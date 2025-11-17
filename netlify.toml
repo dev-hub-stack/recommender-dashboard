@@ -10,6 +10,10 @@
 [build.environment]
   # Node version
   NODE_VERSION = "18"
+  
+  # Backend API URLs - PRODUCTION
+  VITE_API_BASE_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1"
+  VITE_HEALTH_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/health"
 
 # Redirect all routes to index.html for React Router
 [[redirects]]
