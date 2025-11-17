@@ -2,8 +2,8 @@
 // 100% LIVE DATA - NO MOCK DATA
 // Connects to recommendation engine (configurable via .env)
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api/v1';
-const HEALTH_URL = import.meta.env.VITE_HEALTH_URL || 'http://localhost:8001/health';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
+const HEALTH_URL = import.meta.env.VITE_HEALTH_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/health';
 
 export type TimeFilter = 'today' | '7days' | '30days' | 'all';
 
