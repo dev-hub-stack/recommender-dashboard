@@ -53,7 +53,8 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
   const fetchDetailedMetrics = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:8001/api/v1/analytics/dashboard?time_filter=${selectedPeriod}`);
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
+      const response = await fetch(`${API_BASE_URL}/analytics/dashboard?time_filter=${selectedPeriod}`);
       const data = await response.json();
       
       if (data.success) {

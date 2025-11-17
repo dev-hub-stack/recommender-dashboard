@@ -43,14 +43,15 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
   const fetchCrossSellingData = async () => {
     setLoading(true);
     setError(null);
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
     
     try {
       // Fetch dashboard metrics for overall revenue
-      const dashboardResponse = await fetch(`http://localhost:8001/api/v1/analytics/dashboard?time_filter=${timeFilter}`);
+      const dashboardResponse = await fetch(`${API_BASE_URL}/analytics/dashboard?time_filter=${timeFilter}`);
       const dashboardData = await dashboardResponse.json();
 
       // Fetch popular products to get top selling items for cross-selling analysis
-      const popularResponse = await fetch(`http://localhost:8001/api/v1/recommendations/popular?limit=5&time_filter=${timeFilter}`);
+      const popularResponse = await fetch(`${API_BASE_URL}/recommendations/popular?limit=5&time_filter=${timeFilter}`);
       const popularData = await popularResponse.json();
 
       // Fetch product pairs for the top products
@@ -61,7 +62,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       for (const product of popularData.recommendations.slice(0, 3)) {
         try {
           const pairsResponse = await fetch(
-            `http://localhost:8001/api/v1/recommendations/product-pairs?product_id=${product.product_id}&limit=3&time_filter=${timeFilter}`
+            `${API_BASE_URL}/recommendations/product-pairs?product_id=${product.product_id}&limit=3&time_filter=${timeFilter}`
           );
           const pairsData = await pairsResponse.json();
           
