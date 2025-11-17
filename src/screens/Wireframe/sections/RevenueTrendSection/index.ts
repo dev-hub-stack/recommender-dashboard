@@ -1,0 +1,1 @@
+export { RevenueTrendSection } from "./RevenueTrendSection";

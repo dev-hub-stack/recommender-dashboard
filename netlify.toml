@@ -1,0 +1,64 @@
+# Netlify Configuration for Master Group Analytics Dashboard
+
+[build]
+  # Directory with the production build
+  publish = "dist"
+  
+  # Build command
+  command = "npm run build"
+
+[build.environment]
+  # Node version
+  NODE_VERSION = "18"
+
+# Redirect all routes to index.html for React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # CORS headers (if needed for API calls)
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Environment variables (these can also be set in Netlify UI)
+# [context.production.environment]
+#   VITE_API_BASE_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1"
+#   VITE_HEALTH_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/health"
+
+# Deploy preview environment variables
+[context.deploy-preview.environment]
+  VITE_API_BASE_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1"
+  VITE_HEALTH_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/health"
+
+# Branch deploy environment variables
+[context.branch-deploy.environment]
+  VITE_API_BASE_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1"
+  VITE_HEALTH_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/health"

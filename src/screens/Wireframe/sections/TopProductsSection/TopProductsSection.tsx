@@ -1,0 +1,316 @@
+import { ArrowUpIcon, ChevronDownIcon } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Badge } from "../../../../components/ui/badge";
+import { Card, CardContent } from "../../../../components/ui/card";
+import { getPopularProducts, getRevenueTrend, Product } from "../../../../services/api";
+import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
+
+// Live data from recommendation engine - no static data needed
+
+const yAxisLabels = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
+
+const chartBars = [
+  { day: "Mon", height: "h-[87px]" },
+  { day: "Tue", height: "h-[50px]" },
+  { day: "Wed", height: "h-[107px]" },
+  { day: "Thu", height: "h-[137px]" },
+  { day: "Fri", height: "h-[50px]" },
+  { day: "Sat", height: "h-full" },
+  { day: "Sun", height: "h-[181px]" },
+];
+
+interface TopProductsSectionProps {
+  timeFilter?: string;
+}
+
+export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilter = '7days' }) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [localTimeFilter, setLocalTimeFilter] = useState<string>(timeFilter);
+  const [revenueTrend, setRevenueTrend] = useState<any>(null);
+  const [trendPeriod, setTrendPeriod] = useState<string>('daily');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Fetch both products and revenue trend data
+        const [popularProducts, trendData] = await Promise.all([
+          getPopularProducts(5, localTimeFilter || timeFilter),
+          getRevenueTrend(localTimeFilter || timeFilter, trendPeriod)
+        ]);
+        
+        setProducts(popularProducts);
+        setRevenueTrend(trendData);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load data');
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [timeFilter, localTimeFilter, trendPeriod]); // Re-fetch when filters change
+
+  // Update local filter when prop changes
+  useEffect(() => {
+    setLocalTimeFilter(timeFilter);
+  }, [timeFilter]);
+
+  if (loading) {
+    return (
+      <section className="flex items-start gap-6 w-full">
+        <Card className="flex flex-col items-start gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl flex-1">
+          <CardContent className="p-0 w-full space-y-4">
+            <div className="flex items-center gap-2.5 w-full">
+              <h2 className="flex-1 font-semibold text-black text-base">
+                Top Performing Products
+              </h2>
+              <Badge className="h-auto px-2 py-1 bg-foundation-whitewhite-200 rounded-[5px]">
+                <span className="font-normal text-foundation-greygrey-800 text-xs">
+                  Live Data
+                </span>
+              </Badge>
+            </div>
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-16 bg-gray-100 rounded animate-pulse"></div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <div className="w-80 h-64 bg-gray-100 rounded-xl animate-pulse"></div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="flex items-start gap-6 w-full">
+        <Card className="flex flex-col items-start gap-4 p-5 bg-red-50 rounded-xl flex-1">
+          <CardContent className="p-0 w-full">
+            <div className="text-red-600 text-center py-8">
+              {error}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
+
+  return (
+    <section className="flex items-start gap-6 w-full">
+      <Card className="flex flex-col items-start gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl flex-1">
+        <CardContent className="p-0 w-full space-y-4">
+          <div className="flex items-center gap-2.5 w-full">
+            <h2 className="flex-1 font-semibold text-black text-base">
+              Top Performing Products (Live)
+            </h2>
+            <select 
+              value={localTimeFilter} 
+              onChange={(e) => setLocalTimeFilter(e.target.value)}
+              className="px-3 py-1 text-sm border rounded bg-white"
+            >
+              <option value="today">Today</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="mtd">Month to Date</option>
+              <option value="90days">Last 3 Months</option>
+              <option value="6months">Last 6 Months</option>
+              <option value="1year">Last 1 Year</option>
+              <option value="all">All Time</option>
+            </select>
+            <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
+              <span className="font-normal text-green-800 text-xs">
+                🔴 Live Data
+              </span>
+            </Badge>
+          </div>
+
+          <div className="flex w-full">
+            <div className="flex flex-col flex-1">
+              <div className="h-[41px] flex items-center gap-2.5 p-2.5 w-full bg-foundation-whitewhite-100">
+                <span className="font-normal text-foundation-greygrey-400 text-sm">
+                  Product ID
+                </span>
+              </div>
+
+              {products.map((product, index) => (
+                <div
+                  key={product.product_id}
+                  className={`h-[83px] flex items-center gap-2 px-2.5 py-5 w-full bg-foundation-whitewhite-50 ${
+                    index < products.length - 1
+                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
+                      : ""
+                  }`}
+                >
+                  <div className="w-[43px] h-[43px] bg-blue-100 rounded flex items-center justify-center">
+                    <span className="text-blue-600 font-bold text-xs">#{index + 1}</span>
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <span className="font-medium text-foundation-greygrey-800 text-sm">
+                      {product.product_name || `Product ${product.product_id}`}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      ID: {product.product_id} • Score: {product.score?.toFixed(0) || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col w-[142px]">
+              <div className="h-[41px] flex items-center gap-2.5 p-2.5 w-full bg-foundation-whitewhite-100">
+                <span className="font-normal text-foundation-greygrey-400 text-sm">
+                  Popularity Score
+                </span>
+              </div>
+
+              {products.map((product, index) => (
+                <div
+                  key={product.product_id}
+                  className={`flex w-[142px] h-[83px] items-center gap-2 px-2.5 py-5 bg-foundation-whitewhite-50 ${
+                    index < products.length - 1
+                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
+                      : ""
+                  }`}
+                >
+                  <div className="inline-flex items-center gap-1 rounded-[5px] overflow-hidden">
+                    <span className="font-normal text-foundation-greengreen-500 text-sm">
+                      {formatLargeNumber(product.score || 0)}
+                    </span>
+                    <ArrowUpIcon className="w-[18px] h-[18px] text-foundation-greengreen-500" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col w-[142px]">
+              <div className="h-[41px] flex items-center gap-2.5 p-2.5 w-full bg-foundation-whitewhite-100">
+                <span className="font-normal text-foundation-greygrey-400 text-sm">
+                  Category
+                </span>
+              </div>
+
+              {products.map((product, index) => (
+                <div
+                  key={product.product_id}
+                  className={`flex w-[142px] h-[83px] items-center gap-2 px-2.5 py-5 bg-foundation-whitewhite-50 ${
+                    index < products.length - 1
+                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
+                      : ""
+                  }`}
+                >
+                  <div className="inline-flex flex-col items-start justify-center">
+                    <span className="font-medium text-black text-sm">
+                      {product.category || 'General'}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {formatCurrency(product.avg_price || product.price || product.total_revenue || 0)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="flex flex-col w-[422px] h-[453px] items-start gap-2.5 p-5 bg-foundation-whitewhite-50 rounded-xl">
+        <CardContent className="p-0 w-full h-full flex flex-col gap-2.5">
+          <div className="flex items-start gap-2.5 w-full">
+            <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal]">
+              Revenue Trend
+            </h2>
+            <select 
+              value={trendPeriod} 
+              onChange={(e) => setTrendPeriod(e.target.value)}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-[5px] border border-solid border-[#cacbce] h-auto text-xs bg-white"
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+
+          <div className="inline-flex items-end gap-[26px] flex-1">
+            <div className="w-4 flex flex-col items-start gap-[11px]">
+              {(() => {
+                // Generate dynamic Y-axis labels based on max revenue
+                const maxRevenue = revenueTrend?.summary?.max_revenue || 100;
+                const labels = [];
+                for (let i = 10; i >= 0; i--) {
+                  const value = (i / 10) * maxRevenue;
+                  labels.push(formatLargeNumber(value));
+                }
+                return labels;
+              })().map((label, index) => (
+                <span
+                  key={index}
+                  className={`${
+                    index === 0 ? "mr-[-6.00px]" : ""
+                  } [font-family:'Inter',Helvetica] font-medium text-black text-xs tracking-[0] leading-6 ${
+                    index === 0 ? "whitespace-nowrap" : ""
+                  }`}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex flex-col w-[334px] h-[260px] items-center gap-[5px]">
+              <div className="flex items-end gap-4 flex-1 w-full">
+                {revenueTrend?.trend_data ? 
+                  revenueTrend.trend_data.slice(0, 7).map((dataPoint: any, index: number) => {
+                    // Calculate height based on percentage (260px max height - 20px padding = 240px usable)
+                    const heightPx = Math.max(20, (dataPoint.percentage / 100) * 240);
+                    return (
+                      <div
+                        key={index}
+                        className="w-[34px] bg-foundation-blueblue-300 rounded-xl"
+                        style={{ height: `${heightPx}px` }}
+                        title={`${dataPoint.label}: ${formatCurrency(dataPoint.total_revenue)}`}
+                      />
+                    );
+                  }) :
+                  // Fallback to static bars if no data
+                  chartBars.map((bar, index) => (
+                    <div
+                      key={index}
+                      className={`w-[34px] ${bar.height} bg-foundation-blueblue-300 rounded-xl`}
+                    />
+                  ))
+                }
+              </div>
+
+              <div className="inline-flex items-center gap-7">
+                {revenueTrend?.trend_data ? 
+                  revenueTrend.trend_data.slice(0, 7).map((dataPoint: any, index: number) => (
+                    <span
+                      key={index}
+                      className="[font-family:'Inter',Helvetica] font-medium text-black text-xs tracking-[0] leading-6 whitespace-nowrap"
+                    >
+                      {dataPoint.label}
+                    </span>
+                  )) :
+                  // Fallback to static labels if no data
+                  chartBars.map((bar, index) => (
+                    <span
+                      key={index}
+                      className="[font-family:'Inter',Helvetica] font-medium text-black text-xs tracking-[0] leading-6 whitespace-nowrap"
+                    >
+                      {bar.day}
+                    </span>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
+  );
+};
