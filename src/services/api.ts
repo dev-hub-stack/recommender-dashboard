@@ -5,6 +5,20 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
 const HEALTH_URL = import.meta.env.VITE_HEALTH_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/health';
 
+// Helper function to get auth headers
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('auth_token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
 export type TimeFilter = 'today' | '7days' | '30days' | 'all';
 
 export interface Product {
@@ -60,7 +74,9 @@ export interface RecommendationResponse {
 
 // Health Check
 export async function getHealthStatus(): Promise<HealthStatus> {
-  const response = await fetch(HEALTH_URL);
+  const response = await fetch(HEALTH_URL, {
+    headers: getAuthHeaders(),
+  });
   if (!response.ok) {
     throw new Error('Failed to fetch health status');
   }
