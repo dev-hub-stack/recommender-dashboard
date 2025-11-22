@@ -9,6 +9,7 @@ import { CustomerProfilingSection } from "./sections/CustomerProfilingSection";
 import { CustomerDetailedProfiling } from "./sections/CustomerProfilingSection/CustomerDetailedProfiling";
 import { POSvsOESection } from "./sections/POSvsOESection";
 import { CrossSellingSection } from "./sections/CrossSellingSection";
+import CollaborativeRecommendationDashboard from "./sections/CollaborativeRecommendationSection";
 
 export const Wireframe = (): JSX.Element => {
   const [timeFilter, setTimeFilter] = useState<string>('7days'); // Changed default to 7 days
@@ -138,6 +139,10 @@ export const Wireframe = (): JSX.Element => {
         
         {activeView === 'Cross-Selling' && (
           <CrossSellingSection timeFilter={timeFilter} />
+        )}
+        
+        {activeView === 'Collaborative Recommendation' && (
+          <CollaborativeRecommendationDashboard timeFilter={timeFilter} />
         )}
       </main>
 

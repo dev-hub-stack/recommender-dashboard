@@ -19,6 +19,15 @@ function getAuthHeaders(): HeadersInit {
   return headers;
 }
 
+// Helper function to handle authentication errors
+function handleAuthError(response: Response): void {
+  if (response.status === 401) {
+    // Token expired or invalid - clear auth and redirect to login
+    localStorage.removeItem('auth_token');
+    window.location.href = '/login';
+  }
+}
+
 export type TimeFilter = 'today' | '7days' | '30days' | 'all';
 
 export interface Product {
@@ -72,12 +81,53 @@ export interface RecommendationResponse {
   execution_time_ms: number;
 }
 
+// Collaborative Filtering Interfaces
+export interface CollaborativeMetrics {
+  total_recommendations: number;
+  avg_similarity_score: number;
+  active_customer_pairs: number;
+  algorithm_accuracy: number;
+  time_period: string;
+}
+
+export interface CollaborativeProduct {
+  product_id: string;
+  product_name: string;
+  category: string;
+  price: number;
+  recommendation_count: number;
+  avg_similarity_score: number;
+  total_revenue: number;
+}
+
+export interface CustomerSimilarityData {
+  customer_id: string;
+  similar_customers_count: number;
+  avg_similarity_score: number;
+  recommendations_generated: number;
+  top_similar_customers: Array<{
+    customer_id: string;
+    similarity_score: number;
+  }>;
+}
+
+export interface CollaborativeProductPair {
+  product_a_id: string;
+  product_a_name: string;
+  product_b_id: string;
+  product_b_name: string;
+  co_recommendation_count: number;
+  similarity_score: number;
+  combined_revenue: number;
+}
+
 // Health Check
 export async function getHealthStatus(): Promise<HealthStatus> {
   const response = await fetch(HEALTH_URL, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
+    handleAuthError(response);
     throw new Error('Failed to fetch health status');
   }
   const data = await response.json();
@@ -93,7 +143,10 @@ export async function getHealthStatus(): Promise<HealthStatus> {
 // Get Recommendations (Popular Products) with time filter
 export async function getPopularProducts(limit: number = 10, timeFilter: string = 'all'): Promise<Product[]> {
   const response = await fetch(
-    `${API_BASE_URL}/recommendations/popular?limit=${limit}&time_filter=${timeFilter}`
+    `${API_BASE_URL}/recommendations/popular?limit=${limit}&time_filter=${timeFilter}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
   
   if (!response.ok) {
@@ -117,7 +170,10 @@ export async function getPopularProducts(limit: number = 10, timeFilter: string 
 // Get Product Pairs (Frequently Bought Together)
 export async function getProductPairs(productId: string, limit: number = 5): Promise<Product[]> {
   const response = await fetch(
-    `${API_BASE_URL}/recommendations/product-pairs?product_id=${productId}&limit=${limit}`
+    `${API_BASE_URL}/recommendations/product-pairs?product_id=${productId}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
   
   if (!response.ok) {
@@ -137,7 +193,10 @@ export async function getProductPairs(productId: string, limit: number = 5): Pro
 // Get Content-Based Recommendations
 export async function getSimilarProducts(productId: string, limit: number = 10): Promise<Product[]> {
   const response = await fetch(
-    `${API_BASE_URL}/recommendations/content-based/${productId}?limit=${limit}`
+    `${API_BASE_URL}/recommendations/content-based/${productId}?limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
   
   if (!response.ok) {
@@ -154,7 +213,10 @@ export async function getPersonalizedRecommendations(
   limit: number = 10
 ): Promise<Product[]> {
   const response = await fetch(
-    `${API_BASE_URL}/recommendations/collaborative/${customerId}?limit=${limit}`
+    `${API_BASE_URL}/recommendations/collaborative/${customerId}?limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
   
   if (!response.ok) {
@@ -171,7 +233,10 @@ export async function getAdvancedRecommendations(
   limit: number = 10
 ): Promise<Product[]> {
   const response = await fetch(
-    `${API_BASE_URL}/recommendations/matrix-factorization/${customerId}?limit=${limit}`
+    `${API_BASE_URL}/recommendations/matrix-factorization/${customerId}?limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
   
   if (!response.ok) {
@@ -185,7 +250,10 @@ export async function getAdvancedRecommendations(
 // Get Collaborative Filtering Recommendations
 export async function getCollaborativeRecommendations(customerId: string, limit: number = 5): Promise<Product[]> {
   const response = await fetch(
-    `${API_BASE_URL}/recommendations/collaborative?customer_id=${customerId}&limit=${limit}`
+    `${API_BASE_URL}/recommendations/collaborative?customer_id=${customerId}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
   
   if (!response.ok) {
@@ -204,7 +272,9 @@ export async function getCollaborativeRecommendations(customerId: string, limit:
 
 // Get Cache Statistics
 export async function getCacheStats() {
-  const response = await fetch(`${API_BASE_URL}/cache/stats`);
+  const response = await fetch(`${API_BASE_URL}/cache/stats`, {
+    headers: getAuthHeaders(),
+  });
   
   if (!response.ok) {
     throw new Error('Failed to fetch cache stats');
@@ -215,7 +285,9 @@ export async function getCacheStats() {
 
 // Get Customer History
 export async function getCustomerHistory(customerId: string) {
-  const response = await fetch(`${API_BASE_URL}/customers/${customerId}/history`);
+  const response = await fetch(`${API_BASE_URL}/customers/${customerId}/history`, {
+    headers: getAuthHeaders(),
+  });
   
   if (!response.ok) {
     throw new Error('Failed to fetch customer history');
@@ -227,7 +299,9 @@ export async function getCustomerHistory(customerId: string) {
 // Get System Statistics
 export async function getSystemStats() {
   try {
-    const response = await fetch(`${API_BASE_URL}/stats`);
+    const response = await fetch(`${API_BASE_URL}/stats`, {
+      headers: getAuthHeaders(),
+    });
     
     if (!response.ok) {
       throw new Error('Failed to fetch system stats');
@@ -236,7 +310,9 @@ export async function getSystemStats() {
     return response.json();
   } catch (error) {
     // Fallback to basic health check if stats endpoint doesn't exist
-    const healthResponse = await fetch(HEALTH_URL);
+    const healthResponse = await fetch(HEALTH_URL, {
+      headers: getAuthHeaders(),
+    });
     const health = await healthResponse.json();
     
     return {
@@ -261,7 +337,10 @@ export async function getProductAnalytics(
   limit: number = 100
 ): Promise<ProductAnalytics[]> {
   const response = await fetch(
-    `${API_BASE_URL}/analytics/products?time_filter=${timeFilter}&limit=${limit}`
+    `${API_BASE_URL}/analytics/products?time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
   
   if (!response.ok) {
@@ -275,10 +354,14 @@ export async function getProductAnalytics(
 // Get Dashboard Metrics with Time Filter (REAL METRICS)
 export async function getDashboardMetrics(timeFilter: TimeFilter = 'all'): Promise<DashboardMetrics> {
   const response = await fetch(
-    `${API_BASE_URL}/analytics/dashboard?time_filter=${timeFilter}`
+    `${API_BASE_URL}/analytics/dashboard?time_filter=${timeFilter}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
   
   if (!response.ok) {
+    handleAuthError(response);
     throw new Error('Failed to fetch dashboard metrics');
   }
   
@@ -288,7 +371,10 @@ export async function getDashboardMetrics(timeFilter: TimeFilter = 'all'): Promi
 // Get Revenue Trend Data
 export async function getRevenueTrend(timeFilter: string = '7days', period: string = 'daily'): Promise<any> {
   const response = await fetch(
-    `${API_BASE_URL}/analytics/revenue-trend?time_filter=${timeFilter}&period=${period}`
+    `${API_BASE_URL}/analytics/revenue-trend?time_filter=${timeFilter}&period=${period}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
   
   if (!response.ok) {
@@ -296,6 +382,92 @@ export async function getRevenueTrend(timeFilter: string = '7days', period: stri
   }
   
   return response.json();
+}
+
+// ==============================================
+// COLLABORATIVE FILTERING ENDPOINTS
+// ==============================================
+
+// Get Collaborative Filtering Metrics
+export async function getCollaborativeMetrics(
+  timeFilter: TimeFilter = 'all'
+): Promise<CollaborativeMetrics> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/collaborative-metrics?time_filter=${timeFilter}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch collaborative metrics');
+  }
+  
+  return response.json();
+}
+
+// Get Top Collaborative Products
+export async function getTopCollaborativeProducts(
+  timeFilter: TimeFilter = 'all',
+  limit: number = 10
+): Promise<CollaborativeProduct[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/collaborative-products?time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch collaborative products');
+  }
+  
+  const data = await response.json();
+  return data.products || [];
+}
+
+// Get Customer Similarity Data
+export async function getCustomerSimilarityData(
+  timeFilter: TimeFilter = 'all',
+  limit: number = 20
+): Promise<CustomerSimilarityData[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/customer-similarity?time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch customer similarity data');
+  }
+  
+  const data = await response.json();
+  return data.customers || [];
+}
+
+// Get Collaborative Product Pairs
+export async function getCollaborativeProductPairs(
+  timeFilter: TimeFilter = 'all',
+  limit: number = 10
+): Promise<CollaborativeProductPair[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/collaborative-pairs?time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch collaborative product pairs');
+  }
+  
+  const data = await response.json();
+  return data.pairs || [];
 }
 
 // ==============================================
