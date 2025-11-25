@@ -43,12 +43,10 @@ export const Wireframe = (): JSX.Element => {
         <div className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-4">
             <h3 className="text-lg font-semibold text-gray-800">
-              {activeView === 'Dashboard' ? 'Analytics Dashboard' : activeView}
+              {activeView === 'Dashboard' ? 'Analytics Dashboard' : 
+               activeView === 'Collaborative Recommendation' ? 'Collaborative Filtering' : 
+               activeView}
             </h3>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-gray-600">100% Live Data</span>
-            </div>
           </div>
           
           <div className="flex items-center gap-2">
