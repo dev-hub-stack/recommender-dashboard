@@ -9,7 +9,7 @@ interface CustomerSimilaritySectionProps {
   timeFilter?: TimeFilter;
 }
 
-type SortField = 'similar_customers_count' | 'avg_similarity_score' | 'recommendations_generated';
+type SortField = 'similar_customers_count' | 'actual_recommendations';
 type SortDirection = 'asc' | 'desc';
 
 export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps> = ({ 
@@ -18,7 +18,7 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
   const [customers, setCustomers] = useState<CustomerSimilarityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<SortField>('avg_similarity_score');
+  const [sortField, setSortField] = useState<SortField>('similar_customers_count');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
@@ -49,8 +49,13 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
   };
 
   const sortedCustomers = [...customers].sort((a, b) => {
-    const aValue = a[sortField];
-    const bValue = b[sortField];
+    // Use actual_recommendations if available, fallback to recommendations_generated for backward compatibility
+    const aValue = sortField === 'actual_recommendations' 
+      ? (a.actual_recommendations ?? a.recommendations_generated)
+      : a[sortField];
+    const bValue = sortField === 'actual_recommendations'
+      ? (b.actual_recommendations ?? b.recommendations_generated)
+      : b[sortField];
     const multiplier = sortDirection === 'asc' ? 1 : -1;
     return (aValue - bValue) * multiplier;
   });
@@ -129,19 +134,14 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
           <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base">
             Customer Similarity Insights
           </h2>
-          <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
-            <span className="[font-family:'Poppins',Helvetica] font-normal text-green-800 text-xs">
-              🔴 Live Data
-            </span>
-          </Badge>
         </div>
 
         <div className="w-full overflow-x-auto">
           <div className="flex min-w-[640px]">
-            <div className="flex flex-col flex-1 min-w-[150px]">
+            <div className="flex flex-col flex-1 min-w-[200px]">
               <div className="h-[41px] flex items-center gap-2.5 p-2.5 w-full bg-foundation-whitewhite-100">
                 <span className="font-normal text-foundation-greygrey-400 text-sm">
-                  Customer ID
+                  Customer
                 </span>
               </div>
 
@@ -153,14 +153,65 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
                       ? "border-b-[0.5px] border-solid border-[#cacbce]"
                       : ""
                   }`}
+                  title={`${customer.customer_name || customer.customer_id}\nID: ${customer.customer_id}`}
                 >
                   <div className="w-[35px] h-[35px] bg-purple-100 rounded flex items-center justify-center flex-shrink-0">
                     <span className="text-purple-600 font-bold text-xs">#{index + 1}</span>
                   </div>
                   <div className="flex flex-col flex-1 min-w-0">
                     <span className="font-medium text-foundation-greygrey-800 text-sm truncate">
-                      {customer.customer_id}
+                      {(() => {
+                        const name = customer.customer_name || customer.customer_id;
+                        // If format is "number_name", extract just the name part
+                        if (name.includes('_')) {
+                          const parts = name.split('_');
+                          // Check if first part is a number
+                          if (!isNaN(Number(parts[0]))) {
+                            return parts.slice(1).join('_');
+                          }
+                        }
+                        return name.substring(0, 20);
+                      })()}
                     </span>
+                    <span className="text-xs text-gray-500 truncate">
+                      ID: {customer.customer_id.substring(0, 12)}...
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col flex-1 min-w-[250px]">
+              <div className="h-[41px] flex items-center gap-2.5 p-2.5 w-full bg-foundation-whitewhite-100">
+                <span className="font-normal text-foundation-greygrey-400 text-sm">
+                  Top Shared Products
+                </span>
+              </div>
+
+              {sortedCustomers.map((customer, index) => (
+                <div
+                  key={`${customer.customer_id}-products`}
+                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
+                    index < sortedCustomers.length - 1
+                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
+                      : ""
+                  }`}
+                >
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    {customer.top_shared_products && customer.top_shared_products.length > 0 ? (
+                      customer.top_shared_products.slice(0, 2).map((product, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span className="text-xs text-foundation-greygrey-600 truncate">
+                            {product.product_name}
+                          </span>
+                          <span className="text-xs text-foundation-blueblue-600 font-medium">
+                            ({product.shared_count})
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-xs text-gray-400">No shared products</span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -193,58 +244,42 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
               ))}
             </div>
 
-            <div className="flex flex-col w-[150px] flex-shrink-0">
-              <button
-                onClick={() => handleSort('avg_similarity_score')}
-                className="h-[41px] flex items-center gap-1 p-2.5 w-full bg-foundation-whitewhite-100 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer touch-manipulation"
-              >
-                <span className="font-normal text-foundation-greygrey-400 text-sm">
-                  Avg Score
-                </span>
-                <SortIcon field="avg_similarity_score" />
-              </button>
-
-              {sortedCustomers.map((customer, index) => (
-                <div
-                  key={customer.customer_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedCustomers.length - 1
-                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
-                      : ""
-                  }`}
-                >
-                  <span className="font-normal text-foundation-greengreen-500 text-sm">
-                    {formatPercentage(customer.avg_similarity_score, 1)}
-                  </span>
-                </div>
-              ))}
-            </div>
-
             <div className="flex flex-col w-[180px] flex-shrink-0">
               <button
-                onClick={() => handleSort('recommendations_generated')}
+                onClick={() => handleSort('actual_recommendations')}
                 className="h-[41px] flex items-center gap-1 p-2.5 w-full bg-foundation-whitewhite-100 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer touch-manipulation"
+                title="Actual products available for recommendation (from database)"
               >
                 <span className="font-normal text-foundation-greygrey-400 text-sm">
-                  Recommendations
+                  Available Recommendations
                 </span>
-                <SortIcon field="recommendations_generated" />
+                <SortIcon field="actual_recommendations" />
               </button>
 
-              {sortedCustomers.map((customer, index) => (
-                <div
-                  key={customer.customer_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedCustomers.length - 1
-                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
-                      : ""
-                  }`}
-                >
-                  <span className="font-medium text-black text-sm">
-                    {formatLargeNumber(customer.recommendations_generated)}
-                  </span>
-                </div>
-              ))}
+              {sortedCustomers.map((customer, index) => {
+                // Use actual_recommendations if available, fallback to recommendations_generated
+                const recommendationCount = customer.actual_recommendations ?? customer.recommendations_generated;
+                const isActual = customer.actual_recommendations !== undefined;
+                
+                return (
+                  <div
+                    key={customer.customer_id}
+                    className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
+                      index < sortedCustomers.length - 1
+                        ? "border-b-[0.5px] border-solid border-[#cacbce]"
+                        : ""
+                    }`}
+                    title={isActual ? "Real count from database" : "Estimated (products × 2)"}
+                  >
+                    <span className={`font-medium text-sm ${isActual ? 'text-green-600' : 'text-gray-600'}`}>
+                      {formatLargeNumber(recommendationCount)}
+                    </span>
+                    {!isActual && (
+                      <span className="text-xs text-gray-400">*</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
