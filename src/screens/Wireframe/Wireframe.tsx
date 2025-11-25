@@ -10,6 +10,8 @@ import { CustomerDetailedProfiling } from "./sections/CustomerProfilingSection/C
 import { POSvsOESection } from "./sections/POSvsOESection";
 import { CrossSellingSection } from "./sections/CrossSellingSection";
 import CollaborativeRecommendationDashboard from "./sections/CollaborativeRecommendationSection";
+import { GeographicIntelligenceSection } from "./sections/GeographicIntelligenceSection";
+import { RFMSegmentationSection } from "./sections/RFMSegmentationSection";
 
 export const Wireframe = (): JSX.Element => {
   const [timeFilter, setTimeFilter] = useState<string>('7days'); // Changed default to 7 days
@@ -143,6 +145,14 @@ export const Wireframe = (): JSX.Element => {
         
         {activeView === 'Collaborative Recommendation' && (
           <CollaborativeRecommendationDashboard timeFilter={timeFilter} />
+        )}
+        
+        {activeView === 'Geographic Intelligence' && (
+          <GeographicIntelligenceSection />
+        )}
+        
+        {activeView === 'RFM Segmentation' && (
+          <RFMSegmentationSection />
         )}
       </main>
 

@@ -121,6 +121,76 @@ export interface CollaborativeProductPair {
   combined_revenue: number;
 }
 
+// ==============================================
+// PHASE 1: GEOGRAPHIC INTELLIGENCE & RFM SEGMENTATION
+// ==============================================
+
+// Geographic Analytics Interfaces
+export interface GeographicMetrics {
+  province: string;
+  region: string;
+  total_orders: number;
+  total_revenue: number;
+  total_customers: number;
+  avg_order_value: number;
+  growth_rate?: number;
+}
+
+export interface CityPerformance {
+  city: string;
+  province: string;
+  region: string;
+  total_orders: number;
+  total_revenue: number;
+  total_customers: number;
+  avg_order_value: number;
+  top_products: Array<{
+    product_name: string;
+    revenue: number;
+  }>;
+}
+
+// RFM Segmentation Interfaces
+export interface RFMSegment {
+  segment_name: string;
+  customer_count: number;
+  total_revenue: number;
+  avg_order_value: number;
+  avg_orders_per_customer: number;
+  avg_days_since_last_order: number;
+  percentage: number;
+}
+
+export interface CustomerSegmentDetail {
+  customer_id: string;
+  customer_name: string;
+  customer_city: string;
+  segment: string;
+  total_orders: number;
+  total_spent: number;
+  last_order_date: string;
+  days_since_last_order: number;
+  rfm_score: {
+    recency: number;
+    frequency: number;
+    monetary: number;
+  };
+}
+
+// Brand Performance Interface
+export interface BrandPerformance {
+  brand_name: string;
+  total_orders: number;
+  total_revenue: number;
+  total_customers: number;
+  avg_order_value: number;
+  market_share: number;
+  top_cities: Array<{
+    city: string;
+    revenue: number;
+  }>;
+}
+
 // Health Check
 export async function getHealthStatus(): Promise<HealthStatus> {
   const response = await fetch(HEALTH_URL, {
@@ -472,6 +542,165 @@ export async function getCollaborativeProductPairs(
 
 // ==============================================
 // UTILITY FUNCTIONS
+// ==============================================
+
+// ==============================================
+// PHASE 1: GEOGRAPHIC ANALYTICS ENDPOINTS
+// ==============================================
+
+// Get Province Performance
+export async function getProvincePerformance(
+  timeFilter: TimeFilter = 'all'
+): Promise<GeographicMetrics[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/geographic/provinces?time_filter=${timeFilter}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch province performance');
+  }
+  
+  const data = await response.json();
+  return data.provinces || [];
+}
+
+// Get City Performance
+export async function getCityPerformance(
+  timeFilter: TimeFilter = 'all',
+  limit: number = 20
+): Promise<CityPerformance[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/geographic/cities?time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch city performance');
+  }
+  
+  const data = await response.json();
+  return data.cities || [];
+}
+
+// Get City Detailed Performance
+export async function getCityDetailedPerformance(
+  city: string,
+  timeFilter: TimeFilter = 'all'
+): Promise<CityPerformance> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/geographic/city-performance/${encodeURIComponent(city)}?time_filter=${timeFilter}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch city detailed performance');
+  }
+  
+  return response.json();
+}
+
+// ==============================================
+// PHASE 1: RFM SEGMENTATION ENDPOINTS
+// ==============================================
+
+// Get RFM Segment Analysis
+export async function getRFMSegments(
+  timeFilter: TimeFilter = 'all'
+): Promise<RFMSegment[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/customers/rfm-segments?time_filter=${timeFilter}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch RFM segments');
+  }
+  
+  const data = await response.json();
+  return data.segments || [];
+}
+
+// Get Customers by Segment
+export async function getCustomersBySegment(
+  segment: string,
+  limit: number = 50
+): Promise<CustomerSegmentDetail[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/customers/segment-details/${encodeURIComponent(segment)}?limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch customers by segment');
+  }
+  
+  const data = await response.json();
+  return data.customers || [];
+}
+
+// Get At-Risk Customers
+export async function getAtRiskCustomers(
+  limit: number = 50
+): Promise<CustomerSegmentDetail[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/customers/at-risk?limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch at-risk customers');
+  }
+  
+  const data = await response.json();
+  return data.customers || [];
+}
+
+// ==============================================
+// PHASE 1: BRAND PERFORMANCE ENDPOINTS
+// ==============================================
+
+// Get Brand Performance
+export async function getBrandPerformance(
+  timeFilter: TimeFilter = 'all',
+  limit: number = 10
+): Promise<BrandPerformance[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/brands/performance?time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch brand performance');
+  }
+  
+  const data = await response.json();
+  return data.brands || [];
+}
+
+// ==============================================
+// UTILITY FUNCTIONS (EXISTING)
 // ==============================================
 
 // Format price in PKR currency

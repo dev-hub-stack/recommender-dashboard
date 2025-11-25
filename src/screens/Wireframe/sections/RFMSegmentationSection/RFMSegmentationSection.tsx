@@ -1,0 +1,282 @@
+// RFM Customer Segmentation Section Component
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../../components/ui/card';
+import { useEffect, useState } from 'react';
+import { getRFMSegments, getCustomersBySegment, RFMSegment, CustomerSegmentDetail, TimeFilter, formatPKR } from '../../../../services/api';
+import { Badge } from '../../../../components/ui/badge';
+
+export const RFMSegmentationSection = () => {
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [segments, setSegments] = useState<RFMSegment[]>([]);
+  const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
+  const [segmentCustomers, setSegmentCustomers] = useState<CustomerSegmentDetail[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const data = await getRFMSegments(timeFilter);
+        setSegments(data);
+      } catch (error) {
+        console.error('Error fetching RFM segments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [timeFilter]);
+
+  const handleSegmentClick = async (segmentName: string) => {
+    if (selectedSegment === segmentName) {
+      setSelectedSegment(null);
+      setSegmentCustomers([]);
+      return;
+    }
+
+    try {
+      setLoadingCustomers(true);
+      setSelectedSegment(segmentName);
+      const customers = await getCustomersBySegment(segmentName, 20);
+      setSegmentCustomers(customers);
+    } catch (error) {
+      console.error('Error fetching segment customers:', error);
+    } finally {
+      setLoadingCustomers(false);
+    }
+  };
+
+  const getSegmentColor = (segment: string) => {
+    const colors: Record<string, string> = {
+      'Champions': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      'Loyal Customers': 'bg-green-100 text-green-800 border-green-300',
+      'Potential Loyalists': 'bg-blue-100 text-blue-800 border-blue-300',
+      'New Customers': 'bg-cyan-100 text-cyan-800 border-cyan-300',
+      'At Risk': 'bg-orange-100 text-orange-800 border-orange-300',
+      'Cannot Lose Them': 'bg-red-100 text-red-800 border-red-300',
+      'Need Attention': 'bg-purple-100 text-purple-800 border-purple-300',
+      'Hibernating': 'bg-gray-100 text-gray-800 border-gray-300',
+      'Lost': 'bg-slate-100 text-slate-800 border-slate-300',
+    };
+    return colors[segment] || 'bg-gray-100 text-gray-800 border-gray-300';
+  };
+
+  const getSegmentIcon = (segment: string) => {
+    const icons: Record<string, string> = {
+      'Champions': '🏆',
+      'Loyal Customers': '⭐',
+      'Potential Loyalists': '🎯',
+      'New Customers': '🌱',
+      'At Risk': '⚠️',
+      'Cannot Lose Them': '🚨',
+      'Need Attention': '💬',
+      'Hibernating': '💤',
+      'Lost': '📉',
+    };
+    return icons[segment] || '👤';
+  };
+
+  const getSegmentPriority = (segment: string) => {
+    const priorities: Record<string, string> = {
+      'Champions': 'VIP Treatment',
+      'Loyal Customers': 'Maintain',
+      'Potential Loyalists': 'Convert',
+      'New Customers': 'Onboard',
+      'At Risk': 'Win Back',
+      'Cannot Lose Them': 'URGENT',
+      'Need Attention': 'Re-engage',
+      'Hibernating': 'Reactivate',
+      'Lost': 'Low Priority',
+    };
+    return priorities[segment] || 'Standard';
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">👥 RFM Customer Segmentation</h2>
+          <p className="text-gray-600 mt-1">Recency, Frequency, Monetary Analysis</p>
+        </div>
+        <select
+          value={timeFilter}
+          onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
+          className="px-4 py-2 border rounded-lg"
+        >
+          <option value="today">Today</option>
+          <option value="7days">Last 7 Days</option>
+          <option value="30days">Last 30 Days</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
+
+      {/* Segment Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {segments.map((segment) => (
+          <Card
+            key={segment.segment_name}
+            className={`cursor-pointer transition-all hover:shadow-lg ${
+              selectedSegment === segment.segment_name ? 'ring-2 ring-blue-500' : ''
+            }`}
+            onClick={() => handleSegmentClick(segment.segment_name)}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{getSegmentIcon(segment.segment_name)}</span>
+                  <div>
+                    <CardTitle className="text-lg">{segment.segment_name}</CardTitle>
+                    <Badge className={getSegmentColor(segment.segment_name)} variant="outline">
+                      {getSegmentPriority(segment.segment_name)}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Customers:</span>
+                <span className="font-bold">{segment.customer_count.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Percentage:</span>
+                <span className="font-semibold">{segment.percentage.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Total Revenue:</span>
+                <span className="font-bold text-green-600">{formatPKR(segment.total_revenue)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Avg Order Value:</span>
+                <span className="font-semibold">{formatPKR(segment.avg_order_value)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Avg Orders:</span>
+                <span className="font-semibold">{segment.avg_orders_per_customer.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Last Order:</span>
+                <span className="font-semibold">{segment.avg_days_since_last_order.toFixed(0)} days ago</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Selected Segment Details */}
+      {selectedSegment && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span>{getSegmentIcon(selectedSegment)}</span>
+              {selectedSegment} - Customer Details
+            </CardTitle>
+            <CardDescription>
+              Top {segmentCustomers.length} customers in this segment
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingCustomers ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-3 font-semibold">Customer</th>
+                      <th className="text-left p-3 font-semibold">City</th>
+                      <th className="text-right p-3 font-semibold">Orders</th>
+                      <th className="text-right p-3 font-semibold">Total Spent</th>
+                      <th className="text-right p-3 font-semibold">Last Order</th>
+                      <th className="text-center p-3 font-semibold">RFM Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {segmentCustomers.map((customer) => (
+                      <tr key={customer.customer_id} className="border-b hover:bg-gray-50">
+                        <td className="p-3">
+                          <div>
+                            <p className="font-medium">{customer.customer_name}</p>
+                            <p className="text-xs text-gray-500">{customer.customer_id}</p>
+                          </div>
+                        </td>
+                        <td className="p-3">{customer.customer_city || 'N/A'}</td>
+                        <td className="p-3 text-right">{customer.total_orders}</td>
+                        <td className="p-3 text-right font-semibold">{formatPKR(customer.total_spent)}</td>
+                        <td className="p-3 text-right">
+                          <span className="text-sm">{customer.days_since_last_order} days ago</span>
+                        </td>
+                        <td className="p-3 text-center">
+                          <div className="flex gap-1 justify-center">
+                            <Badge variant="outline" className="text-xs">
+                              R:{customer.rfm_score.recency}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              F:{customer.rfm_score.frequency}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              M:{customer.rfm_score.monetary}
+                            </Badge>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>🎯 Recommended Actions</CardTitle>
+          <CardDescription>Strategic priorities based on RFM analysis</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="p-4 border rounded-lg bg-yellow-50">
+              <p className="font-semibold mb-2">🏆 VIP Program</p>
+              <p className="text-sm text-gray-600">
+                Focus on {segments.find(s => s.segment_name === 'Champions')?.customer_count || 0} Champions
+                with exclusive offers and personalized service
+              </p>
+            </div>
+            <div className="p-4 border rounded-lg bg-orange-50">
+              <p className="font-semibold mb-2">⚠️ Win-Back Campaign</p>
+              <p className="text-sm text-gray-600">
+                Re-engage {segments.find(s => s.segment_name === 'At Risk')?.customer_count || 0} at-risk customers
+                before they become lost
+              </p>
+            </div>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <p className="font-semibold mb-2">💤 Reactivation Drive</p>
+              <p className="text-sm text-gray-600">
+                Wake up {segments.find(s => s.segment_name === 'Hibernating')?.customer_count || 0} hibernating customers
+                with special incentives
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default RFMSegmentationSection;
