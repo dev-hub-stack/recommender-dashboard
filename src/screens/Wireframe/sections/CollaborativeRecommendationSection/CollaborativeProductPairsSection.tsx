@@ -94,13 +94,10 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
                   Product B
                 </th>
                 <th className="text-center py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-sm">
-                  Co-Rec.
-                </th>
-                <th className="text-center py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-sm">
-                  Score
+                  Co-Recommendations
                 </th>
                 <th className="text-right py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-sm">
-                  Revenue
+                  Combined Revenue
                 </th>
               </tr>
             </thead>
@@ -134,19 +131,6 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
                     <span className="inline-flex items-center justify-center px-2 py-1 bg-foundation-blueblue-50 rounded-full text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica]">
                       {formatLargeNumber(pair.co_recommendation_count)}
                     </span>
-                  </td>
-                  <td className="py-3 px-2 text-center">
-                    <div className="flex flex-col items-center">
-                      <span className="text-sm font-semibold text-foundation-greygrey-800 [font-family:'Poppins',Helvetica]">
-                        {(pair.similarity_score * 100).toFixed(1)}%
-                      </span>
-                      <div className="w-14 bg-foundation-greygrey-100 rounded-full h-1.5 mt-1">
-                        <div 
-                          className="bg-foundation-greengreen-500 h-1.5 rounded-full" 
-                          style={{ width: `${Math.min(pair.similarity_score * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
                   </td>
                   <td className="py-3 px-2 text-right">
                     <span className="text-sm font-semibold text-foundation-greengreen-500 [font-family:'Poppins',Helvetica]">
