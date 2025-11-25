@@ -3,14 +3,28 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../..
 import { useEffect, useState } from 'react';
 import { getRFMSegments, getCustomersBySegment, RFMSegment, CustomerSegmentDetail, TimeFilter, formatPKR } from '../../../../services/api';
 import { Badge } from '../../../../components/ui/badge';
+import { ExplanationCard } from '../../../../components/ExplanationCard';
+import { DateRangeDisplay } from '../../../../components/DateRangeDisplay';
+import { RFMScoreTooltip } from '../../../../components/Tooltip';
 
-export const RFMSegmentationSection = () => {
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+interface RFMSegmentationSectionProps {
+  timeFilter?: string;
+}
+
+export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmentationSectionProps) => {
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>(propTimeFilter as TimeFilter || 'all');
   const [segments, setSegments] = useState<RFMSegment[]>([]);
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
   const [segmentCustomers, setSegmentCustomers] = useState<CustomerSegmentDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
+
+  // Update internal timeFilter when prop changes
+  useEffect(() => {
+    if (propTimeFilter) {
+      setTimeFilter(propTimeFilter as TimeFilter);
+    }
+  }, [propTimeFilter]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,11 +118,48 @@ export const RFMSegmentationSection = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+      {/* Header with Date Range */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            RFM Customer Segmentation
+            <RFMScoreTooltip />
+          </h2>
+          <p className="text-gray-600 mt-1">Customer behavior analysis & targeting</p>
+        </div>
+        <DateRangeDisplay 
+          timeFilter={timeFilter} 
+          totalRecords={segments.reduce((sum, s) => sum + (s.customer_count || 0), 0)}
+        />
+      </div>
+
+      {/* Explanation Card */}
+      <ExplanationCard
+        icon="📊"
+        title="What is RFM Segmentation?"
+        description="RFM (Recency, Frequency, Monetary) segmentation is a proven marketing analysis technique that groups customers based on their purchase behavior to enable targeted engagement strategies."
+        methodology={[
+          "Recency (R): Days since last purchase - scored 1-5 (lower days = higher score)",
+          "Frequency (F): Total number of orders - scored 1-5 (more orders = higher score)",
+          "Monetary (M): Total spend in PKR - scored 1-5 (higher spend = higher score)",
+          "Combines R+F+M scores into 9 customer segments using business rules"
+        ]}
+        insights={[
+          "Champions (R≥4, F≥4, M≥4): Your best customers - reward and retain them",
+          "At Risk (R≤2, F≥3, M≥3): High-value customers going dormant - re-engage urgently",
+          "Lost (R≤2, F≤2, M≤2): 99K customers to win back with special offers",
+          "Hibernating (65K customers): Occasional buyers needing reactivation campaigns"
+        ]}
+      />
+
+      {/* Header */}
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div className="space-y-2">
           <h2 className="text-2xl font-bold">👥 RFM Customer Segmentation</h2>
-          <p className="text-gray-600 mt-1">Recency, Frequency, Monetary Analysis</p>
+          <DateRangeDisplay 
+            timeFilter={timeFilter} 
+            totalRecords={segments.reduce((sum, s) => sum + (s.total_customers || 0), 0)}
+          />
         </div>
         <select
           value={timeFilter}

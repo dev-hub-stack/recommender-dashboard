@@ -2,6 +2,7 @@ import { CheckCircle2Icon, InfoIcon, RefreshCwIcon } from "lucide-react";
 import React from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { Button } from "../../../../components/ui/button";
+import { DateRangeDisplay } from "../../../../components/DateRangeDisplay";
 
 const activityData = [
   {
@@ -36,15 +37,17 @@ const activityData = [
   },
 ];
 
-export const RecentActivitySection = (): JSX.Element => {
-  return (
-    <section className="flex items-start gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl overflow-hidden">
-      <div className="flex flex-col items-start gap-3.5 flex-1">
-        <header className="flex items-center gap-2.5 w-full">
-          <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal]">
-            Recent Activity
-          </h2>
+interface RecentActivitySectionProps {
+  timeFilter?: string;
+}
 
+export const RecentActivitySection = ({ timeFilter = '7days' }: RecentActivitySectionProps): JSX.Element => {
+  return (
+    <section className="flex flex-col gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold text-lg">Recent Activity</h2>
+        <div className="flex items-center gap-4">
+          <DateRangeDisplay timeFilter={timeFilter as any} />
           <Button
             variant="outline"
             className="h-auto px-3 py-1 rounded-[5px] border-[#cacbce] hover:bg-foundation-whitewhite-100"
@@ -53,8 +56,9 @@ export const RecentActivitySection = (): JSX.Element => {
               View All
             </span>
           </Button>
-        </header>
-
+        </div>
+      </div>
+      <div className="flex flex-col items-start gap-3.5 flex-1">
         <div className="flex flex-col items-start w-full">
           {activityData.map((activity, index) => {
             const IconComponent = activity.icon;

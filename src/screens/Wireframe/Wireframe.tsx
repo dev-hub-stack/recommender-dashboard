@@ -105,16 +105,16 @@ export const Wireframe = (): JSX.Element => {
         {/* Render different views based on activeView */}
         {activeView === 'Dashboard' && (
           <>
-            <PerformanceMetricsSection />
+            <PerformanceMetricsSection timeFilter={timeFilter} />
             <TopProductsSection timeFilter={timeFilter} />
             <POSvsOESection timeFilter={timeFilter} />
-            <RecentActivitySection />
+            <RecentActivitySection timeFilter={timeFilter} />
           </>
         )}
         
         {activeView === 'Analytics' && (
           <>
-            <PerformanceMetricsSection />
+            <PerformanceMetricsSection timeFilter={timeFilter} />
             <POSvsOESection timeFilter={timeFilter} />
           </>
         )}
@@ -146,11 +146,11 @@ export const Wireframe = (): JSX.Element => {
         )}
         
         {activeView === 'Geographic Intelligence' && (
-          <GeographicIntelligenceSection />
+          <GeographicIntelligenceSection timeFilter={timeFilter} />
         )}
         
         {activeView === 'RFM Segmentation' && (
-          <RFMSegmentationSection />
+          <RFMSegmentationSection timeFilter={timeFilter} />
         )}
       </main>
 

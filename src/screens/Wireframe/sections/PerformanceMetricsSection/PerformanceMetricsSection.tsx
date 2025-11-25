@@ -2,12 +2,17 @@ import { useState } from "react";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { useDashboardMetrics } from "../../../../hooks/useDashboardMetrics";
 import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
+import { DateRangeDisplay } from "../../../../components/DateRangeDisplay";
 
-export const PerformanceMetricsSection = (): JSX.Element => {
-  const [timeFilter, setTimeFilter] = useState<string>('7days'); // Changed default to 7 days
+interface PerformanceMetricsSectionProps {
+  timeFilter?: string;
+}
+
+export const PerformanceMetricsSection = ({ timeFilter: propTimeFilter }: PerformanceMetricsSectionProps): JSX.Element => {
+  const [timeFilter, setTimeFilter] = useState<string>(propTimeFilter || '7days');
   const { metrics, loading, error, isEngineOnline } = useDashboardMetrics({
     timeFilter: timeFilter as any,
-    autoRefresh: false, // Disabled auto-refresh
+    autoRefresh: false,
     refreshInterval: 0
   });
 
@@ -89,19 +94,13 @@ export const PerformanceMetricsSection = (): JSX.Element => {
 
   return (
     <section className="w-full bg-foundation-whitewhite-50 rounded-xl p-5">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
         <h2 className="font-semibold text-lg">Live Performance Metrics</h2>
         <div className="flex items-center gap-4">
-          <select 
-            value={timeFilter} 
-            onChange={(e) => setTimeFilter(e.target.value)}
-            className="px-3 py-1 text-sm border rounded bg-white"
-          >
-            <option value="all">All Time</option>
-            <option value="30days">Last 30 Days</option>
-            <option value="7days">Last 7 Days</option>
-            <option value="today">Today</option>
-          </select>
+          <DateRangeDisplay 
+            timeFilter={timeFilter as any} 
+            totalRecords={metrics?.totalOrders || 0}
+          />
           <div className={`flex items-center gap-2 ${isEngineOnline ? 'text-green-600' : 'text-red-600'}`}>
             <div className={`w-2 h-2 rounded-full ${isEngineOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
             <span className="text-sm">{isEngineOnline ? 'Engine Online' : 'Engine Offline'}</span>

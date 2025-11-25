@@ -3,12 +3,26 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../..
 import { useEffect, useState } from 'react';
 import { getProvincePerformance, getCityPerformance, GeographicMetrics, CityPerformance, TimeFilter, formatPKR } from '../../../../services/api';
 import { Badge } from '../../../../components/ui/badge';
+import { ExplanationCard } from '../../../../components/ExplanationCard';
+import { DateRangeDisplay } from '../../../../components/DateRangeDisplay';
+import { GeographicScoreTooltip } from '../../../../components/Tooltip';
 
-export const GeographicIntelligenceSection = () => {
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>('30days');
+interface GeographicIntelligenceSectionProps {
+  timeFilter?: string;
+}
+
+export const GeographicIntelligenceSection = ({ timeFilter: propTimeFilter }: GeographicIntelligenceSectionProps) => {
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>(propTimeFilter as TimeFilter || '30days');
   const [provinces, setProvinces] = useState<GeographicMetrics[]>([]);
   const [cities, setCities] = useState<CityPerformance[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Update internal timeFilter when prop changes
+  useEffect(() => {
+    if (propTimeFilter) {
+      setTimeFilter(propTimeFilter as TimeFilter);
+    }
+  }, [propTimeFilter]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,20 +69,39 @@ export const GeographicIntelligenceSection = () => {
 
   return (
     <div className="space-y-6">
-      {/* Time Filter */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">🗺️ Geographic Intelligence</h2>
-        <select
-          value={timeFilter}
-          onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
-          className="px-4 py-2 border rounded-lg"
-        >
-          <option value="today">Today</option>
-          <option value="7days">Last 7 Days</option>
-          <option value="30days">Last 30 Days</option>
-          <option value="all">All Time</option>
-        </select>
+      {/* Header with Date Range */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            Geographic Intelligence
+            <GeographicScoreTooltip />
+          </h2>
+          <p className="text-gray-600 mt-1">Sales performance across Pakistan</p>
+        </div>
+        <DateRangeDisplay 
+          timeFilter={timeFilter} 
+          totalRecords={provinces.reduce((sum, p) => sum + (p.total_orders || 0), 0)}
+        />
       </div>
+
+      {/* Explanation Card */}
+      <ExplanationCard
+        icon="🗺️"
+        title="What is Geographic Intelligence?"
+        description="Geographic Intelligence tracks sales performance across Pakistan's provinces and cities to identify regional growth opportunities and optimize distribution strategies."
+        methodology={[
+          "Maps customer cities to provinces using a comprehensive 61-city database",
+          "Aggregates revenue, orders, and customer counts by region",
+          "Calculates average order values and growth trends per location",
+          "Identifies top-performing cities and emerging markets"
+        ]}
+        insights={[
+          "Punjab leads with 86K+ orders and PKR 4.8B revenue (93% of total)",
+          "Focus on Lahore, Faisalabad, and Rawalpindi as primary markets",
+          "Potential expansion opportunities in Sindh and KPK regions",
+          "Regional analysis helps optimize inventory and delivery networks"
+        ]}
+      />
 
       {/* Province Performance */}
       <Card>
