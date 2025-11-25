@@ -131,9 +131,16 @@ export interface GeographicMetrics {
   region: string;
   total_orders: number;
   total_revenue: number;
-  total_customers: number;
+  unique_customers: number;
   avg_order_value: number;
+  cities_covered?: number;
   growth_rate?: number;
+}
+
+// Helper function to safely format numbers
+export function safeNumber(value: any, defaultValue: number = 0): number {
+  const num = Number(value);
+  return isNaN(num) || !isFinite(num) ? defaultValue : num;
 }
 
 export interface CityPerformance {
@@ -142,9 +149,9 @@ export interface CityPerformance {
   region: string;
   total_orders: number;
   total_revenue: number;
-  total_customers: number;
+  unique_customers: number;
   avg_order_value: number;
-  top_products: Array<{
+  top_products?: Array<{
     product_name: string;
     revenue: number;
   }>;
@@ -565,7 +572,18 @@ export async function getProvincePerformance(
   }
   
   const data = await response.json();
-  return data.provinces || [];
+  const provinces = data.provinces || [];
+  
+  // Transform and validate data
+  return provinces.map((p: any) => ({
+    province: p.province || 'Unknown',
+    region: p.region || 'Unknown',
+    total_orders: safeNumber(p.total_orders, 0),
+    total_revenue: safeNumber(p.total_revenue, 0),
+    unique_customers: safeNumber(p.unique_customers, 0),
+    avg_order_value: safeNumber(p.avg_order_value, 0),
+    cities_covered: safeNumber(p.cities_covered, 0),
+  }));
 }
 
 // Get City Performance
@@ -586,7 +604,18 @@ export async function getCityPerformance(
   }
   
   const data = await response.json();
-  return data.cities || [];
+  const cities = data.cities || [];
+  
+  // Transform and validate data
+  return cities.map((c: any) => ({
+    city: c.city || 'Unknown',
+    province: c.province || 'Unknown',
+    region: c.region || 'Unknown',
+    total_orders: safeNumber(c.total_orders, 0),
+    total_revenue: safeNumber(c.total_revenue, 0),
+    unique_customers: safeNumber(c.unique_customers, 0),
+    avg_order_value: safeNumber(c.avg_order_value, 0),
+  }));
 }
 
 // Get City Detailed Performance
@@ -606,7 +635,18 @@ export async function getCityDetailedPerformance(
     throw new Error('Failed to fetch city detailed performance');
   }
   
-  return response.json();
+  const data = await response.json();
+  
+  // Transform and validate data
+  return {
+    city: data.city || 'Unknown',
+    province: data.province || 'Unknown',
+    region: data.region || 'Unknown',
+    total_orders: safeNumber(data.total_orders, 0),
+    total_revenue: safeNumber(data.total_revenue, 0),
+    unique_customers: safeNumber(data.unique_customers, 0),
+    avg_order_value: safeNumber(data.avg_order_value, 0),
+  };
 }
 
 // ==============================================
@@ -630,7 +670,18 @@ export async function getRFMSegments(
   }
   
   const data = await response.json();
-  return data.segments || [];
+  const segments = data.segments || [];
+  
+  // Transform and validate data
+  return segments.map((s: any) => ({
+    segment_name: s.segment_name || 'Unknown',
+    customer_count: safeNumber(s.customer_count, 0),
+    total_revenue: safeNumber(s.total_revenue, 0),
+    avg_order_value: safeNumber(s.avg_customer_value, 0),
+    avg_orders_per_customer: safeNumber(s.avg_orders_per_customer, 0),
+    avg_days_since_last_order: safeNumber(s.avg_recency_days, 0),
+    percentage: 0, // Calculate on frontend
+  }));
 }
 
 // Get Customers by Segment
@@ -651,7 +702,24 @@ export async function getCustomersBySegment(
   }
   
   const data = await response.json();
-  return data.customers || [];
+  const customers = data.customers || [];
+  
+  // Transform and validate data
+  return customers.map((c: any) => ({
+    customer_id: c.customer_id || '',
+    customer_name: c.customer_name || 'Unknown',
+    customer_city: c.customer_city || 'Unknown',
+    segment: c.segment || segment,
+    total_orders: safeNumber(c.total_orders, 0),
+    total_spent: safeNumber(c.total_spent, 0),
+    last_order_date: c.last_order_date || '',
+    days_since_last_order: safeNumber(c.recency_days, 0),
+    rfm_score: {
+      recency: safeNumber(c.recency_score, 0),
+      frequency: safeNumber(c.frequency_score, 0),
+      monetary: safeNumber(c.monetary_score, 0),
+    },
+  }));
 }
 
 // Get At-Risk Customers
@@ -671,7 +739,24 @@ export async function getAtRiskCustomers(
   }
   
   const data = await response.json();
-  return data.customers || [];
+  const customers = data.customers || [];
+  
+  // Transform and validate data
+  return customers.map((c: any) => ({
+    customer_id: c.customer_id || '',
+    customer_name: c.customer_name || 'Unknown',
+    customer_city: c.customer_city || 'Unknown',
+    segment: c.segment || 'At Risk',
+    total_orders: safeNumber(c.total_orders, 0),
+    total_spent: safeNumber(c.total_spent, 0),
+    last_order_date: c.last_order_date || '',
+    days_since_last_order: safeNumber(c.days_since_purchase, 0),
+    rfm_score: {
+      recency: 0,
+      frequency: 0,
+      monetary: 0,
+    },
+  }));
 }
 
 // ==============================================

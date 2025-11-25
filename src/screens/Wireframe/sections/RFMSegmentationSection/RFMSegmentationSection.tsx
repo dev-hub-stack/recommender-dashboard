@@ -148,27 +148,27 @@ export const RFMSegmentationSection = () => {
             <CardContent className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Customers:</span>
-                <span className="font-bold">{segment.customer_count.toLocaleString()}</span>
+                <span className="font-bold">{(segment.customer_count || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Percentage:</span>
-                <span className="font-semibold">{segment.percentage.toFixed(1)}%</span>
+                <span className="font-semibold">{(segment.percentage || 0).toFixed(1)}%</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Total Revenue:</span>
-                <span className="font-bold text-green-600">{formatPKR(segment.total_revenue)}</span>
+                <span className="font-bold text-green-600">{formatPKR(segment.total_revenue || 0)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Avg Order Value:</span>
-                <span className="font-semibold">{formatPKR(segment.avg_order_value)}</span>
+                <span className="font-semibold">{formatPKR(segment.avg_order_value || 0)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Avg Orders:</span>
-                <span className="font-semibold">{segment.avg_orders_per_customer.toFixed(1)}</span>
+                <span className="font-semibold">{(segment.avg_orders_per_customer || 0).toFixed(1)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Last Order:</span>
-                <span className="font-semibold">{segment.avg_days_since_last_order.toFixed(0)} days ago</span>
+                <span className="font-semibold">{(segment.avg_days_since_last_order || 0).toFixed(0)} days ago</span>
               </div>
             </CardContent>
           </Card>
@@ -210,26 +210,26 @@ export const RFMSegmentationSection = () => {
                       <tr key={customer.customer_id} className="border-b hover:bg-gray-50">
                         <td className="p-3">
                           <div>
-                            <p className="font-medium">{customer.customer_name}</p>
+                            <p className="font-medium">{customer.customer_name || 'Unknown'}</p>
                             <p className="text-xs text-gray-500">{customer.customer_id}</p>
                           </div>
                         </td>
                         <td className="p-3">{customer.customer_city || 'N/A'}</td>
-                        <td className="p-3 text-right">{customer.total_orders}</td>
-                        <td className="p-3 text-right font-semibold">{formatPKR(customer.total_spent)}</td>
+                        <td className="p-3 text-right">{(customer.total_orders || 0).toLocaleString()}</td>
+                        <td className="p-3 text-right font-semibold">{formatPKR(customer.total_spent || 0)}</td>
                         <td className="p-3 text-right">
-                          <span className="text-sm">{customer.days_since_last_order} days ago</span>
+                          <span className="text-sm">{customer.days_since_last_order || 0} days ago</span>
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex gap-1 justify-center">
                             <Badge variant="outline" className="text-xs">
-                              R:{customer.rfm_score.recency}
+                              R:{customer.rfm_score?.recency || 0}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
-                              F:{customer.rfm_score.frequency}
+                              F:{customer.rfm_score?.frequency || 0}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
-                              M:{customer.rfm_score.monetary}
+                              M:{customer.rfm_score?.monetary || 0}
                             </Badge>
                           </div>
                         </td>

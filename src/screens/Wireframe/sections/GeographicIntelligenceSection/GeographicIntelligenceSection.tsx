@@ -87,14 +87,14 @@ export const GeographicIntelligenceSection = () => {
                   <div>
                     <p className="font-semibold">{province.province}</p>
                     <p className="text-sm text-gray-500">
-                      {province.total_orders.toLocaleString()} orders · {province.total_customers.toLocaleString()} customers
+                      {(province.total_orders || 0).toLocaleString()} orders · {(province.unique_customers || 0).toLocaleString()} customers
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-lg">{formatPKR(province.total_revenue)}</p>
+                  <p className="font-bold text-lg">{formatPKR(province.total_revenue || 0)}</p>
                   <p className="text-sm text-gray-500">
-                    Avg: {formatPKR(province.avg_order_value)}
+                    Avg: {formatPKR(province.avg_order_value || 0)}
                   </p>
                 </div>
               </div>
@@ -136,9 +136,9 @@ export const GeographicIntelligenceSection = () => {
                         {city.province}
                       </Badge>
                     </td>
-                    <td className="p-3 text-right">{city.total_orders.toLocaleString()}</td>
-                    <td className="p-3 text-right font-semibold">{formatPKR(city.total_revenue)}</td>
-                    <td className="p-3 text-right">{city.total_customers.toLocaleString()}</td>
+                    <td className="p-3 text-right">{(city.total_orders || 0).toLocaleString()}</td>
+                    <td className="p-3 text-right font-semibold">{formatPKR(city.total_revenue || 0)}</td>
+                    <td className="p-3 text-right">{(city.unique_customers || 0).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
