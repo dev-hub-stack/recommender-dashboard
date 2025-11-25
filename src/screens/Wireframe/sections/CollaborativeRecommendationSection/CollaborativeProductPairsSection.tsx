@@ -74,32 +74,29 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
   }
 
   return (
-    <Card className="bg-foundation-whitewhite-50 border-0 shadow-none rounded-xl">
-      <CardContent className="p-5">
-        <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal] mb-4">
+    <Card className="bg-foundation-whitewhite-50 border-0 shadow-none rounded-xl h-[600px]">
+      <CardContent className="p-5 flex flex-col h-full">
+        <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal] mb-2">
           Collaborative Product Pairs
         </h3>
         <p className="text-foundation-greygrey-600 text-sm [font-family:'Poppins',Helvetica] mb-4">
-          Products frequently recommended together based on collaborative filtering patterns
+          Products frequently recommended together
         </p>
         
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
-            <thead>
+        <div className="flex-1 overflow-y-auto">
+          <table className="w-full">
+            <thead className="sticky top-0 bg-foundation-whitewhite-100 z-10">
               <tr className="border-b border-foundation-greygrey-200">
-                <th className="text-left py-2 md:py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-xs md:text-sm">
+                <th className="text-left py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-sm">
                   Product A
                 </th>
-                <th className="text-left py-2 md:py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-xs md:text-sm">
+                <th className="text-left py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-sm">
                   Product B
                 </th>
-                <th className="text-center py-2 md:py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-xs md:text-sm">
+                <th className="text-center py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-sm">
                   Co-Recommendations
                 </th>
-                <th className="text-center py-2 md:py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-xs md:text-sm">
-                  Similarity Score
-                </th>
-                <th className="text-right py-2 md:py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-xs md:text-sm">
+                <th className="text-right py-3 px-2 text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-medium text-sm">
                   Combined Revenue
                 </th>
               </tr>
@@ -108,48 +105,35 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
               {pairs.map((pair, index) => (
                 <tr 
                   key={index}
-                  className="border-b border-foundation-greygrey-100 hover:bg-foundation-greygrey-50 active:bg-foundation-greygrey-100 transition-colors"
+                  className="border-b border-foundation-greygrey-100 hover:bg-foundation-greygrey-50 transition-colors"
                 >
-                  <td className="py-2 md:py-3 px-2">
+                  <td className="py-3 px-2">
                     <div className="flex flex-col">
-                      <span className="text-xs md:text-sm font-medium text-foundation-greygrey-800 [font-family:'Poppins',Helvetica] truncate max-w-[120px] md:max-w-none">
+                      <span className="text-sm font-medium text-foundation-greygrey-800 [font-family:'Poppins',Helvetica] truncate" style={{ maxWidth: '150px' }}>
                         {pair.product_a_name}
                       </span>
-                      <span className="text-[10px] md:text-xs text-foundation-greygrey-500 [font-family:'Poppins',Helvetica] truncate">
+                      <span className="text-xs text-foundation-greygrey-500 [font-family:'Poppins',Helvetica] truncate">
                         ID: {pair.product_a_id}
                       </span>
                     </div>
                   </td>
-                  <td className="py-2 md:py-3 px-2">
+                  <td className="py-3 px-2">
                     <div className="flex flex-col">
-                      <span className="text-xs md:text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica] truncate max-w-[120px] md:max-w-none">
+                      <span className="text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica] truncate" style={{ maxWidth: '150px' }}>
                         {pair.product_b_name}
                       </span>
-                      <span className="text-[10px] md:text-xs text-foundation-greygrey-500 [font-family:'Poppins',Helvetica] truncate">
+                      <span className="text-xs text-foundation-greygrey-500 [font-family:'Poppins',Helvetica] truncate">
                         ID: {pair.product_b_id}
                       </span>
                     </div>
                   </td>
-                  <td className="py-2 md:py-3 px-2 text-center">
-                    <span className="inline-flex items-center justify-center px-2 md:px-3 py-0.5 md:py-1 bg-foundation-blueblue-50 rounded-full text-xs md:text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica]">
+                  <td className="py-3 px-2 text-center">
+                    <span className="inline-flex items-center justify-center px-2 py-1 bg-foundation-blueblue-50 rounded-full text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica]">
                       {formatLargeNumber(pair.co_recommendation_count)}
                     </span>
                   </td>
-                  <td className="py-2 md:py-3 px-2 text-center">
-                    <div className="flex flex-col items-center">
-                      <span className="text-xs md:text-sm font-semibold text-foundation-greygrey-800 [font-family:'Poppins',Helvetica]">
-                        {(pair.similarity_score * 100).toFixed(1)}%
-                      </span>
-                      <div className="w-12 md:w-16 bg-foundation-greygrey-100 rounded-full h-1 md:h-1.5 mt-1">
-                        <div 
-                          className="bg-foundation-greengreen-500 h-1 md:h-1.5 rounded-full" 
-                          style={{ width: `${Math.min(pair.similarity_score * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-2 md:py-3 px-2 text-right">
-                    <span className="text-xs md:text-sm font-semibold text-foundation-greengreen-500 [font-family:'Poppins',Helvetica]">
+                  <td className="py-3 px-2 text-right">
+                    <span className="text-sm font-semibold text-foundation-greengreen-500 [font-family:'Poppins',Helvetica]">
                       {formatCurrency(pair.combined_revenue)}
                     </span>
                   </td>
