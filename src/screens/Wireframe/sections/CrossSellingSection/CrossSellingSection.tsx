@@ -26,6 +26,7 @@ interface CrossSellingSectionProps {
 export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({ 
   timeFilter = '7days' // Changed default to 7 days for faster loading
 }) => {
+  // COMING SOON - Cross-selling analytics will be available in Phase 2
   const [metrics, setMetrics] = useState<CrossSellingMetrics>({
     totalRevenue: 0,
     conversionRate: 0,
@@ -33,11 +34,12 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     avgConfidence: 0,
     topPairs: []
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCrossSellingData();
+    // Disabled for Phase 1 - Coming Soon
+    // fetchCrossSellingData();
   }, [timeFilter]);
 
   const fetchCrossSellingData = async () => {
@@ -181,150 +183,76 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     );
   }
 
+  // COMING SOON UI for Phase 2
   return (
     <section className="w-full bg-foundation-whitewhite-50 rounded-xl p-5">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {metricsData.map((metric, index) => (
-          <Card
-            key={index}
-            className={`${metric.bgColor} border-0 shadow-none`}
-          >
-            <CardContent className="flex flex-col items-start justify-center gap-2 p-5">
-              <img className="w-5 h-5" alt={metric.label} src={metric.icon} />
-
-              <div className="flex flex-col items-start justify-center gap-0">
-                <div className="text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-normal text-sm tracking-[0] leading-[normal]">
-                  {metric.label}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="[font-family:'Poppins',Helvetica] font-medium text-black text-2xl tracking-[0] leading-[normal]">
-                    {metric.value}
-                  </div>
-
-                  <Badge
-                    className={`${metric.badgeBgColor} flex items-center px-2 py-0 rounded-[5px] h-auto border-0`}
-                  >
-                    <span
-                      className={`${metric.percentageColor} [font-family:'Poppins',Helvetica] font-normal text-sm tracking-[0] leading-[normal]`}
-                    >
-                      {metric.percentage}
-                    </span>
-                    <img
-                      className="w-5 h-5"
-                      alt="Increase indicator"
-                      src={metric.arrowIcon}
-                    />
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Top Cross-Selling Opportunities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Product Pair Recommendations */}
-        <Card className="bg-foundation-whitewhite-50 border-0 shadow-none">
-          <CardContent className="p-5">
-            <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-lg tracking-[0] leading-[normal] mb-4">Top Product Pairs</h3>
-            <div className="space-y-3">
-              {metrics.topPairs.slice(0, 5).map((pair, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-foundation-greygrey-50 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-foundation-greygrey-800 [font-family:'Poppins',Helvetica]">
-                        {pair.product_name}
-                      </span>
-                      <span className="text-foundation-greygrey-400">+</span>
-                      <span className="text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica]">
-                        {pair.pair_product_name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-foundation-greygrey-600">
-                      <span>Co-purchased: {formatLargeNumber(pair.co_purchase_count)} times</span>
-                      <span>Confidence: {pair.confidence_score.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-foundation-greengreen-500 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(pair.potential_revenue)}
-                    </p>
-                    <p className="text-xs text-foundation-greygrey-600">potential</p>
-                  </div>
-                </div>
-              ))}
+      <div className="flex flex-col items-center justify-center py-12 px-4">
+        <div className="max-w-2xl w-full bg-gradient-to-br from-foundation-blueblue-50 to-foundation-purplepurple-50 rounded-2xl p-8 text-center shadow-sm">
+          {/* Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-foundation-blueblue-100 rounded-full p-4">
+              <svg className="w-16 h-16 text-foundation-blueblue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Cross-Selling Performance Chart */}
-        <Card className="bg-foundation-whitewhite-50 border-0 shadow-none">
-          <CardContent className="p-5">
-            <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-lg tracking-[0] leading-[normal] mb-4">Cross-Selling Performance</h3>
-            <div className="space-y-4">
-              
-              {/* Success Rate */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">Success Rate</span>
-                  <span className="text-sm font-bold text-black [font-family:'Poppins',Helvetica]">{metrics.conversionRate.toFixed(1)}%</span>
-                </div>
-                <div className="w-full bg-foundation-greygrey-100 rounded-full h-2">
-                  <div 
-                    className="bg-foundation-greengreen-500 h-2 rounded-full" 
-                    style={{ width: `${Math.min(metrics.conversionRate, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
+          {/* Badge */}
+          <Badge className="bg-foundation-blueblue-500 text-white mb-4 px-4 py-1 text-sm font-medium border-0">
+            Phase 2 Feature
+          </Badge>
 
-              {/* Average Confidence */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">Average Confidence</span>
-                  <span className="text-sm font-bold text-black [font-family:'Poppins',Helvetica]">{metrics.avgConfidence.toFixed(1)}%</span>
-                </div>
-                <div className="w-full bg-foundation-greygrey-100 rounded-full h-2">
-                  <div 
-                    className="bg-foundation-blueblue-500 h-2 rounded-full" 
-                    style={{ width: `${Math.min(metrics.avgConfidence, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
+          {/* Title */}
+          <h2 className="text-3xl font-bold text-foundation-greygrey-900 mb-3 [font-family:'Poppins',Helvetica]">
+            Cross-Selling Intelligence
+          </h2>
+          
+          {/* Subtitle */}
+          <p className="text-lg text-foundation-greygrey-700 mb-6 [font-family:'Poppins',Helvetica]">
+            Coming Soon
+          </p>
 
-              {/* Revenue Impact */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">Revenue Impact</span>
-                  <span className="text-sm font-bold text-black [font-family:'Poppins',Helvetica]">
-                    {formatCurrency(metrics.totalRevenue)}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  <div className="text-center p-3 bg-foundation-greengreen-50 rounded-lg">
-                    <p className="text-xs text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">This Month</p>
-                    <p className="text-sm font-bold text-foundation-greengreen-500 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(metrics.totalRevenue * 0.3)}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 bg-foundation-blueblue-50 rounded-lg">
-                    <p className="text-xs text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">This Quarter</p>
-                    <p className="text-sm font-bold text-foundation-blueblue-600 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(metrics.totalRevenue * 0.8)}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 bg-foundation-purplepurple-50 rounded-lg">
-                    <p className="text-xs text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">Projected</p>
-                    <p className="text-sm font-bold text-foundation-purplepurple-500 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(metrics.totalRevenue)}
-                    </p>
-                  </div>
-                </div>
+          {/* Description */}
+          <p className="text-foundation-greygrey-600 mb-8 leading-relaxed [font-family:'Poppins',Helvetica]">
+            Advanced cross-selling analytics powered by AI will help you identify the best product combinations, 
+            optimize bundling strategies, and maximize revenue opportunities through intelligent product recommendations.
+          </p>
+
+          {/* Features Preview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white/80 rounded-lg p-4">
+              <div className="text-foundation-blueblue-600 font-semibold mb-2 [font-family:'Poppins',Helvetica]">
+                Smart Pairing
               </div>
+              <p className="text-sm text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">
+                AI-powered product pair recommendations
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="bg-white/80 rounded-lg p-4">
+              <div className="text-foundation-purplepurple-600 font-semibold mb-2 [font-family:'Poppins',Helvetica]">
+                Bundle Optimization
+              </div>
+              <p className="text-sm text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">
+                Optimize product bundles for maximum conversion
+              </p>
+            </div>
+            <div className="bg-white/80 rounded-lg p-4">
+              <div className="text-foundation-greengreen-600 font-semibold mb-2 [font-family:'Poppins',Helvetica]">
+                Revenue Impact
+              </div>
+              <p className="text-sm text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">
+                Track cross-sell revenue and performance metrics
+              </p>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="bg-white/60 rounded-lg p-4 inline-block">
+            <p className="text-sm text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">
+              <span className="font-semibold text-foundation-blueblue-600">Expected Launch:</span> Q1 2026
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );
