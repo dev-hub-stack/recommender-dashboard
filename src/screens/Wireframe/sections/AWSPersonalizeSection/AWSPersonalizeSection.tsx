@@ -1,15 +1,87 @@
 /**
- * AWS Personalize Recommendations Section
- * Full-featured ML recommendations dashboard powered by AWS Personalize
+ * ML Recommendations Section
+ * Full-featured ML recommendations dashboard using Collaborative Filtering
  * Features: Location-based, User-specific, Trending, Regional Comparison
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://44.201.11.243:8001/api/v1';
+
+// Helper function to get date range from time filter
+const getDateRangeFromFilter = (filter: string): { start: Date; end: Date; label: string } => {
+  const end = new Date();
+  let start = new Date();
+  let label = '';
+  
+  switch (filter) {
+    case 'today':
+      start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      label = `Today (${start.toLocaleDateString()})`;
+      break;
+    case '7days':
+      start.setDate(end.getDate() - 7);
+      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+      break;
+    case '30days':
+      start.setDate(end.getDate() - 30);
+      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+      break;
+    case 'mtd':
+      start = new Date(end.getFullYear(), end.getMonth(), 1);
+      label = `Month to Date (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`;
+      break;
+    case '90days':
+      start.setDate(end.getDate() - 90);
+      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+      break;
+    case '6months':
+      start.setMonth(end.getMonth() - 6);
+      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+      break;
+    case '1year':
+      start.setFullYear(end.getFullYear() - 1);
+      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+      break;
+    case 'all':
+      start = new Date(2020, 0, 1);
+      label = 'All Time';
+      break;
+    default:
+      // Custom date range format: "2024-01-01:2024-12-31"
+      if (filter.includes(':')) {
+        const [startStr, endStr] = filter.split(':');
+        start = new Date(startStr);
+        const customEnd = new Date(endStr);
+        label = `${start.toLocaleDateString()} - ${customEnd.toLocaleDateString()}`;
+        return { start, end: customEnd, label };
+      }
+      start.setDate(end.getDate() - 30);
+      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+  }
+  
+  return { start, end, label };
+};
+
+// CSV Export helper
+const exportToCSV = (data: any[], filename: string) => {
+  if (data.length === 0) return;
+  
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => headers.map(h => `"${row[h] || ''}"`).join(','))
+  ].join('\n');
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+};
 
 // Types
 interface Recommendation {
@@ -97,6 +169,9 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
   const [loading, setLoading] = useState(true);
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'location' | 'user' | 'trending' | 'compare'>('overview');
+
+  // Get date range label from time filter
+  const dateRange = useMemo(() => getDateRangeFromFilter(timeFilter), [timeFilter]);
 
   // Fetch Personalize Status
   const fetchStatus = useCallback(async () => {
@@ -316,7 +391,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
     return (
       <section className="w-full space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">AWS Personalize Recommendations</h2>
+          <h2 className="text-2xl font-bold">ML Model Recommendations</h2>
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -335,10 +410,13 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-gray-900">☁️ AWS Personalize Recommendations</h2>
+          <h2 className="text-2xl font-bold text-gray-900">🤖 ML Recommendations</h2>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-300">
+            Collaborative Filtering
+          </Badge>
           {status?.is_configured ? (
             <Badge className="bg-green-100 text-green-700 border-green-300">
-              ✓ Connected
+              ✓ Model Active
             </Badge>
           ) : (
             <Badge className="bg-red-100 text-red-700 border-red-300">
@@ -346,11 +424,37 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-4 text-sm text-gray-500">
-          <span>Region: {status?.region || 'N/A'}</span>
-          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
-            📅 Time Filter: {timeFilter}
-          </span>
+        <div className="flex items-center gap-4">
+          <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-xs text-blue-600 font-medium">📅 Date Range</p>
+            <p className="text-sm text-blue-800 font-semibold">{dateRange.label}</p>
+          </div>
+          <button
+            onClick={() => {
+              const allData = [
+                ...locationRecommendations.aggregated.map(r => ({
+                  type: 'location_recommendation',
+                  product_id: r.product_id,
+                  product_name: r.product_name,
+                  score: r.avg_score,
+                  recommended_to_users: r.recommended_to_users,
+                  province: selectedProvince,
+                  city: selectedCity
+                })),
+                ...userRecommendations.map(r => ({
+                  type: 'user_recommendation',
+                  product_id: r.product_id,
+                  product_name: r.product_name,
+                  score: r.score,
+                  customer_id: selectedUser
+                }))
+              ];
+              if (allData.length > 0) exportToCSV(allData, 'ml_recommendations');
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2"
+          >
+            � Export CSV
+          </button>
         </div>
       </div>
 
@@ -455,7 +559,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
             {!selectedProvince ? (
               <div className="text-center py-12 text-gray-500">
                 <p className="text-lg mb-2">📍 Select a Province to see recommendations</p>
-                <p className="text-sm">AWS Personalize will show top products for customers in that area</p>
+                <p className="text-sm">ML Model will show top products for customers in that area</p>
               </div>
             ) : (
               <>
@@ -465,7 +569,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
                     <CardTitle className="flex items-center gap-2">
                       <span>🏆</span> Top Recommended Products for {selectedCity || selectedProvince}
                       <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs">
-                        AWS Personalize
+                        ML Model
                       </Badge>
                     </CardTitle>
                   </CardHeader>
@@ -545,7 +649,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
               <CardTitle className="flex items-center gap-2">
                 <span>🎯</span> Personalized Recommendations
                 <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs">
-                  AWS Personalize
+                  ML Model
                 </Badge>
               </CardTitle>
             </CardHeader>
@@ -553,7 +657,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
               {!selectedUser ? (
                 <div className="text-center py-12 text-gray-500">
                   <p className="text-lg mb-2">👤 Select a Customer to see their recommendations</p>
-                  <p className="text-sm">AWS Personalize will generate personalized product suggestions</p>
+                  <p className="text-sm">ML Model will generate personalized product suggestions</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -686,7 +790,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
             {/* How It Works */}
             <Card>
               <CardHeader>
-                <CardTitle>🧠 How AWS Personalize Works</CardTitle>
+                <CardTitle>🧠 How ML Model Works</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -699,9 +803,9 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
                   </div>
                   <div className="text-center p-4 bg-pink-50 rounded-lg">
                     <div className="text-4xl mb-3">🤖</div>
-                    <h4 className="font-semibold mb-2">2. ML Training</h4>
+                    <h4 className="font-semibold mb-2">2. Collaborative Filtering</h4>
                     <p className="text-sm text-gray-600">
-                      User-Personalization algorithm learns purchase patterns
+                      Finds similar customers and learns purchase patterns
                     </p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -729,7 +833,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
               </CardHeader>
               <CardContent>
                 <p className="text-gray-500 mb-4">
-                  These are the most frequently recommended products by AWS Personalize across all customers.
+                  These are the most frequently recommended products by ML Model across all customers.
                 </p>
                 {trendingProducts.length > 0 ? (
                   <div className="space-y-3">

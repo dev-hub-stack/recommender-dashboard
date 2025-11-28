@@ -63,7 +63,7 @@ const phase1AnalyticsItems = [
   },
   {
     icon: "/vuesax-linear-cloud.svg",
-    label: "AWS Personalize",
+    label: "ML Recommendations",
   },
 ];
 

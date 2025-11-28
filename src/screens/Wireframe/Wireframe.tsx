@@ -154,7 +154,7 @@ export const Wireframe = (): JSX.Element => {
           <RFMSegmentationSection timeFilter={timeFilter} />
         )}
         
-        {activeView === 'AWS Personalize' && (
+        {activeView === 'ML Recommendations' && (
           <AWSPersonalizeSection timeFilter={timeFilter} />
         )}
       </main>
