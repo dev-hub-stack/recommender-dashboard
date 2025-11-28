@@ -1,6 +1,28 @@
 // Tooltip Component for explaining metrics
 import { useState } from 'react';
-import { InfoIcon } from 'lucide-react';
+import { InfoIcon, HelpCircle } from 'lucide-react';
+
+// Simple inline info tooltip for metric labels
+export const InfoTooltip = ({ text }: { text: string }) => {
+  const [show, setShow] = useState(false);
+  
+  return (
+    <span className="relative inline-block ml-1">
+      <HelpCircle 
+        className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help inline"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onClick={() => setShow(!show)}
+      />
+      {show && (
+        <span className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg">
+          {text}
+          <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-800"></span>
+        </span>
+      )}
+    </span>
+  );
+};
 
 interface TooltipProps {
   content: string | React.ReactNode;

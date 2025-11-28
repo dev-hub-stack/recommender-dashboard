@@ -3,6 +3,7 @@ import { Card, CardContent } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
 import { formatCurrency, formatLargeNumber } from '../../../../utils/formatters';
 import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
+import { InfoTooltip } from '../../../../components/Tooltip';
 
 interface CrossSellingMetrics {
   totalRevenue: number;
@@ -60,24 +61,51 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     setLoading(true);
     setError(null);
     
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-      'https://mastergroup-recommendation-e2b3eba97f57.herokuapp.com';
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 
+      'http://localhost:8001';
     
     try {
-      // Determine if we use ML or SQL based on A/B test
-      const useMLAlgorithm = enableABTest 
-        ? variant?.algorithm === 'ml' 
-        : Math.random() * 100 < mlRolloutPercentage;
+      // Always use ML product pairs endpoint
+      setUsingML(true);
       
-      setUsingML(useMLAlgorithm);
-
-      if (useMLAlgorithm && mlStatus?.is_trained) {
-        // Use ML-based collaborative products
-        await fetchMLCrossSellingData(API_BASE_URL);
-      } else {
-        // Use SQL-based analytics (fallback or control group)
-        await fetchSQLCrossSellingData(API_BASE_URL);
+      // Fetch ML product pairs directly
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=10`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch product pairs');
       }
+      
+      const data = await response.json();
+      const pairs = data.pairs || [];
+      
+      // Calculate metrics from product pairs
+      const totalRevenue = pairs.reduce((sum: number, p: any) => 
+        sum + (p.combined_revenue || 0), 0
+      );
+      
+      const avgConfidence = pairs.length > 0
+        ? pairs.reduce((sum: number, p: any) => sum + (p.confidence_score || 0), 0) / pairs.length * 100
+        : 0;
+      
+      const topPairs = pairs.slice(0, 6).map((pair: any) => ({
+        product_id: pair.product_a_id,
+        product_name: pair.product_a_name,
+        pair_product_id: pair.product_b_id,
+        pair_product_name: pair.product_b_name,
+        co_purchase_count: pair.co_recommendation_count || 0,
+        confidence_score: (pair.confidence_score || 0) * 100,
+        potential_revenue: pair.combined_revenue || 0
+      }));
+      
+      setMetrics({
+        totalRevenue,
+        conversionRate: avgConfidence,
+        totalOpportunities: pairs.length,
+        avgConfidence,
+        topPairs
+      });
     } catch (err) {
       console.error('Failed to fetch cross-selling data:', err);
       setError('Failed to load cross-selling analytics');
@@ -192,8 +220,9 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
   const metricsData = [
     {
       icon: "/vuesax-linear-chart.svg",
-      label: "Total Revenue",
-      value: `Rs ${formatLargeNumber(metrics.totalRevenue)}`, // PKR format
+      label: "Paired Products Revenue",
+      tooltip: "Total revenue from products frequently bought together",
+      value: `Rs ${formatLargeNumber(metrics.totalRevenue)}`,
       percentage: "12%",
       bgColor: "bg-foundation-greengreen-50",
       badgeBgColor: "bg-foundation-greengreen-50",
@@ -202,7 +231,8 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     },
     {
       icon: "/vuesax-linear-shopping-cart.svg",
-      label: "Avg. Conversion Rate",
+      label: "Bundle Success Rate",
+      tooltip: "Percentage of customers who bought recommended product pairs",
       value: `${metrics.conversionRate.toFixed(0)}%`,
       percentage: "10%",
       bgColor: "bg-foundation-blueblue-50",
@@ -212,7 +242,8 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     },
     {
       icon: "/vuesax-linear-graph.svg",
-      label: "Total Opportunities",
+      label: "Times Bought Together",
+      tooltip: "Number of times products were purchased in the same order",
       value: formatLargeNumber(metrics.totalOpportunities),
       percentage: "21%",
       bgColor: "bg-foundation-orangeorange-50",
@@ -222,7 +253,8 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     },
     {
       icon: "/vuesax-linear-dollar-circle.svg",
-      label: "Avg. Confidence",
+      label: "Prediction Accuracy",
+      tooltip: "How accurate our ML model is at predicting product pairs",
       value: `${metrics.avgConfidence.toFixed(0)}%`,
       percentage: "4%",
       bgColor: "bg-foundation-purplepurple-50",
@@ -311,8 +343,9 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
                 <img src={metric.icon} alt={metric.label} className="w-5 h-5" />
               </div>
               <div className="flex flex-col items-start justify-center gap-0 w-full">
-                <span className="text-foundation-greygrey-600 text-sm [font-family:'Poppins',Helvetica]">
+                <span className="text-foundation-greygrey-600 text-sm [font-family:'Poppins',Helvetica] flex items-center">
                   {metric.label}
+                  <InfoTooltip text={metric.tooltip} />
                 </span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-foundation-greygrey-900 text-2xl font-semibold [font-family:'Poppins',Helvetica]">

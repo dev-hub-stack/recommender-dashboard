@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { useDashboardMetrics } from "../../../../hooks/useDashboardMetrics";
-import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
+import { formatLargeNumber } from "../../../../utils/formatters";
 import { DateRangeDisplay } from "../../../../components/DateRangeDisplay";
 
 interface PerformanceMetricsSectionProps {
@@ -9,7 +9,7 @@ interface PerformanceMetricsSectionProps {
 }
 
 export const PerformanceMetricsSection = ({ timeFilter: propTimeFilter }: PerformanceMetricsSectionProps): JSX.Element => {
-  const [timeFilter, setTimeFilter] = useState<string>(propTimeFilter || '7days');
+  const [timeFilter] = useState<string>(propTimeFilter || '7days');
   const { metrics, loading, error, isEngineOnline } = useDashboardMetrics({
     timeFilter: timeFilter as any,
     autoRefresh: false,
@@ -53,7 +53,7 @@ export const PerformanceMetricsSection = ({ timeFilter: propTimeFilter }: Perfor
     {
       icon: "/vuesax-linear-chart.svg",
       label: "Total Revenue",
-      value: formatCurrency(Number(metrics?.totalRevenueAmount) || 0),
+      value: `Rs ${formatLargeNumber(Number(metrics?.totalRevenueAmount) || 0)}`,
       percentage: "Live",
       bgColor: "bg-foundation-greengreen-50",
       percentageColor: "text-foundation-greengreen-500",
@@ -83,7 +83,7 @@ export const PerformanceMetricsSection = ({ timeFilter: propTimeFilter }: Perfor
     {
       icon: "/vuesax-linear-dollar-circle.svg",
       label: "Avg Order Value",
-      value: formatCurrency(Number(metrics?.avgOrderValueAmount) || 0),
+      value: `Rs ${formatLargeNumber(Number(metrics?.avgOrderValueAmount) || 0)}`,
       percentage: "Live",
       bgColor: "bg-foundation-purplepurple-50",
       percentageColor: "text-foundation-purplepurple-500",

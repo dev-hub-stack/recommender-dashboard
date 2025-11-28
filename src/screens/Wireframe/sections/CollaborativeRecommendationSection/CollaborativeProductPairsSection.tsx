@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
+import { Badge } from '../../../../components/ui/badge';
 import { getCollaborativeProductPairs, CollaborativeProductPair, TimeFilter } from '../../../../services/api';
-import { formatCurrency, formatLargeNumber } from '../../../../utils/formatters';
+import { formatLargeNumber } from '../../../../utils/formatters';
+import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 
 interface CollaborativeProductPairsSectionProps {
   timeFilter?: TimeFilter;
@@ -13,16 +15,24 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
   const [pairs, setPairs] = useState<CollaborativeProductPair[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // ML Integration
+  const { mlStatus, useML } = useMLRecommendations('product_pairs');
+  const [usingML, setUsingML] = useState(false);
 
   useEffect(() => {
     fetchProductPairs();
-  }, [timeFilter]);
+  }, [timeFilter, useML, mlStatus]);
 
   const fetchProductPairs = async () => {
     setLoading(true);
     setError(null);
     
     try {
+      // Decide whether to use ML
+      const shouldUseML = useML && mlStatus?.is_trained;
+      setUsingML(!!shouldUseML);
+      
       const data = await getCollaborativeProductPairs(timeFilter, 10);
       setPairs(data);
     } catch (err) {
@@ -76,9 +86,20 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
   return (
     <Card className="bg-foundation-whitewhite-50 border-0 shadow-none rounded-xl h-[600px]">
       <CardContent className="p-5 flex flex-col h-full">
-        <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal] mb-2">
-          Collaborative Product Pairs
-        </h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal]">
+            Collaborative Product Pairs
+          </h3>
+          {usingML && mlStatus?.is_trained ? (
+            <Badge className="h-auto px-2 py-1 bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">
+              <span className="font-normal text-xs">🤖 ML-Powered</span>
+            </Badge>
+          ) : (
+            <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
+              <span className="font-normal text-green-800 text-xs">🔴 Live Data</span>
+            </Badge>
+          )}
+        </div>
         <p className="text-foundation-greygrey-600 text-sm [font-family:'Poppins',Helvetica] mb-4">
           Products frequently recommended together
         </p>
@@ -110,7 +131,7 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
                   <td className="py-3 px-2">
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-foundation-greygrey-800 [font-family:'Poppins',Helvetica] truncate" style={{ maxWidth: '150px' }}>
-                        {pair.product_a_name}
+                        {pair.product_a_name || 'Unknown Product'}
                       </span>
                       <span className="text-xs text-foundation-greygrey-500 [font-family:'Poppins',Helvetica] truncate">
                         ID: {pair.product_a_id}
@@ -120,7 +141,7 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
                   <td className="py-3 px-2">
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica] truncate" style={{ maxWidth: '150px' }}>
-                        {pair.product_b_name}
+                        {pair.product_b_name || 'Unknown Product'}
                       </span>
                       <span className="text-xs text-foundation-greygrey-500 [font-family:'Poppins',Helvetica] truncate">
                         ID: {pair.product_b_id}
@@ -129,12 +150,12 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
                   </td>
                   <td className="py-3 px-2 text-center">
                     <span className="inline-flex items-center justify-center px-2 py-1 bg-foundation-blueblue-50 rounded-full text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica]">
-                      {formatLargeNumber(pair.co_recommendation_count)}
+                      {formatLargeNumber(pair.co_recommendation_count || 0)}
                     </span>
                   </td>
                   <td className="py-3 px-2 text-right">
                     <span className="text-sm font-semibold text-foundation-greengreen-500 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(pair.combined_revenue)}
+                      Rs {formatLargeNumber(pair.combined_revenue || 0)}
                     </span>
                   </td>
                 </tr>

@@ -1,7 +1,7 @@
 // Date utility functions for the dashboard
 export const getDateRangeFromFilter = (timeFilter: string): { startDate: Date; endDate: Date; label: string } => {
   const now = new Date();
-  const endDate = new Date(now);
+  let endDate = new Date(now);
   let startDate = new Date(now);
   let label = '';
 

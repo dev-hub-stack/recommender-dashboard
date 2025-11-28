@@ -99,7 +99,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Revenue
+                  Cross-Sell Revenue
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                   {formatPKR(totalRevenue)}
@@ -211,10 +211,10 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
                       Avg Price
                     </th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Total Revenue
+                      Revenue
                     </th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Collaboration Score
+                      Cross-Sell Score
                     </th>
                   </tr>
                 </thead>

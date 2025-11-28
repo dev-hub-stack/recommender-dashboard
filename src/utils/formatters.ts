@@ -9,15 +9,22 @@
  * @returns Formatted string with appropriate suffix
  */
 export const formatLargeNumber = (num: number, decimals: number = 1): string => {
+  if (num === null || num === undefined || isNaN(num)) return '0';
   if (num === 0) return '0';
+  
+  // Handle numbers less than 1 (like scores 0.943)
+  if (Math.abs(num) < 1) {
+    return num.toFixed(decimals);
+  }
   
   const k = 1000;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ['', 'K', 'M', 'B', 'T'];
 
-  const i = Math.floor(Math.log(num) / Math.log(k));
+  const i = Math.floor(Math.log(Math.abs(num)) / Math.log(k));
+  const safeIndex = Math.min(i, sizes.length - 1);
 
-  return parseFloat((num / Math.pow(k, i)).toFixed(dm)) + sizes[i];
+  return parseFloat((num / Math.pow(k, safeIndex)).toFixed(dm)) + sizes[safeIndex];
 };
 
 /**

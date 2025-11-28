@@ -1,11 +1,12 @@
 // RFM Customer Segmentation Section Component
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../../components/ui/card';
 import { useEffect, useState } from 'react';
-import { getRFMSegments, getCustomersBySegment, RFMSegment, CustomerSegmentDetail, TimeFilter, formatPKR } from '../../../../services/api';
+import { getCustomersBySegment, RFMSegment, CustomerSegmentDetail, TimeFilter, formatPKR } from '../../../../services/api';
 import { Badge } from '../../../../components/ui/badge';
 import { ExplanationCard } from '../../../../components/ExplanationCard';
 import { DateRangeDisplay } from '../../../../components/DateRangeDisplay';
 import { RFMScoreTooltip } from '../../../../components/Tooltip';
+import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 
 interface RFMSegmentationSectionProps {
   timeFilter?: string;
@@ -19,6 +20,10 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
   const [loading, setLoading] = useState(true);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
 
+  // ML Only - no SQL fallback
+  const { mlStatus } = useMLRecommendations('rfm');
+  const [usingML, setUsingML] = useState(true);
+
   // Update internal timeFilter when prop changes
   useEffect(() => {
     if (propTimeFilter) {
@@ -30,8 +35,23 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getRFMSegments(timeFilter);
+        setUsingML(true); // Always use ML
+        
+        // Use ML endpoint directly - no SQL fallback
+        const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8001';
+        const response = await fetch(
+          `${ML_API_BASE_URL}/api/v1/ml/rfm-segments?time_filter=${timeFilter}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch ML RFM segments');
+        }
+        
+        const result = await response.json();
+        const data = result.segments || [];
+        
         setSegments(data);
+        console.log('✅ Using ML RFM Segments (/api/v1/ml/rfm-segments)');
       } catch (error) {
         console.error('Error fetching RFM segments:', error);
       } finally {
@@ -124,6 +144,15 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             RFM Customer Segmentation
             <RFMScoreTooltip />
+            {usingML && mlStatus?.is_trained ? (
+              <Badge className="bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">
+                🤖 ML-Powered
+              </Badge>
+            ) : (
+              <Badge className="bg-foundation-greygrey-500 text-white border-0">
+                📊 SQL-Based Analytics
+              </Badge>
+            )}
           </h2>
           <p className="text-gray-600 mt-1">Customer behavior analysis & targeting</p>
         </div>
@@ -158,7 +187,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
           <h2 className="text-2xl font-bold">👥 RFM Customer Segmentation</h2>
           <DateRangeDisplay 
             timeFilter={timeFilter} 
-            totalRecords={segments.reduce((sum, s) => sum + (s.total_customers || 0), 0)}
+            totalRecords={segments.reduce((sum, s) => sum + (s.customer_count || 0), 0)}
           />
         </div>
         <select

@@ -5,8 +5,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-// API Base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mastergroup-recommendation-e2b3eba97f57.herokuapp.com';
+// API Base URL - Using Vite environment variables
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8001';
 
 // Types
 export interface MLRecommendation {
@@ -179,16 +179,181 @@ export function useMLRecommendations(dashboardName: string, userId?: string) {
     }
   }, [fetchMLStatus]);
 
+  // Get popular products (ML-based fallback)
+  const getPopularProducts = useCallback(async (
+    timeFilter: string = '30days',
+    limit: number = 10
+  ): Promise<MLRecommendation[]> => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/ml/top-products?time_filter=${timeFilter}&limit=${limit}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch popular products');
+      }
+
+      const data = await response.json();
+      return data.products || [];
+    } catch (err) {
+      console.error('Error fetching popular products:', err);
+      return [];
+    }
+  }, []);
+
+  // Get customer similarity data
+  const getCustomerSimilarity = useCallback(async (
+    timeFilter: string = '30days',
+    limit: number = 10
+  ) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/ml/customer-similarity?time_filter=${timeFilter}&limit=${limit}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch customer similarity');
+      }
+
+      const data = await response.json();
+      return data.customers || [];
+    } catch (err) {
+      console.error('Error fetching customer similarity:', err);
+      return [];
+    }
+  }, []);
+
+  // Get product pairs (frequently bought together)
+  const getProductPairs = useCallback(async (
+    timeFilter: string = '30days',
+    limit: number = 10
+  ) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=${limit}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch product pairs');
+      }
+
+      const data = await response.json();
+      return data.pairs || [];
+    } catch (err) {
+      console.error('Error fetching product pairs:', err);
+      return [];
+    }
+  }, []);
+
+  // Get RFM segments
+  const getRFMSegments = useCallback(async (
+    timeFilter: string = 'all'
+  ) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/ml/rfm-segments?time_filter=${timeFilter}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch RFM segments');
+      }
+
+      const data = await response.json();
+      return data.segments || [];
+    } catch (err) {
+      console.error('Error fetching RFM segments:', err);
+      return [];
+    }
+  }, []);
+
+  // Get A/B test config with available algorithms
+  const getABTestConfig = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/ml/ab-test/config`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch A/B test config');
+      }
+      return response.json();
+    } catch (err) {
+      console.error('Error fetching A/B test config:', err);
+      return null;
+    }
+  }, []);
+
+  // Get recommendations for a specific algorithm (for A/B testing)
+  const getABTestRecommendations = useCallback(async (
+    userId: string,
+    algorithm: 'hybrid' | 'collaborative' | 'content_based' | 'matrix_factorization' | 'popularity' = 'hybrid',
+    nRecommendations: number = 10
+  ) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/ml/ab-test/recommendations/${encodeURIComponent(userId)}?algorithm=${algorithm}&n_recommendations=${nRecommendations}`
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch A/B test recommendations');
+      }
+      return response.json();
+    } catch (err) {
+      console.error('Error fetching A/B test recommendations:', err);
+      return { recommendations: [], algorithm, error: String(err) };
+    }
+  }, []);
+
+  // Get pre-computed data for instant responses
+  const getPrecomputedData = useCallback(async (
+    cacheKey: 'top_products' | 'product_pairs' | 'customer_segments'
+  ) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/ml/precomputed/${cacheKey}`);
+      if (!response.ok) {
+        throw new Error('Pre-computed data not available');
+      }
+      return response.json();
+    } catch (err) {
+      console.error('Error fetching precomputed data:', err);
+      return null;
+    }
+  }, []);
+
+  // Trigger pre-computation
+  const precomputeRecommendations = useCallback(async (timeFilter: string = '30days') => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/ml/precompute?time_filter=${timeFilter}`,
+        { method: 'POST' }
+      );
+      if (!response.ok) {
+        throw new Error('Failed to precompute recommendations');
+      }
+      return response.json();
+    } catch (err) {
+      console.error('Error precomputing:', err);
+      return { success: false, error: String(err) };
+    }
+  }, []);
+
   return {
     variant,
     mlStatus,
     loading,
     error,
     useML: variant?.algorithm === 'ml',
+    // Core functions
     getMLRecommendations,
     getCollaborativeProducts,
+    getPopularProducts,
+    getCustomerSimilarity,
+    getProductPairs,
+    getRFMSegments,
     trainMLModels,
-    fetchMLStatus
+    fetchMLStatus,
+    // A/B Testing
+    getABTestConfig,
+    getABTestRecommendations,
+    // Pre-computed data
+    getPrecomputedData,
+    precomputeRecommendations
   };
 }
 

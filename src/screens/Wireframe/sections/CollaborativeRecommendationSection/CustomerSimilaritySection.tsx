@@ -2,8 +2,12 @@ import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent } from "../../../../components/ui/card";
-import { getCustomerSimilarityData, CustomerSimilarityData, TimeFilter } from "../../../../services/api";
-import { formatLargeNumber, formatPercentage } from "../../../../utils/formatters";
+import { CustomerSimilarityData, TimeFilter } from "../../../../services/api";
+import { formatLargeNumber } from "../../../../utils/formatters";
+import { useMLRecommendations } from "../../../../hooks/useMLRecommendations";
+
+// API Configuration for ML endpoints
+const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8001';
 
 interface CustomerSimilaritySectionProps {
   timeFilter?: TimeFilter;
@@ -20,16 +24,34 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
   const [error, setError] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>('similar_customers_count');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  
+  // ML Only - no SQL fallback
+  const { mlStatus } = useMLRecommendations('customer_similarity');
+  const [usingML, setUsingML] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getCustomerSimilarityData(timeFilter, 10); // Changed to 10 to match Product Pairs
+        setUsingML(true); // Always use ML
+        
+        // Use ML endpoint directly - no SQL fallback
+        const response = await fetch(
+          `${ML_API_BASE_URL}/api/v1/ml/customer-similarity?time_filter=${timeFilter}&limit=10`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch ML customer similarity');
+        }
+        
+        const result = await response.json();
+        const data = result.customers || [];
+        
         setCustomers(data);
         setError(null);
+        console.log('✅ Using ML Customer Similarity (/api/v1/ml/customer-similarity)');
       } catch (err) {
-        setError('Failed to load customer similarity data');
+        setError('Failed to load customer similarity data. Please train ML models first.');
         console.error('Error fetching customer similarity data:', err);
       } finally {
         setLoading(false);
@@ -97,10 +119,20 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
     try {
       setLoading(true);
       setError(null);
-      const data = await getCustomerSimilarityData(timeFilter, 10); // Changed to 10 to match Product Pairs
-      setCustomers(data);
+      
+      // Use ML endpoint directly
+      const response = await fetch(
+        `${ML_API_BASE_URL}/api/v1/ml/customer-similarity?time_filter=${timeFilter}&limit=10`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch ML customer similarity');
+      }
+      
+      const result = await response.json();
+      setCustomers(result.customers || []);
     } catch (err) {
-      setError('Failed to load customer similarity data');
+      setError('Failed to load customer similarity data. Please train ML models first.');
       console.error('Error fetching customer similarity data:', err);
     } finally {
       setLoading(false);
@@ -134,6 +166,19 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
           <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base">
             Customer Similarity Insights
           </h2>
+          {usingML && mlStatus?.is_trained ? (
+            <Badge className="h-auto px-2 py-1 bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">
+              <span className="[font-family:'Poppins',Helvetica] font-normal text-xs">
+                🤖 ML-Powered
+              </span>
+            </Badge>
+          ) : (
+            <Badge className="h-auto px-2 py-1 bg-foundation-greygrey-500 text-white border-0">
+              <span className="[font-family:'Poppins',Helvetica] font-normal text-xs">
+                📊 SQL-Based Analytics
+              </span>
+            </Badge>
+          )}
         </div>
 
         <div className="w-full flex-1 overflow-hidden">
@@ -208,10 +253,10 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
                           customer.top_shared_products.slice(0, 2).map((product, idx) => (
                             <div key={idx} className="flex items-center gap-1">
                               <span className="text-xs text-foundation-greygrey-600 truncate">
-                                {product.product_name.substring(0, 20)}
+                                {(product.product_name || 'Unknown').substring(0, 20)}
                               </span>
                               <span className="text-xs text-foundation-blueblue-600 font-medium flex-shrink-0">
-                                ({product.shared_count})
+                                ({product.shared_count || 0})
                               </span>
                             </div>
                           ))

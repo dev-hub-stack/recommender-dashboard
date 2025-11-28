@@ -1,13 +1,15 @@
-import { ArrowUpIcon, ChevronDownIcon } from "lucide-react";
+import { ArrowUpIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent } from "../../../../components/ui/card";
-import { getPopularProducts, getRevenueTrend, Product } from "../../../../services/api";
+import { getRevenueTrend, Product } from "../../../../services/api";
 import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
+import { useMLRecommendations } from "../../../../hooks/useMLRecommendations";
+
+// API Configuration for ML endpoints
+const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8001';
 
 // Live data from recommendation engine - no static data needed
-
-const yAxisLabels = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
 
 const chartBars = [
   { day: "Mon", height: "h-[87px]" },
@@ -30,22 +32,38 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
   const [localTimeFilter, setLocalTimeFilter] = useState<string>(timeFilter);
   const [revenueTrend, setRevenueTrend] = useState<any>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>('daily');
+  
+  // ML Integration
+  const { mlStatus } = useMLRecommendations('top_products');
+  const [usingML, setUsingML] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch both products and revenue trend data
-        const [popularProducts, trendData] = await Promise.all([
-          getPopularProducts(5, localTimeFilter || timeFilter),
-          getRevenueTrend(localTimeFilter || timeFilter, trendPeriod)
-        ]);
+        setUsingML(true); // Always use ML
+        
+        // Use ML endpoint directly - no SQL fallback
+        const mlResponse = await fetch(
+          `${ML_API_BASE_URL}/api/v1/ml/top-products?time_filter=${localTimeFilter || timeFilter}&limit=5`
+        );
+        
+        if (!mlResponse.ok) {
+          throw new Error('Failed to fetch ML top products');
+        }
+        
+        const mlData = await mlResponse.json();
+        const popularProducts = mlData.products || [];
+        console.log('✅ Using ML-powered top products');
+        
+        // Fetch revenue trend data
+        const trendData = await getRevenueTrend(localTimeFilter || timeFilter, trendPeriod);
         
         setProducts(popularProducts);
         setRevenueTrend(trendData);
         setError(null);
       } catch (err) {
-        setError('Failed to load data');
+        setError('Failed to load data. Please train ML models first.');
         console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
@@ -123,18 +141,26 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
               <option value="1year">Last 1 Year</option>
               <option value="all">All Time</option>
             </select>
-            <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
-              <span className="font-normal text-green-800 text-xs">
-                🔴 Live Data
-              </span>
-            </Badge>
+            {usingML && mlStatus?.is_trained ? (
+              <Badge className="h-auto px-2 py-1 bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">
+                <span className="font-normal text-xs">
+                  🤖 ML-Powered
+                </span>
+              </Badge>
+            ) : (
+              <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
+                <span className="font-normal text-green-800 text-xs">
+                  🔴 Live Data
+                </span>
+              </Badge>
+            )}
           </div>
 
           <div className="flex w-full">
             <div className="flex flex-col flex-1">
               <div className="h-[41px] flex items-center gap-2.5 p-2.5 w-full bg-foundation-whitewhite-100">
-                <span className="font-normal text-foundation-greygrey-400 text-sm">
-                  Product ID
+<span className="font-normal text-foundation-greygrey-400 text-sm cursor-help" title="Product name and unique identifier">
+                  Product ℹ️
                 </span>
               </div>
 
@@ -164,8 +190,8 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
 
             <div className="flex flex-col w-[142px]">
               <div className="h-[41px] flex items-center gap-2.5 p-2.5 w-full bg-foundation-whitewhite-100">
-                <span className="font-normal text-foundation-greygrey-400 text-sm">
-                  Popularity Score
+<span className="font-normal text-foundation-greygrey-400 text-sm cursor-help" title="How often this product is purchased - higher score means more popular">
+                  Popularity ℹ️
                 </span>
               </div>
 
@@ -190,8 +216,8 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
 
             <div className="flex flex-col w-[142px]">
               <div className="h-[41px] flex items-center gap-2.5 p-2.5 w-full bg-foundation-whitewhite-100">
-                <span className="font-normal text-foundation-greygrey-400 text-sm">
-                  Category
+<span className="font-normal text-foundation-greygrey-400 text-sm cursor-help" title="Product brand/category and average selling price">
+                  Brand & Price ℹ️
                 </span>
               </div>
 
@@ -209,7 +235,7 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
                       {product.category || 'General'}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {formatCurrency(product.avg_price || product.price || product.total_revenue || 0)}
+                      Rs {formatLargeNumber(product.avg_price || product.price || product.total_revenue || 0)}
                     </span>
                   </div>
                 </div>
