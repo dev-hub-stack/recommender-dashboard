@@ -689,7 +689,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
                         <div>
                           <p className="font-medium">{rec.product_name}</p>
                           <p className="text-sm text-gray-500">
-                            Algorithm: {rec.algorithm || 'aws_personalize'}
+                            Product ID: {rec.product_id}
                           </p>
                         </div>
                       </div>
@@ -775,7 +775,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {provinces.slice(0, 8).map((p, index) => {
+                  {provinces.slice(0, 8).map((p) => {
                     const maxCount = provinces[0]?.customer_count || 1;
                     const percentage = (p.customer_count / maxCount) * 100;
                     const isSmallBar = percentage < 15;
