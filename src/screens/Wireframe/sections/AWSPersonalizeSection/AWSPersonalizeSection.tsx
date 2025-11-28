@@ -188,9 +188,44 @@ export const AWSPersonalizeSection: React.FC = () => {
           users: data.users || [],
           aggregated: data.aggregated_recommendations || []
         });
+        // Also update trending with aggregated data
+        if (data.aggregated_recommendations?.length > 0) {
+          setTrendingProducts(data.aggregated_recommendations.map((r: AggregatedRecommendation) => ({
+            product_id: r.product_id,
+            product_name: r.product_name,
+            purchase_count: r.recommended_to_users * 10, // Estimate
+            unique_customers: r.recommended_to_users,
+            total_revenue: 0
+          })));
+        }
       }
     } catch (err) {
       console.error('Failed to fetch location recommendations:', err);
+    } finally {
+      setLoadingRecs(false);
+    }
+  }, []);
+
+  // Fetch Comparison Data for multiple provinces
+  const fetchComparisonData = useCallback(async (provincesToCompare: string[]) => {
+    if (provincesToCompare.length === 0) return;
+    
+    setLoadingRecs(true);
+    const newComparisonData: Record<string, AggregatedRecommendation[]> = {};
+    
+    try {
+      for (const province of provincesToCompare) {
+        const response = await fetch(
+          `${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(province)}&limit_users=5&num_results=10`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          newComparisonData[province] = data.aggregated_recommendations || [];
+        }
+      }
+      setComparisonData(newComparisonData);
+    } catch (err) {
+      console.error('Failed to fetch comparison data:', err);
     } finally {
       setLoadingRecs(false);
     }
@@ -241,6 +276,37 @@ export const AWSPersonalizeSection: React.FC = () => {
       setUserRecommendations([]);
     }
   }, [selectedUser, fetchUserRecommendations]);
+
+  // When compare provinces change
+  useEffect(() => {
+    if (compareProvinces.length > 0) {
+      fetchComparisonData(compareProvinces);
+    }
+  }, [compareProvinces, fetchComparisonData]);
+
+  // Fetch trending data on initial load (use Punjab as default)
+  useEffect(() => {
+    if (provinces.length > 0 && trendingProducts.length === 0) {
+      // Fetch trending from the largest province
+      const largestProvince = provinces[0]?.province;
+      if (largestProvince) {
+        fetch(`${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(largestProvince)}&limit_users=10&num_results=10`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.aggregated_recommendations?.length > 0) {
+              setTrendingProducts(data.aggregated_recommendations.map((r: AggregatedRecommendation) => ({
+                product_id: r.product_id,
+                product_name: r.product_name,
+                purchase_count: r.recommended_to_users * 10,
+                unique_customers: r.recommended_to_users,
+                total_revenue: 0
+              })));
+            }
+          })
+          .catch(err => console.error('Failed to fetch trending:', err));
+      }
+    }
+  }, [provinces, trendingProducts.length]);
 
   if (loading) {
     return (
