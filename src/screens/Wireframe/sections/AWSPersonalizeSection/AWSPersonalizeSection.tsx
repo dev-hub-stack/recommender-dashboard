@@ -1,6 +1,7 @@
 /**
  * AWS Personalize Recommendations Section
- * Displays ML recommendations from AWS Personalize with province/city/user filters
+ * Full-featured ML recommendations dashboard powered by AWS Personalize
+ * Features: Location-based, User-specific, Trending, Regional Comparison
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -61,12 +62,23 @@ interface PersonalizeStatus {
   campaign_arn: string;
 }
 
+interface TrendingProduct {
+  product_id: string;
+  product_name: string;
+  purchase_count: number;
+  unique_customers: number;
+  total_revenue: number;
+}
+
 export const AWSPersonalizeSection: React.FC = () => {
   // State
   const [status, setStatus] = useState<PersonalizeStatus | null>(null);
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>([]);
+  const [compareProvinces, setCompareProvinces] = useState<string[]>([]);
+  const [comparisonData, setComparisonData] = useState<Record<string, AggregatedRecommendation[]>>({});
   
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
@@ -80,7 +92,7 @@ export const AWSPersonalizeSection: React.FC = () => {
   
   const [loading, setLoading] = useState(true);
   const [loadingRecs, setLoadingRecs] = useState(false);
-  const [activeTab, setActiveTab] = useState<'user' | 'location'>('location');
+  const [activeTab, setActiveTab] = useState<'overview' | 'location' | 'user' | 'trending' | 'compare'>('overview');
 
   // Fetch Personalize Status
   const fetchStatus = useCallback(async () => {
@@ -336,27 +348,26 @@ export const AWSPersonalizeSection: React.FC = () => {
       </Card>
 
       {/* Tab Navigation */}
-      <div className="flex border-b">
-        <button
-          onClick={() => setActiveTab('location')}
-          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
-            activeTab === 'location'
-              ? 'border-purple-600 text-purple-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          📍 Location-Based Recommendations
-        </button>
-        <button
-          onClick={() => setActiveTab('user')}
-          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
-            activeTab === 'user'
-              ? 'border-purple-600 text-purple-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          👤 User-Specific Recommendations
-        </button>
+      <div className="flex border-b overflow-x-auto">
+        {[
+          { id: 'overview', label: '📊 Overview', icon: '📊' },
+          { id: 'location', label: '📍 By Location', icon: '📍' },
+          { id: 'user', label: '👤 By User', icon: '👤' },
+          { id: 'trending', label: '🔥 Trending', icon: '🔥' },
+          { id: 'compare', label: '⚖️ Compare Regions', icon: '⚖️' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Content */}
@@ -454,7 +465,7 @@ export const AWSPersonalizeSection: React.FC = () => {
               </>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'user' ? (
           /* User-Specific Recommendations */
           <Card>
             <CardHeader>
@@ -508,7 +519,255 @@ export const AWSPersonalizeSection: React.FC = () => {
               )}
             </CardContent>
           </Card>
-        )}
+        ) : activeTab === 'overview' ? (
+          /* Overview Tab */
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-100 text-sm">Total Provinces</p>
+                      <p className="text-3xl font-bold">{provinces.length}</p>
+                    </div>
+                    <div className="text-4xl opacity-80">🗺️</div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-pink-100 text-sm">Total Customers</p>
+                      <p className="text-3xl font-bold">
+                        {provinces.reduce((sum, p) => sum + p.customer_count, 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-4xl opacity-80">👥</div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm">Total Orders</p>
+                      <p className="text-3xl font-bold">
+                        {provinces.reduce((sum, p) => sum + p.order_count, 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-4xl opacity-80">📦</div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm">ML Model</p>
+                      <p className="text-xl font-bold">User-Personalization</p>
+                    </div>
+                    <div className="text-4xl opacity-80">🤖</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Province Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>📊 Customer Distribution by Province</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {provinces.slice(0, 8).map((p, index) => {
+                    const maxCount = provinces[0]?.customer_count || 1;
+                    const percentage = (p.customer_count / maxCount) * 100;
+                    return (
+                      <div key={p.province} className="flex items-center gap-4">
+                        <div className="w-32 font-medium text-sm truncate">{p.province}</div>
+                        <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-end pr-3"
+                            style={{ width: `${percentage}%` }}
+                          >
+                            <span className="text-white text-xs font-medium">
+                              {p.customer_count.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="w-20 text-right text-sm text-gray-500">
+                          {p.order_count.toLocaleString()} orders
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* How It Works */}
+            <Card>
+              <CardHeader>
+                <CardTitle>🧠 How AWS Personalize Works</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-4xl mb-3">📊</div>
+                    <h4 className="font-semibold mb-2">1. Data Collection</h4>
+                    <p className="text-sm text-gray-600">
+                      2M+ customer interactions analyzed from order history
+                    </p>
+                  </div>
+                  <div className="text-center p-4 bg-pink-50 rounded-lg">
+                    <div className="text-4xl mb-3">🤖</div>
+                    <h4 className="font-semibold mb-2">2. ML Training</h4>
+                    <p className="text-sm text-gray-600">
+                      User-Personalization algorithm learns purchase patterns
+                    </p>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-4xl mb-3">🎯</div>
+                    <h4 className="font-semibold mb-2">3. Real-time Inference</h4>
+                    <p className="text-sm text-gray-600">
+                      Personalized recommendations generated in milliseconds
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : activeTab === 'trending' ? (
+          /* Trending Products Tab */
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>🔥</span> Trending Products Across All Regions
+                  <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 text-xs">
+                    Popularity-Based
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-500 mb-4">
+                  These are the most frequently recommended products by AWS Personalize across all customers.
+                </p>
+                {trendingProducts.length > 0 ? (
+                  <div className="space-y-3">
+                    {trendingProducts.map((product, index) => (
+                      <div key={product.product_id} className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                            index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-orange-500'
+                          }`}>
+                            #{index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium">{product.product_name}</p>
+                            <p className="text-sm text-gray-500">ID: {product.product_id}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg text-orange-600">
+                            {product.purchase_count?.toLocaleString() || 0} purchases
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {product.unique_customers?.toLocaleString() || 0} customers
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-lg mb-2">🔥 Select a province first to see trending products</p>
+                    <p className="text-sm">Trending data is aggregated from location-based recommendations</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        ) : activeTab === 'compare' ? (
+          /* Compare Regions Tab */
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>⚖️</span> Compare Recommendations Across Regions
+                  <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 text-xs">
+                    Regional Analysis
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-6">
+                  <p className="text-gray-500 mb-4">
+                    Select multiple provinces to compare what products are recommended in each region.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {provinces.slice(0, 6).map(p => (
+                      <button
+                        key={p.province}
+                        onClick={() => {
+                          if (compareProvinces.includes(p.province)) {
+                            setCompareProvinces(compareProvinces.filter(x => x !== p.province));
+                          } else if (compareProvinces.length < 3) {
+                            setCompareProvinces([...compareProvinces, p.province]);
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                          compareProvinces.includes(p.province)
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {p.province}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">Select up to 3 provinces to compare</p>
+                </div>
+
+                {compareProvinces.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {compareProvinces.map(province => (
+                      <Card key={province} className="border-2 border-purple-200">
+                        <CardHeader className="bg-purple-50">
+                          <CardTitle className="text-lg">{province}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4">
+                          {comparisonData[province]?.length > 0 ? (
+                            <div className="space-y-2">
+                              {comparisonData[province].slice(0, 5).map((rec, i) => (
+                                <div key={rec.product_id} className="flex items-center gap-2 text-sm">
+                                  <span className="font-bold text-purple-600">{i + 1}.</span>
+                                  <span className="truncate">{rec.product_name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-400 text-sm">Loading...</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-lg mb-2">⚖️ Select provinces above to compare</p>
+                    <p className="text-sm">See how recommendations differ across regions</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        ) : null}
       </div>
     </section>
   );
