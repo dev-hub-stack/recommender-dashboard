@@ -26,18 +26,6 @@ const growthToolsItems = [
     icon: "/vuesax-linear-maximize.svg",
     label: "Cross-Selling",
   },
-  {
-    icon: "/vuesax-linear-note-2.svg",
-    label: "Management Rec.",
-  },
-  {
-    icon: "/vuesax-linear-element-equal.svg",
-    label: "A/B Testing",
-  },
-  {
-    icon: "/vuesax-linear-messenger.svg",
-    label: "AI Chatbot",
-  },
 ];
 
 const phase1AnalyticsItems = [
