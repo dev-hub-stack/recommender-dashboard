@@ -47,8 +47,8 @@ const getDateRangeFromFilter = (filter: string): { start: Date; end: Date; label
       label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
       break;
     case 'all':
-      start = new Date(2020, 0, 1);
-      label = 'All Time';
+      start = new Date(2021, 7, 17); // Actual data start: Aug 17, 2021
+      label = 'All Time (Aug 2021 - Present)';
       break;
     default:
       // Custom date range format: "2024-01-01:2024-12-31"
@@ -458,10 +458,24 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
         </div>
       </div>
 
+      {/* ML Model Info Banner */}
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">ℹ️</span>
+          <div>
+            <p className="font-medium text-purple-900">ML Model Trained on All Historical Data</p>
+            <p className="text-sm text-purple-700 mt-1">
+              The Collaborative Filtering model is trained on <strong>2M+ interactions</strong> from <strong>Aug 2021 - Nov 2025</strong>. 
+              The date filter above affects the <strong>statistics display</strong>, but recommendations are based on the full trained model.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">🔍 Filter Recommendations</CardTitle>
+          <CardTitle className="text-lg">🔍 Filter by Location</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
