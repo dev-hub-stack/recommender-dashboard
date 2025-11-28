@@ -12,6 +12,7 @@ import { CrossSellingSection } from "./sections/CrossSellingSection";
 import CollaborativeRecommendationDashboard from "./sections/CollaborativeRecommendationSection";
 import { GeographicIntelligenceSection } from "./sections/GeographicIntelligenceSection";
 import { RFMSegmentationSection } from "./sections/RFMSegmentationSection";
+import { AWSPersonalizeSection } from "./sections/AWSPersonalizeSection";
 
 export const Wireframe = (): JSX.Element => {
   const [timeFilter, setTimeFilter] = useState<string>('7days'); // Changed default to 7 days
@@ -151,6 +152,10 @@ export const Wireframe = (): JSX.Element => {
         
         {activeView === 'RFM Segmentation' && (
           <RFMSegmentationSection timeFilter={timeFilter} />
+        )}
+        
+        {activeView === 'AWS Personalize' && (
+          <AWSPersonalizeSection />
         )}
       </main>
 

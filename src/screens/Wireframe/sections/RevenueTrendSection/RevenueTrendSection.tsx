@@ -61,6 +61,10 @@ const phase1AnalyticsItems = [
     icon: "/vuesax-linear-profile-2user.svg",
     label: "RFM Segmentation",
   },
+  {
+    icon: "/vuesax-linear-cloud.svg",
+    label: "AWS Personalize",
+  },
 ];
 
 export const RevenueTrendSection: React.FC<RevenueTrendSectionProps> = ({ 
