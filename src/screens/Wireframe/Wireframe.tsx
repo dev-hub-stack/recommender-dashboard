@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "../../components/ui/button";
 import { DashboardHeaderSection } from "./sections/DashboardHeaderSection";
 import { PerformanceMetricsSection } from "./sections/PerformanceMetricsSection";
 import { RecentActivitySection } from "./sections/RecentActivitySection";
 import { RevenueTrendSection } from "./sections/RevenueTrendSection";
 import { TopProductsSection } from "./sections/TopProductsSection";
-import { CustomerProfilingSection } from "./sections/CustomerProfilingSection";
 import { CustomerDetailedProfiling } from "./sections/CustomerProfilingSection/CustomerDetailedProfiling";
 import { POSvsOESection } from "./sections/POSvsOESection";
 import { CrossSellingSection } from "./sections/CrossSellingSection";
@@ -113,29 +112,8 @@ export const Wireframe = (): JSX.Element => {
           </>
         )}
         
-        {activeView === 'Analytics' && (
-          <>
-            <PerformanceMetricsSection timeFilter={timeFilter} />
-            <POSvsOESection timeFilter={timeFilter} />
-          </>
-        )}
-        
         {activeView === 'Customer Profiling' && (
           <CustomerDetailedProfiling timeFilter={timeFilter} />
-        )}
-        
-        {activeView === 'Conversion Rate' && (
-          <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Conversion Rate Analytics</h2>
-            <p className="text-gray-600">Coming Soon - Advanced conversion tracking and analytics</p>
-          </div>
-        )}
-        
-        {activeView === 'User Flow' && (
-          <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">User Flow Analysis</h2>
-            <p className="text-gray-600">Coming Soon - User journey and flow visualization</p>
-          </div>
         )}
         
         {activeView === 'Cross-Selling' && (

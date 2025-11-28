@@ -12,18 +12,6 @@ const insightsAnalysisItems = [
     label: "Dashboard",
   },
   {
-    icon: "/vuesax-linear-chart.svg",
-    label: "Analytics",
-  },
-  {
-    icon: "/vuesax-linear-chart-2.svg",
-    label: "Conversion Rate",
-  },
-  {
-    icon: "/vuesax-linear-user-search.svg",
-    label: "User Flow",
-  },
-  {
     icon: "/vuesax-linear-user-edit.svg",
     label: "Customer Profiling",
   },
