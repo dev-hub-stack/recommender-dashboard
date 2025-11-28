@@ -778,18 +778,29 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
                   {provinces.slice(0, 8).map((p, index) => {
                     const maxCount = provinces[0]?.customer_count || 1;
                     const percentage = (p.customer_count / maxCount) * 100;
+                    const isSmallBar = percentage < 15;
+                    
                     return (
                       <div key={p.province} className="flex items-center gap-4">
                         <div className="w-32 font-medium text-sm truncate">{p.province}</div>
-                        <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-end pr-3"
-                            style={{ width: `${percentage}%` }}
-                          >
-                            <span className="text-white text-xs font-medium">
+                        <div className="flex-1 flex items-center gap-2">
+                          <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden relative">
+                            <div 
+                              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-end pr-3"
+                              style={{ width: `${percentage}%`, minWidth: isSmallBar ? '4px' : 'auto' }}
+                            >
+                              {!isSmallBar && (
+                                <span className="text-white text-xs font-medium">
+                                  {p.customer_count.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {isSmallBar && (
+                            <span className="text-gray-600 text-xs font-medium w-16">
                               {p.customer_count.toLocaleString()}
                             </span>
-                          </div>
+                          )}
                         </div>
                         <div className="w-20 text-right text-sm text-gray-500">
                           {p.order_count.toLocaleString()} orders
