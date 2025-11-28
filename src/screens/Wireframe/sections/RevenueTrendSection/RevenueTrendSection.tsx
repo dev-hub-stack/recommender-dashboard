@@ -30,15 +30,15 @@ const growthToolsItems = [
 
 const phase1AnalyticsItems = [
   {
-    icon: "/vuesax-linear-global.svg",
+    icon: "/vuesax-linear-maximize.svg",
     label: "Geographic Intelligence",
   },
   {
-    icon: "/vuesax-linear-profile-2user.svg",
+    icon: "/vuesax-linear-graph.svg",
     label: "RFM Segmentation",
   },
   {
-    icon: "/vuesax-linear-cloud.svg",
+    icon: "/vuesax-linear-element-equal.svg",
     label: "ML Recommendations",
   },
 ];
