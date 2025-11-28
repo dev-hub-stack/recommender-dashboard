@@ -70,7 +70,11 @@ interface TrendingProduct {
   total_revenue: number;
 }
 
-export const AWSPersonalizeSection: React.FC = () => {
+interface AWSPersonalizeSectionProps {
+  timeFilter?: string;
+}
+
+export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ timeFilter = '30days' }) => {
   // State
   const [status, setStatus] = useState<PersonalizeStatus | null>(null);
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -342,8 +346,11 @@ export const AWSPersonalizeSection: React.FC = () => {
             </Badge>
           )}
         </div>
-        <div className="text-sm text-gray-500">
-          Region: {status?.region || 'N/A'}
+        <div className="flex items-center gap-4 text-sm text-gray-500">
+          <span>Region: {status?.region || 'N/A'}</span>
+          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
+            📅 Time Filter: {timeFilter}
+          </span>
         </div>
       </div>
 
