@@ -19,11 +19,8 @@ export const DashboardHeaderSection = (): JSX.Element => {
           MasterGroup Recommendation Analytics Dashboard
         </h1>
 
-        <p className="font-normal text-foundation-greygrey-400 text-sm">
-          Welcome back! Here's what's happening with your recommendation engine - 100% Live Data.
-        </p>
       </div>
-      
+
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 px-3 py-2 bg-green-100 rounded-full">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
