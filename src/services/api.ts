@@ -720,7 +720,8 @@ export async function getCustomersBySegment(
   }
   
   const data = await response.json();
-  const customers = data.customers || [];
+  // Backend returns array directly, not {customers: [...]}
+  const customers = Array.isArray(data) ? data : (data.customers || []);
   
   // Transform and validate data
   return customers.map((c: any) => ({
@@ -731,11 +732,11 @@ export async function getCustomersBySegment(
     total_orders: safeNumber(c.total_orders, 0),
     total_spent: safeNumber(c.total_spent, 0),
     last_order_date: c.last_order_date || '',
-    days_since_last_order: safeNumber(c.recency_days, 0),
+    days_since_last_order: safeNumber(c.days_since_last_order, 0),
     rfm_score: {
-      recency: safeNumber(c.recency_score, 0),
-      frequency: safeNumber(c.frequency_score, 0),
-      monetary: safeNumber(c.monetary_score, 0),
+      recency: safeNumber(c.rfm_score?.recency, 0),
+      frequency: safeNumber(c.rfm_score?.frequency, 0),
+      monetary: safeNumber(c.rfm_score?.monetary, 0),
     },
   }));
 }
