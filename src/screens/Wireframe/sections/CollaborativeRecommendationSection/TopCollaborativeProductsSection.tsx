@@ -242,18 +242,20 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
             </div>
 
             <div className="flex flex-col w-[140px] flex-shrink-0">
-              <button
-                onClick={() => handleSort('recommendation_count')}
-                className="h-[41px] flex items-center gap-1 p-2.5 w-full bg-foundation-whitewhite-100 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer touch-manipulation"
-              >
-                <span className="font-normal text-foundation-greygrey-400 text-sm group relative">
-                  Recs ⓘ
-                  <span className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50">
-                    Number of customers who bought this with other products
+              <div className="relative group">
+                <button
+                  onClick={() => handleSort('recommendation_count')}
+                  className="h-[41px] flex items-center gap-1 p-2.5 w-full bg-foundation-whitewhite-100 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer touch-manipulation"
+                >
+                  <span className="font-normal text-foundation-greygrey-400 text-sm">
+                    Recs ⓘ
                   </span>
-                </span>
-                <SortIcon field="recommendation_count" />
-              </button>
+                  <SortIcon field="recommendation_count" />
+                </button>
+                <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
+                  Number of customers who bought this with other products
+                </div>
+              </div>
 
               {sortedProducts.map((product, index) => (
                 <div
@@ -272,18 +274,20 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
             </div>
 
             <div className="flex flex-col w-[130px] flex-shrink-0">
-              <button
-                onClick={() => handleSort('avg_similarity_score')}
-                className="h-[41px] flex items-center gap-1 p-2.5 w-full bg-foundation-whitewhite-100 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer touch-manipulation"
-              >
-                <span className="font-normal text-foundation-greygrey-400 text-sm group relative">
-                  Score ⓘ
-                  <span className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50">
-                    Similarity score (0-1). Higher = stronger purchase pattern
+              <div className="relative group">
+                <button
+                  onClick={() => handleSort('avg_similarity_score')}
+                  className="h-[41px] flex items-center gap-1 p-2.5 w-full bg-foundation-whitewhite-100 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer touch-manipulation"
+                >
+                  <span className="font-normal text-foundation-greygrey-400 text-sm">
+                    Score ⓘ
                   </span>
-                </span>
-                <SortIcon field="avg_similarity_score" />
-              </button>
+                  <SortIcon field="avg_similarity_score" />
+                </button>
+                <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
+                  Similarity score (0-1). Higher = stronger purchase pattern
+                </div>
+              </div>
 
               {sortedProducts.map((product, index) => (
                 <div
