@@ -28,9 +28,10 @@ interface TooltipProps {
   content: string | React.ReactNode;
   children?: React.ReactNode;
   className?: string;
+  position?: 'top' | 'bottom';
 }
 
-export const Tooltip = ({ content, children, className = "" }: TooltipProps) => {
+export const Tooltip = ({ content, children, className = "", position = 'top' }: TooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
 
@@ -38,7 +39,7 @@ export const Tooltip = ({ content, children, className = "" }: TooltipProps) => 
     const rect = e.currentTarget.getBoundingClientRect();
     setCoords({ 
       x: rect.left + rect.width / 2, 
-      y: rect.top 
+      y: position === 'top' ? rect.top : rect.bottom 
     });
     setIsVisible(true);
   };
@@ -55,19 +56,29 @@ export const Tooltip = ({ content, children, className = "" }: TooltipProps) => 
       
       {isVisible && (
         <div 
-          className={`fixed z-[9999] transform -translate-x-1/2 -translate-y-full mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-64 ${className}`}
+          className={`fixed z-[9999] transform -translate-x-1/2 ${
+            position === 'top' ? '-translate-y-full mb-2' : 'mt-2'
+          } px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-64 ${className}`}
           style={{ 
             left: coords.x, 
-            top: coords.y - 8 // 8px offset
+            top: coords.y + (position === 'top' ? -8 : 8)
           }}
         >
+          {position === 'bottom' && (
+             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-px">
+               <div className="border-4 border-transparent border-b-gray-900"></div>
+             </div>
+          )}
+          
           <div className="relative">
             {content}
           </div>
-          {/* Arrow */}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px">
-            <div className="border-4 border-transparent border-t-gray-900"></div>
-          </div>
+          
+          {position === 'top' && (
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px">
+              <div className="border-4 border-transparent border-t-gray-900"></div>
+            </div>
+          )}
         </div>
       )}
     </>
@@ -166,6 +177,7 @@ export const CrossSellScoreTooltip = () => {
 export const RFMColumnTooltip = () => {
   return (
     <Tooltip
+      position="bottom"
       content={
         <div className="space-y-3 text-left">
           <p className="font-semibold text-sm border-b border-gray-600 pb-1">RFM Score Explained (1-5 scale)</p>

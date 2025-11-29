@@ -367,7 +367,7 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {metrics.topSpendingCustomers.map((customer, index) => {
+                {metrics.topSpendingCustomers.map((customer) => {
                   // Map segment to status
                   const getStatus = (segment: string) => {
                     if (segment.includes('Champions')) return { label: 'VIP', class: 'bg-yellow-100 text-yellow-800' };
