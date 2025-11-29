@@ -11,7 +11,7 @@ import {
   Cpu, MapPin, User, GitCompare, Search, 
   Rocket, Info, Brain, BarChart3, Flame, Target, Award
 } from 'lucide-react';
-import { Tooltip, InfoTooltip } from '../../../../components/Tooltip';
+import { InfoTooltip } from '../../../../components/Tooltip';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://44.201.11.243:8001/api/v1';
