@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { getCollaborativeProductPairs, CollaborativeProductPair, TimeFilter } from '../../../../services/api';
 import { formatCurrency, formatLargeNumber } from '../../../../utils/formatters';
+import { ExportButton } from '../../../../components/ExportButton';
+import { exportProductPairsDetail } from '../../../../services/exportApi';
 
 interface CollaborativeProductPairsSectionProps {
   timeFilter?: TimeFilter;
@@ -13,6 +15,7 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
   const [pairs, setPairs] = useState<CollaborativeProductPair[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchProductPairs();
@@ -73,12 +76,33 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
     );
   }
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      await exportProductPairsDetail({ timeFilter, limit: 1000 });
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <Card className="bg-foundation-whitewhite-50 border-0 shadow-none rounded-xl h-[600px]">
       <CardContent className="p-5 flex flex-col h-full">
-        <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal] mb-2">
-          Collaborative Product Pairs
-        </h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal]">
+            Collaborative Product Pairs
+          </h3>
+          <ExportButton 
+            onExport={handleExport}
+            loading={exporting}
+            disabled={pairs.length === 0}
+            size="sm"
+            label="Export Report"
+          />
+        </div>
         <p className="text-foundation-greygrey-600 text-sm [font-family:'Poppins',Helvetica] mb-4">
           Products frequently recommended together
         </p>

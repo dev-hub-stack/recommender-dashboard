@@ -4,6 +4,8 @@ import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { getCustomerSimilarityData, CustomerSimilarityData, TimeFilter } from "../../../../services/api";
 import { formatLargeNumber, formatPercentage } from "../../../../utils/formatters";
+import { ExportButton } from "../../../../components/ExportButton";
+import { exportCustomerPairsDetail } from "../../../../services/exportApi";
 
 interface CustomerSimilaritySectionProps {
   timeFilter?: TimeFilter;
@@ -18,6 +20,7 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
   const [customers, setCustomers] = useState<CustomerSimilarityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [sortField, setSortField] = useState<SortField>('similar_customers_count');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -127,6 +130,18 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
     );
   }
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      await exportCustomerPairsDetail({ timeFilter, limit: 1000 });
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <Card className="flex flex-col items-start gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl w-full h-[600px]">
       <CardContent className="p-0 w-full flex flex-col h-full">
@@ -134,6 +149,13 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
           <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base">
             Customer Similarity Insights
           </h2>
+          <ExportButton 
+            onExport={handleExport}
+            loading={exporting}
+            disabled={customers.length === 0}
+            size="sm"
+            label="Export Report"
+          />
         </div>
 
         <div className="w-full flex-1 overflow-hidden">

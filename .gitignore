@@ -38,3 +38,4 @@ Thumbs.db
 # Build files
 build/
 *.tsbuildinfoCREDENTIALS.md
+database_dumps/

@@ -4,6 +4,8 @@ import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { getTopCollaborativeProducts, CollaborativeProduct, TimeFilter } from "../../../../services/api";
 import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
+import { ExportButton } from "../../../../components/ExportButton";
+import { exportProductsDetail } from "../../../../services/exportApi";
 
 interface TopCollaborativeProductsSectionProps {
   timeFilter?: TimeFilter;
@@ -18,6 +20,7 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
   const [products, setProducts] = useState<CollaborativeProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [sortField, setSortField] = useState<SortField>('recommendation_count');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -122,6 +125,18 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
     );
   }
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      await exportProductsDetail({ timeFilter, limit: 1000, sortBy: 'recommendations' });
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <Card className="flex flex-col items-start gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl w-full">
       <CardContent className="p-0 w-full space-y-4">
@@ -129,6 +144,13 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
           <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base">
             Top Collaborative Products
           </h2>
+          <ExportButton 
+            onExport={handleExport}
+            loading={exporting}
+            disabled={products.length === 0}
+            size="sm"
+            label="Export Report"
+          />
           <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
             <span className="[font-family:'Poppins',Helvetica] font-normal text-green-800 text-xs">
               🔴 Live Data
