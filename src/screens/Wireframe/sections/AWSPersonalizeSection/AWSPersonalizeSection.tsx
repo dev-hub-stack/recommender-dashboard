@@ -576,10 +576,15 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg text-purple-600">
-                              {(rec.avg_score * 100).toFixed(1)}%
+                              {Math.round((rec.recommended_to_users / 50) * 100)}% Match Rate
                             </p>
-                            <p className="text-xs text-gray-500">
-                              Recommended to {rec.recommended_to_users} users
+                            <p className={`text-xs font-medium ${
+                              rec.recommended_to_users >= 40 ? 'text-green-600' : 
+                              rec.recommended_to_users >= 20 ? 'text-blue-600' : 'text-gray-500'
+                            }`}>
+                              {rec.recommended_to_users >= 40 ? '🔥 High Regional Affinity' : 
+                               rec.recommended_to_users >= 20 ? '✓ Medium Regional Affinity' : 
+                               'Low Regional Affinity'}
                             </p>
                           </div>
                         </div>
@@ -847,17 +852,17 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                         <p className="font-semibold text-blue-900">How It Works:</p>
                         <ul className="text-sm text-blue-800 list-disc list-inside space-y-1 mt-1">
                           <li>AWS Personalize analyzed <strong>180,000+ users</strong> and their purchase history</li>
-                          <li>For users in <strong>{selectedProvince || 'the selected region'}</strong>, it identified products they'd most likely want</li>
-                          <li>Results are based on a <strong>real-time sample of 50 users</strong> from this region</li>
-                          <li><strong>"Recommended to X sampled customers"</strong> indicates strong regional affinity</li>
+                          <li>For users in <strong>{selectedProvince || 'the selected region'}</strong>, we sample 50 customers in real-time</li>
+                          <li><strong>Match Rate</strong> = % of sampled users who received this as a top recommendation</li>
+                          <li><strong>100% Match Rate</strong> = Every sampled customer wants this product = Very High Regional Demand</li>
                         </ul>
                       </div>
                       <div>
-                        <p className="font-semibold text-purple-900">Why These Products?</p>
+                        <p className="font-semibold text-purple-900">What This Means for You:</p>
                         <ul className="text-sm text-purple-800 list-disc list-inside space-y-1 mt-1">
-                          <li>These are your <strong>top-performing products</strong> based on purchase patterns</li>
-                          <li>AWS Personalize learns: <em>"Users who bought X also bought Y"</em></li>
-                          <li>Products with high <strong>co-purchase rates</strong> rank higher</li>
+                          <li><strong>🔥 High Affinity (80%+)</strong>: Stock more of this product in this region</li>
+                          <li><strong>✓ Medium Affinity (40-79%)</strong>: Good regional demand, consider promotions</li>
+                          <li><strong>Low Affinity (&lt;40%)</strong>: Niche interest, targeted marketing may help</li>
                         </ul>
                       </div>
                     </div>
@@ -881,10 +886,15 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-lg text-orange-600">
-                            Recommended to {product.purchase_count?.toLocaleString() || 0} sampled customers
+                            {Math.round(((product.purchase_count || 0) / 50) * 100)}% Match Rate
                           </p>
-                          <p className="text-xs text-gray-500">
-                            Avg Score: {((product as any).avg_score || 0.95).toFixed(2)}
+                          <p className={`text-xs font-medium ${
+                            (product.purchase_count || 0) >= 40 ? 'text-green-600' : 
+                            (product.purchase_count || 0) >= 20 ? 'text-blue-600' : 'text-gray-500'
+                          }`}>
+                            {(product.purchase_count || 0) >= 40 ? '🔥 High Regional Affinity' : 
+                             (product.purchase_count || 0) >= 20 ? '✓ Medium Regional Affinity' : 
+                             'Low Regional Affinity'}
                           </p>
                         </div>
                       </div>
