@@ -202,7 +202,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     
     setLoadingRecs(true);
     try {
-      let url = `${API_BASE_URL}/personalize/recommendations/by-location?limit_users=5&num_results=10`;
+      let url = `${API_BASE_URL}/personalize/recommendations/by-location?limit_users=50&num_results=10`;
       if (province) url += `&province=${encodeURIComponent(province)}`;
       if (city) url += `&city=${encodeURIComponent(city)}`;
       
@@ -241,7 +241,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     try {
       for (const province of provincesToCompare) {
         const response = await fetch(
-          `${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(province)}&limit_users=5&num_results=10`
+          `${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(province)}&limit_users=50&num_results=10`
         );
         if (response.ok) {
           const data = await response.json();
@@ -324,7 +324,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       // Fetch trending from the largest province
       const largestProvince = provinces[0]?.province;
       if (largestProvince) {
-        fetch(`${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(largestProvince)}&limit_users=10&num_results=10`)
+        fetch(`${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(largestProvince)}&limit_users=50&num_results=10`)
           .then(res => res.json())
           .then(data => {
             if (data.aggregated_recommendations?.length > 0) {
@@ -848,8 +848,8 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                         <ul className="text-sm text-blue-800 list-disc list-inside space-y-1 mt-1">
                           <li>AWS Personalize analyzed <strong>180,000+ users</strong> and their purchase history</li>
                           <li>For users in <strong>{selectedProvince || 'the selected region'}</strong>, it identified products they'd most likely want</li>
-                          <li><strong>"Recommended to X customers"</strong> means X users in that region received this product as a top recommendation</li>
-                          <li><strong>Avg Score (0-1)</strong> is the ML confidence score — higher means more confident</li>
+                          <li>Results are based on a <strong>real-time sample of 50 users</strong> from this region</li>
+                          <li><strong>"Recommended to X sampled customers"</strong> indicates strong regional affinity</li>
                         </ul>
                       </div>
                       <div>
@@ -881,7 +881,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-lg text-orange-600">
-                            Recommended to {product.purchase_count?.toLocaleString() || 0} customers
+                            Recommended to {product.purchase_count?.toLocaleString() || 0} sampled customers
                           </p>
                           <p className="text-xs text-gray-500">
                             Avg Score: {((product as any).avg_score || 0.95).toFixed(2)}
