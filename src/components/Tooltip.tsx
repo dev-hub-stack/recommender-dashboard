@@ -32,19 +32,35 @@ interface TooltipProps {
 
 export const Tooltip = ({ content, children, className = "" }: TooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setCoords({ 
+      x: rect.left + rect.width / 2, 
+      y: rect.top 
+    });
+    setIsVisible(true);
+  };
 
   return (
-    <div className="relative inline-block">
+    <>
       <div
-        onMouseEnter={() => setIsVisible(true)}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setIsVisible(false)}
-        className="cursor-help"
+        className="cursor-help inline-block"
       >
         {children || <InfoIcon className="w-4 h-4 text-gray-400 hover:text-gray-600" />}
       </div>
       
       {isVisible && (
-        <div className={`absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-64 ${className}`}>
+        <div 
+          className={`fixed z-[9999] transform -translate-x-1/2 -translate-y-full mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-64 ${className}`}
+          style={{ 
+            left: coords.x, 
+            top: coords.y - 8 // 8px offset
+          }}
+        >
           <div className="relative">
             {content}
           </div>
@@ -54,7 +70,7 @@ export const Tooltip = ({ content, children, className = "" }: TooltipProps) => 
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
