@@ -242,17 +242,19 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
             </div>
 
             <div className="flex flex-col w-[140px] flex-shrink-0">
-              <div className="relative group">
+              <div className="relative group/recs">
                 <button
                   onClick={() => handleSort('recommendation_count')}
                   className="h-[41px] flex items-center gap-1 p-2.5 w-full bg-foundation-whitewhite-100 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer touch-manipulation"
+                  title="Number of customers who bought this with other products"
                 >
                   <span className="font-normal text-foundation-greygrey-400 text-sm">
-                    Recs ⓘ
+                    Recs
                   </span>
+                  <span className="text-gray-400 cursor-help text-xs">ⓘ</span>
                   <SortIcon field="recommendation_count" />
                 </button>
-                <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
+                <div className="absolute left-0 top-full mt-1 w-48 p-2 bg-gray-900 text-white text-xs rounded hidden group-hover/recs:block z-[100] shadow-lg">
                   Number of customers who bought this with other products
                 </div>
               </div>
@@ -274,17 +276,19 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
             </div>
 
             <div className="flex flex-col w-[130px] flex-shrink-0">
-              <div className="relative group">
+              <div className="relative group/score">
                 <button
                   onClick={() => handleSort('avg_similarity_score')}
                   className="h-[41px] flex items-center gap-1 p-2.5 w-full bg-foundation-whitewhite-100 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer touch-manipulation"
+                  title="Similarity score (0-1). Higher = stronger purchase pattern"
                 >
                   <span className="font-normal text-foundation-greygrey-400 text-sm">
-                    Score ⓘ
+                    Score
                   </span>
+                  <span className="text-gray-400 cursor-help text-xs">ⓘ</span>
                   <SortIcon field="avg_similarity_score" />
                 </button>
-                <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
+                <div className="absolute left-0 top-full mt-1 w-48 p-2 bg-gray-900 text-white text-xs rounded hidden group-hover/score:block z-[100] shadow-lg">
                   Similarity score (0-1). Higher = stronger purchase pattern
                 </div>
               </div>
