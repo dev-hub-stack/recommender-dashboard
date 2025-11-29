@@ -7,6 +7,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
+import { 
+  Cpu, MapPin, User, GitCompare, Search, 
+  Rocket, Info, Brain, BarChart3, Flame, Target, Award
+} from 'lucide-react';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://44.201.11.243:8001/api/v1';
@@ -352,7 +356,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-gray-900">🤖 ML Recommendations</h2>
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Cpu className="w-6 h-6" /> ML Recommendations</h2>
           <Badge className="bg-purple-100 text-purple-700 border-purple-300">
             Collaborative Filtering
           </Badge>
@@ -399,7 +403,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       {/* AWS Personalize Info Banner */}
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <span className="text-2xl">🚀</span>
+          <Rocket className="w-6 h-6 text-purple-600" />
           <div>
             <p className="font-medium text-purple-900">Powered by AWS Personalize</p>
             <p className="text-sm text-purple-700 mt-1">
@@ -413,7 +417,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">🔍 Filter by Location</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2"><Search className="w-5 h-5" /> Filter by Location</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -478,25 +482,46 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
 
       {/* Tab Navigation */}
       <div className="flex border-b overflow-x-auto">
-        {[
-          { id: 'overview', label: '📊 Overview', icon: '📊' },
-          { id: 'location', label: '📍 By Location', icon: '📍' },
-          { id: 'user', label: '👤 By User', icon: '👤' },
-          { id: 'trending', label: '🔥 Trending', icon: '🔥' },
-          { id: 'compare', label: '⚖️ Compare Regions', icon: '⚖️' },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+            activeTab === 'overview' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" /> Overview
+        </button>
+        <button
+          onClick={() => setActiveTab('location')}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+            activeTab === 'location' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <MapPin className="w-4 h-4" /> By Location
+        </button>
+        <button
+          onClick={() => setActiveTab('user')}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+            activeTab === 'user' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <User className="w-4 h-4" /> By User
+        </button>
+        <button
+          onClick={() => setActiveTab('trending')}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+            activeTab === 'trending' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Flame className="w-4 h-4" /> Trending
+        </button>
+        <button
+          onClick={() => setActiveTab('compare')}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+            activeTab === 'compare' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <GitCompare className="w-4 h-4" /> Compare Regions
+        </button>
       </div>
 
       {/* Content */}
@@ -510,7 +535,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
           <div className="space-y-6">
             {!selectedProvince ? (
               <div className="text-center py-12 text-gray-500">
-                <p className="text-lg mb-2">📍 Select a Province to see recommendations</p>
+                <p className="text-lg mb-2 flex items-center gap-2"><MapPin className="w-5 h-5" /> Select a Province to see recommendations</p>
                 <p className="text-sm">ML Model will show top products for customers in that area</p>
               </div>
             ) : (
@@ -519,7 +544,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <span>🏆</span> Top Recommended Products for {selectedCity || selectedProvince}
+                      <Award className="w-5 h-5 text-yellow-500" /> Top Recommended Products for {selectedCity || selectedProvince}
                       <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs">
                         ML Model
                       </Badge>
@@ -705,7 +730,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                       <p className="text-green-100 text-sm">ML Model</p>
                       <p className="text-xl font-bold">User-Personalization</p>
                     </div>
-                    <div className="text-4xl opacity-80">🤖</div>
+                    <Brain className="w-12 h-12 opacity-80" />
                   </div>
                 </CardContent>
               </Card>
@@ -714,7 +739,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
             {/* Province Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>📊 Customer Distribution by Province</CardTitle>
+                <CardTitle className="flex items-center gap-2"><BarChart3 className="w-5 h-5" /> Customer Distribution by Province</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -758,26 +783,26 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
             {/* How It Works */}
             <Card>
               <CardHeader>
-                <CardTitle>🧠 How ML Model Works</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Brain className="w-5 h-5" /> How ML Model Works</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-4xl mb-3">📊</div>
+                    <BarChart3 className="w-10 h-10 mb-3 text-purple-600" />
                     <h4 className="font-semibold mb-2">1. Data Collection</h4>
                     <p className="text-sm text-gray-600">
                       2M+ customer interactions analyzed from order history
                     </p>
                   </div>
                   <div className="text-center p-4 bg-pink-50 rounded-lg">
-                    <div className="text-4xl mb-3">🤖</div>
+                    <Cpu className="w-10 h-10 mb-3 text-purple-600" />
                     <h4 className="font-semibold mb-2">2. Collaborative Filtering</h4>
                     <p className="text-sm text-gray-600">
                       Finds similar customers and learns purchase patterns
                     </p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-4xl mb-3">🎯</div>
+                    <Target className="w-10 h-10 mb-3 text-purple-600" />
                     <h4 className="font-semibold mb-2">3. Real-time Inference</h4>
                     <p className="text-sm text-gray-600">
                       Personalized recommendations generated in milliseconds
@@ -793,7 +818,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <span>🔥</span> Trending Products Across All Regions
+                  <Flame className="w-5 h-5 text-orange-500" /> Trending Products Across All Regions
                   <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 text-xs">
                     Popularity-Based
                   </Badge>
@@ -807,7 +832,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                 {/* How It Works Info Box */}
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <div className="flex items-start gap-3">
-                    <span className="text-xl">💡</span>
+                    <Info className="w-6 h-6 text-blue-600" />
                     <div className="space-y-3">
                       <div>
                         <p className="font-semibold text-blue-900">How It Works:</p>
@@ -858,7 +883,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                   </div>
                 ) : (
                   <div className="text-center py-12 text-gray-500">
-                    <p className="text-lg mb-2">🔥 Select a province first to see trending products</p>
+                    <p className="text-lg mb-2 flex items-center gap-2"><Flame className="w-5 h-5" /> Select a province first to see trending products</p>
                     <p className="text-sm">Trending data is aggregated from location-based recommendations</p>
                   </div>
                 )}
@@ -871,7 +896,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <span>⚖️</span> Compare Recommendations Across Regions
+                  <GitCompare className="w-5 h-5 text-blue-500" /> Compare Recommendations Across Regions
                   <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 text-xs">
                     Regional Analysis
                   </Badge>
@@ -932,7 +957,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                   </div>
                 ) : (
                   <div className="text-center py-12 text-gray-500">
-                    <p className="text-lg mb-2">⚖️ Select provinces above to compare</p>
+                    <p className="text-lg mb-2 flex items-center gap-2"><GitCompare className="w-5 h-5" /> Select provinces above to compare</p>
                     <p className="text-sm">See how recommendations differ across regions</p>
                   </div>
                 )}
