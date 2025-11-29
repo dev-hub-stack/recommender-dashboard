@@ -2,12 +2,8 @@ import { ArrowUpIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent } from "../../../../components/ui/card";
-import { getRevenueTrend, Product } from "../../../../services/api";
+import { getRevenueTrend, getPopularProducts, Product } from "../../../../services/api";
 import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
-import { useMLRecommendations } from "../../../../hooks/useMLRecommendations";
-
-// API Configuration for ML endpoints
-const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '''';
 
 // Live data from recommendation engine - no static data needed
 
@@ -32,29 +28,14 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
   const [localTimeFilter, setLocalTimeFilter] = useState<string>(timeFilter);
   const [revenueTrend, setRevenueTrend] = useState<any>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>('daily');
-  
-  // ML Integration
-  const { mlStatus } = useMLRecommendations('top_products');
-  const [usingML, setUsingML] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setUsingML(true); // Always use ML
         
-        // Use ML endpoint directly - no SQL fallback
-        const mlResponse = await fetch(
-          `${ML_API_BASE_URL}/api/v1/ml/top-products?time_filter=${localTimeFilter || timeFilter}&limit=5`
-        );
-        
-        if (!mlResponse.ok) {
-          throw new Error('Failed to fetch ML top products');
-        }
-        
-        const mlData = await mlResponse.json();
-        const popularProducts = mlData.products || [];
-        console.log('✅ Using ML-powered top products');
+        // Use regular API endpoint for top products
+        const popularProducts = await getPopularProducts(5, localTimeFilter || timeFilter);
         
         // Fetch revenue trend data
         const trendData = await getRevenueTrend(localTimeFilter || timeFilter, trendPeriod);
@@ -63,7 +44,7 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
         setRevenueTrend(trendData);
         setError(null);
       } catch (err) {
-        setError('Failed to load data. Please train ML models first.');
+        setError('Failed to load data.');
         console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
@@ -71,7 +52,7 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
     };
 
     fetchData();
-  }, [timeFilter, localTimeFilter, trendPeriod]); // Re-fetch when filters change
+  }, [timeFilter, localTimeFilter, trendPeriod]);
 
   // Update local filter when prop changes
   useEffect(() => {
@@ -141,19 +122,11 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
               <option value="1year">Last 1 Year</option>
               <option value="all">All Time</option>
             </select>
-            {usingML && mlStatus?.is_trained ? (
-              <Badge className="h-auto px-2 py-1 bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">
-                <span className="font-normal text-xs">
-                  🤖 ML-Powered
-                </span>
-              </Badge>
-            ) : (
-              <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
-                <span className="font-normal text-green-800 text-xs">
-                  🔴 Live Data
-                </span>
-              </Badge>
-            )}
+            <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
+              <span className="font-normal text-green-800 text-xs">
+                🔴 Live Data
+              </span>
+            </Badge>
           </div>
 
           <div className="flex w-full">
