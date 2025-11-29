@@ -30,7 +30,7 @@ function downloadFile(blob: Blob, filename: string): void {
 export interface ExportOptions {
   timeFilter?: string;
   limit?: number;
-  minCoP urchases?: number;
+  minCoPurchases?: number;
   minSimilarity?: number;
   sortBy?: string;
 }
@@ -178,18 +178,36 @@ export async function exportRecommendationsDetail(options: ExportOptions = {}): 
 }
 
 /**
- * Export All Collaborative Reports (Batch)
+ * Export Comprehensive Collaborative Dashboard Report
+ * Exports all dashboard data in a single, well-formatted CSV
  */
 export async function exportAllCollaborativeReports(options: ExportOptions = {}): Promise<void> {
-  // Export all reports with a delay between each
-  await exportProductPairsDetail(options);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  await exportCustomerPairsDetail(options);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  await exportProductsDetail(options);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  await exportRecommendationsDetail(options);
+  const {
+    timeFilter = 'all',
+    limit = 1000
+  } = options;
+
+  const params = new URLSearchParams({
+    time_filter: timeFilter,
+    limit: limit.toString()
+  });
+
+  const response = await fetch(
+    `${API_BASE_URL}/export/collaborative/dashboard-complete?${params}`,
+    {
+      method: 'GET',
+      headers: getAuthHeaders()
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Export failed: ${response.statusText}`);
+  }
+
+  const blob = await response.blob();
+  const filename = response.headers.get('Content-Disposition')
+    ?.split('filename=')[1]
+    ?.replace(/"/g, '') || `collaborative_dashboard_${timeFilter}_${Date.now()}.csv`;
+
+  downloadFile(blob, filename);
 }

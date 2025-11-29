@@ -14,8 +14,8 @@ interface TopCollaborativeProductsSectionProps {
 type SortField = 'recommendation_count' | 'avg_similarity_score' | 'total_revenue';
 type SortDirection = 'asc' | 'desc';
 
-export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsSectionProps> = ({ 
-  timeFilter = 'all' 
+export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsSectionProps> = ({
+  timeFilter = 'all'
 }) => {
   const [products, setProducts] = useState<CollaborativeProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,18 +144,13 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
           <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base">
             Top Collaborative Products
           </h2>
-          <ExportButton 
+          <ExportButton
             onExport={handleExport}
             loading={exporting}
             disabled={products.length === 0}
             size="sm"
             label="Export Report"
           />
-          <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
-            <span className="[font-family:'Poppins',Helvetica] font-normal text-green-800 text-xs">
-              🔴 Live Data
-            </span>
-          </Badge>
         </div>
 
         <div className="w-full overflow-x-auto">
@@ -170,11 +165,10 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
               {sortedProducts.map((product, index) => (
                 <div
                   key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 w-full bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
-                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
-                      : ""
-                  }`}
+                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 w-full bg-foundation-whitewhite-50 ${index < sortedProducts.length - 1
+                    ? "border-b-[0.5px] border-solid border-[#cacbce]"
+                    : ""
+                    }`}
                 >
                   <div className="w-[35px] h-[35px] bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
                     <span className="text-blue-600 font-bold text-xs">#{index + 1}</span>
@@ -187,29 +181,6 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
                       ID: {product.product_id}
                     </span>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-col w-[120px] flex-shrink-0">
-              <div className="h-[41px] flex items-center gap-2.5 p-2.5 w-full bg-foundation-whitewhite-100">
-                <span className="font-normal text-foundation-greygrey-400 text-sm truncate">
-                  Category
-                </span>
-              </div>
-
-              {sortedProducts.map((product, index) => (
-                <div
-                  key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
-                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
-                      : ""
-                  }`}
-                >
-                  <span className="font-medium text-black text-sm truncate">
-                    {product.category}
-                  </span>
                 </div>
               ))}
             </div>
@@ -228,41 +199,13 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
               {sortedProducts.map((product, index) => (
                 <div
                   key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
-                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
-                      : ""
-                  }`}
+                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${index < sortedProducts.length - 1
+                    ? "border-b-[0.5px] border-solid border-[#cacbce]"
+                    : ""
+                    }`}
                 >
                   <span className="font-normal text-foundation-greengreen-500 text-sm">
                     {formatLargeNumber(product.recommendation_count)}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-col w-[130px] flex-shrink-0">
-              <button
-                onClick={() => handleSort('avg_similarity_score')}
-                className="h-[41px] flex items-center gap-1 p-2.5 w-full bg-foundation-whitewhite-100 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer touch-manipulation"
-              >
-                <span className="font-normal text-foundation-greygrey-400 text-sm">
-                  Avg Score
-                </span>
-                <SortIcon field="avg_similarity_score" />
-              </button>
-
-              {sortedProducts.map((product, index) => (
-                <div
-                  key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
-                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
-                      : ""
-                  }`}
-                >
-                  <span className="font-normal text-blue-600 text-sm">
-                    {product.avg_similarity_score.toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -282,11 +225,10 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
               {sortedProducts.map((product, index) => (
                 <div
                   key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
-                      ? "border-b-[0.5px] border-solid border-[#cacbce]"
-                      : ""
-                  }`}
+                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${index < sortedProducts.length - 1
+                    ? "border-b-[0.5px] border-solid border-[#cacbce]"
+                    : ""
+                    }`}
                 >
                   <span className="font-medium text-black text-sm">
                     {formatCurrency(product.total_revenue)}

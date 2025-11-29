@@ -12,8 +12,7 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
 }) => {
   const { metrics, loading, error, isEngineOnline, refresh } = useCollaborativeMetrics({
     timeFilter: timeFilter as any,
-    autoRefresh: true,
-    refreshInterval: 60000
+    autoRefresh: false
   });
 
   if (loading) {
