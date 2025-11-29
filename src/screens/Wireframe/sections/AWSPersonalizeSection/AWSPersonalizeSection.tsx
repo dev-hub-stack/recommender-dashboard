@@ -4,67 +4,12 @@
  * Features: Location-based, User-specific, Trending, Regional Comparison
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://44.201.11.243:8001/api/v1';
-
-// Helper function to get date range from time filter
-const getDateRangeFromFilter = (filter: string): { start: Date; end: Date; label: string } => {
-  const end = new Date();
-  let start = new Date();
-  let label = '';
-  
-  switch (filter) {
-    case 'today':
-      start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-      label = `Today (${start.toLocaleDateString()})`;
-      break;
-    case '7days':
-      start.setDate(end.getDate() - 7);
-      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-      break;
-    case '30days':
-      start.setDate(end.getDate() - 30);
-      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-      break;
-    case 'mtd':
-      start = new Date(end.getFullYear(), end.getMonth(), 1);
-      label = `Month to Date (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`;
-      break;
-    case '90days':
-      start.setDate(end.getDate() - 90);
-      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-      break;
-    case '6months':
-      start.setMonth(end.getMonth() - 6);
-      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-      break;
-    case '1year':
-      start.setFullYear(end.getFullYear() - 1);
-      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-      break;
-    case 'all':
-      start = new Date(2021, 7, 17); // Actual data start: Aug 17, 2021
-      label = 'All Time (Aug 2021 - Present)';
-      break;
-    default:
-      // Custom date range format: "2024-01-01:2024-12-31"
-      if (filter.includes(':')) {
-        const [startStr, endStr] = filter.split(':');
-        start = new Date(startStr);
-        const customEnd = new Date(endStr);
-        label = `${start.toLocaleDateString()} - ${customEnd.toLocaleDateString()}`;
-        return { start, end: customEnd, label };
-      }
-      start.setDate(end.getDate() - 30);
-      label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-  }
-  
-  return { start, end, label };
-};
 
 // CSV Export helper
 const exportToCSV = (data: any[], filename: string) => {
@@ -143,10 +88,10 @@ interface TrendingProduct {
 }
 
 interface AWSPersonalizeSectionProps {
-  timeFilter?: string;
+  // No props needed - AWS Personalize uses all historical data
 }
 
-export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ timeFilter = '30days' }) => {
+export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () => {
   // State
   const [status, setStatus] = useState<PersonalizeStatus | null>(null);
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -169,9 +114,6 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
   const [loading, setLoading] = useState(true);
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'location' | 'user' | 'trending' | 'compare'>('overview');
-
-  // Get date range label from time filter
-  const dateRange = useMemo(() => getDateRangeFromFilter(timeFilter), [timeFilter]);
 
   // Fetch Personalize Status
   const fetchStatus = useCallback(async () => {
@@ -416,19 +358,15 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
           </Badge>
           {status?.is_configured ? (
             <Badge className="bg-green-100 text-green-700 border-green-300">
-              ✓ Model Active
+              ✓ ML Model Active
             </Badge>
           ) : (
-            <Badge className="bg-red-100 text-red-700 border-red-300">
-              ✗ Not Configured
+            <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">
+              ⏳ Loading Model...
             </Badge>
           )}
         </div>
         <div className="flex items-center gap-4">
-          <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs text-blue-600 font-medium">📅 Date Range</p>
-            <p className="text-sm text-blue-800 font-semibold">{dateRange.label}</p>
-          </div>
           <button
             onClick={() => {
               const allData = [
@@ -458,15 +396,15 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
         </div>
       </div>
 
-      {/* ML Model Info Banner */}
+      {/* AWS Personalize Info Banner */}
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <span className="text-2xl">ℹ️</span>
+          <span className="text-2xl">🚀</span>
           <div>
-            <p className="font-medium text-purple-900">ML Model Trained on All Historical Data</p>
+            <p className="font-medium text-purple-900">Powered by AWS Personalize</p>
             <p className="text-sm text-purple-700 mt-1">
-              The Collaborative Filtering model is trained on <strong>2M+ interactions</strong> from <strong>Aug 2021 - Nov 2025</strong>. 
-              The date filter above affects the <strong>statistics display</strong>, but recommendations are based on the full trained model.
+              Recommendations are generated using <strong>Personalize ML</strong> trained on <strong>180,000+ users</strong> and <strong>4,000+ products</strong>. 
+              Select a location below to see trending products and personalized recommendations for that region.
             </p>
           </div>
         </div>
