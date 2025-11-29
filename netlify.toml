@@ -12,8 +12,8 @@
   NODE_VERSION = "18"
   
   # Backend API URLs - PRODUCTION
-  VITE_API_BASE_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1"
-  VITE_HEALTH_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/health"
+  VITE_API_BASE_URL = "http://44.201.11.243:8001/api/v1"
+  VITE_HEALTH_URL = "http://44.201.11.243:8001/health"
 
 # Redirect all routes to index.html for React Router
 [[redirects]]
@@ -54,15 +54,15 @@
 
 # Environment variables for production
 [context.production.environment]
-  VITE_API_BASE_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1"
-  VITE_HEALTH_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/health"
+  VITE_API_BASE_URL = "http://44.201.11.243:8001/api/v1"
+  VITE_HEALTH_URL = "http://44.201.11.243:8001/health"
 
 # Deploy preview environment variables
 [context.deploy-preview.environment]
-  VITE_API_BASE_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1"
-  VITE_HEALTH_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/health"
+  VITE_API_BASE_URL = "http://44.201.11.243:8001/api/v1"
+  VITE_HEALTH_URL = "http://44.201.11.243:8001/health"
 
 # Branch deploy environment variables
 [context.branch-deploy.environment]
-  VITE_API_BASE_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1"
-  VITE_HEALTH_URL = "https://master-group-recommender-9e2a306b76af.herokuapp.com/health"
+  VITE_API_BASE_URL = "http://44.201.11.243:8001/api/v1"
+  VITE_HEALTH_URL = "http://44.201.11.243:8001/health"
