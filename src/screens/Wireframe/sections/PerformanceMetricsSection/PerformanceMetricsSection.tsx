@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { useDashboardMetrics } from "../../../../hooks/useDashboardMetrics";
 import { formatLargeNumber } from "../../../../utils/formatters";
@@ -9,9 +8,9 @@ interface PerformanceMetricsSectionProps {
 }
 
 export const PerformanceMetricsSection = ({ timeFilter: propTimeFilter }: PerformanceMetricsSectionProps): JSX.Element => {
-  const [timeFilter] = useState<string>(propTimeFilter || '7days');
+  // Use prop directly, do not duplicate into state
   const { metrics, loading, error, isEngineOnline } = useDashboardMetrics({
-    timeFilter: timeFilter as any,
+    timeFilter: (propTimeFilter || '7days') as any,
     autoRefresh: false,
     refreshInterval: 0
   });
@@ -98,7 +97,7 @@ export const PerformanceMetricsSection = ({ timeFilter: propTimeFilter }: Perfor
         <h2 className="font-semibold text-lg">Live Performance Metrics</h2>
         <div className="flex items-center gap-4">
           <DateRangeDisplay 
-            timeFilter={timeFilter as any} 
+            timeFilter={(propTimeFilter || '7days') as any} 
             totalRecords={metrics?.totalOrders || 0}
           />
           <div className={`flex items-center gap-2 ${isEngineOnline ? 'text-green-600' : 'text-red-600'}`}>
