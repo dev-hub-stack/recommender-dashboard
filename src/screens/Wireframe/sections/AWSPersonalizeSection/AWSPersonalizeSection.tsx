@@ -11,6 +11,7 @@ import {
   Cpu, MapPin, User, GitCompare, Search, 
   Rocket, Info, Brain, BarChart3, Flame, Target, Award
 } from 'lucide-react';
+import { Tooltip, InfoTooltip } from '../../../../components/Tooltip';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://44.201.11.243:8001/api/v1';
@@ -575,8 +576,9 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="font-bold text-lg text-purple-600">
+                            <p className="font-bold text-lg text-purple-600 flex items-center gap-1">
                               {Math.round((rec.recommended_to_users / 50) * 100)}% Match Rate
+                              <InfoTooltip text="Match Rate = % of sampled users who received this as a top recommendation. Higher % = stronger regional demand." />
                             </p>
                             <p className={`text-xs font-medium ${
                               rec.recommended_to_users >= 40 ? 'text-green-600' : 
@@ -585,6 +587,11 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                               {rec.recommended_to_users >= 40 ? '🔥 High Regional Affinity' : 
                                rec.recommended_to_users >= 20 ? '✓ Medium Regional Affinity' : 
                                'Low Regional Affinity'}
+                              <InfoTooltip text={
+                                rec.recommended_to_users >= 40 ? 'High: Stock more of this product in this region' :
+                                rec.recommended_to_users >= 20 ? 'Medium: Good regional demand, consider promotions' :
+                                'Low: Niche interest, targeted marketing may help'
+                              } />
                             </p>
                           </div>
                         </div>
@@ -885,8 +892,9 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-lg text-orange-600">
+                          <p className="font-bold text-lg text-orange-600 flex items-center gap-1">
                             {Math.round(((product.purchase_count || 0) / 50) * 100)}% Match Rate
+                            <InfoTooltip text="Match Rate = % of sampled users who received this as a top recommendation. Higher % = stronger regional demand." />
                           </p>
                           <p className={`text-xs font-medium ${
                             (product.purchase_count || 0) >= 40 ? 'text-green-600' : 
@@ -895,6 +903,11 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                             {(product.purchase_count || 0) >= 40 ? '🔥 High Regional Affinity' : 
                              (product.purchase_count || 0) >= 20 ? '✓ Medium Regional Affinity' : 
                              'Low Regional Affinity'}
+                            <InfoTooltip text={
+                              (product.purchase_count || 0) >= 40 ? 'High: Stock more of this product in this region' :
+                              (product.purchase_count || 0) >= 20 ? 'Medium: Good regional demand, consider promotions' :
+                              'Low: Niche interest, targeted marketing may help'
+                            } />
                           </p>
                         </div>
                       </div>
