@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 // API Base URL - Using Vite environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '''';
 
 // Types
 export interface MLRecommendation {

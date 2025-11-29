@@ -38,7 +38,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
         setUsingML(true); // Always use ML
         
         // Use ML endpoint directly - no SQL fallback
-        const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8001';
+        const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '''';
         const response = await fetch(
           `${ML_API_BASE_URL}/api/v1/ml/rfm-segments?time_filter=${timeFilter}`
         );

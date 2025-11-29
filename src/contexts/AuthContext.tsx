@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserInfo = async (authToken: string) => {
     try {
-      const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8001/api/v1';
+      const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || '/api/v1';
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (email: string, password: string) => {
-    const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8001/api/v1';
+    const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || '/api/v1';
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {

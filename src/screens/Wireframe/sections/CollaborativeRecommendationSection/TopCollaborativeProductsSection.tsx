@@ -7,7 +7,7 @@ import { formatLargeNumber } from "../../../../utils/formatters";
 import { useMLRecommendations } from "../../../../hooks/useMLRecommendations";
 
 // API Configuration for ML endpoints
-const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8001';
+const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '''';
 
 interface TopCollaborativeProductsSectionProps {
   timeFilter?: TimeFilter;

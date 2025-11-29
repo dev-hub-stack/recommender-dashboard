@@ -62,7 +62,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     setError(null);
     
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 
-      'http://localhost:8001';
+      '''';
     
     try {
       // Always use ML product pairs endpoint

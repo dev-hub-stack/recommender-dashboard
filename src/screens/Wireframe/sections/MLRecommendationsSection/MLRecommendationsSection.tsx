@@ -10,7 +10,7 @@ import { Badge } from '../../../../components/ui/badge';
 import { formatLargeNumber } from '../../../../utils/formatters';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '''';
 
 // Types
 interface MLProduct {
