@@ -7,7 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 // API Base URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '''';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '';
 
 interface MLStatus {
   is_trained: boolean;

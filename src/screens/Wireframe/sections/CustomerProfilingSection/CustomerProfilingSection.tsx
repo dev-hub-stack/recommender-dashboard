@@ -6,7 +6,7 @@ import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 import { InfoTooltip } from '../../../../components/Tooltip';
 
 // API Configuration
-const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '''';
+const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '';
 
 interface CustomerMetrics {
   totalCustomers: number;
