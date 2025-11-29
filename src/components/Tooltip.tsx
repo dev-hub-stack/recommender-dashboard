@@ -145,3 +145,40 @@ export const CrossSellScoreTooltip = () => {
     />
   );
 };
+
+// RFM Score Column Tooltip - For table headers
+export const RFMColumnTooltip = () => {
+  return (
+    <Tooltip
+      content={
+        <div className="space-y-3 text-left">
+          <p className="font-semibold text-sm border-b border-gray-600 pb-1">RFM Score Explained (1-5 scale)</p>
+          
+          <div className="space-y-2">
+            <div>
+              <p className="font-medium text-blue-300">R = Recency</p>
+              <p className="text-xs">How recently did they purchase?</p>
+              <p className="text-xs text-gray-400">5: ≤30 days | 4: ≤60 | 3: ≤90 | 2: ≤180 | 1: 180+</p>
+            </div>
+            
+            <div>
+              <p className="font-medium text-green-300">F = Frequency</p>
+              <p className="text-xs">How often do they purchase?</p>
+              <p className="text-xs text-gray-400">5: 10+ orders | 4: 5+ | 3: 3+ | 2: 2+ | 1: 1</p>
+            </div>
+            
+            <div>
+              <p className="font-medium text-yellow-300">M = Monetary</p>
+              <p className="text-xs">How much do they spend?</p>
+              <p className="text-xs text-gray-400">5: 100K+ | 4: 50K+ | 3: 20K+ | 2: 5K+ | 1: &lt;5K</p>
+            </div>
+          </div>
+          
+          <p className="text-xs text-gray-300 border-t border-gray-600 pt-2">
+            Higher scores = Better customers
+          </p>
+        </div>
+      }
+    />
+  );
+};

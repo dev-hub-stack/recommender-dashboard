@@ -5,7 +5,7 @@ import { getCustomersBySegment, RFMSegment, CustomerSegmentDetail, TimeFilter, f
 import { Badge } from '../../../../components/ui/badge';
 import { ExplanationCard } from '../../../../components/ExplanationCard';
 import { DateRangeDisplay } from '../../../../components/DateRangeDisplay';
-import { RFMScoreTooltip } from '../../../../components/Tooltip';
+import { RFMScoreTooltip, RFMColumnTooltip } from '../../../../components/Tooltip';
 import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 
 interface RFMSegmentationSectionProps {
@@ -289,7 +289,12 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
                       <th className="text-right p-3 font-semibold">Orders</th>
                       <th className="text-right p-3 font-semibold">Total Spent</th>
                       <th className="text-right p-3 font-semibold">Last Order</th>
-                      <th className="text-center p-3 font-semibold">RFM Score</th>
+                      <th className="text-center p-3 font-semibold">
+                        <span className="inline-flex items-center gap-1">
+                          RFM Score
+                          <RFMColumnTooltip />
+                        </span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>

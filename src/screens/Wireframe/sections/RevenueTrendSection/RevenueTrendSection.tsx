@@ -20,7 +20,7 @@ const insightsAnalysisItems = [
 const growthToolsItems = [
   {
     icon: "/vuesax-linear-lamp-charge.svg",
-    label: "Collaborative Filtering",
+    label: "Popularity Based",
   },
   {
     icon: "/vuesax-linear-maximize.svg",
@@ -100,7 +100,7 @@ export const RevenueTrendSection: React.FC<RevenueTrendSectionProps> = ({
           {growthToolsItems.map((item, index) => {
             const isActive = 
               (activeView === "Cross-Selling" && item.label === "Cross-Selling") ||
-              (activeView === "Collaborative Recommendation" && item.label === "Collaborative Filtering");
+              (activeView === "Collaborative Recommendation" && item.label === "Popularity Based");
             
             return (
               <Button
@@ -109,7 +109,7 @@ export const RevenueTrendSection: React.FC<RevenueTrendSectionProps> = ({
                   // Handle Cross-Selling and Collaborative Filtering navigation, show coming soon for others
                   if (item.label === "Cross-Selling") {
                     onNavigate("Cross-Selling");
-                  } else if (item.label === "Collaborative Filtering") {
+                  } else if (item.label === "Popularity Based") {
                     onNavigate("Collaborative Recommendation");
                   } else {
                     alert(`${item.label} - Coming Soon! This feature is under development.`);
