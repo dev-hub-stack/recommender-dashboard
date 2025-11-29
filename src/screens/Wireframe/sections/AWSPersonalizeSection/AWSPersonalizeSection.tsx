@@ -271,7 +271,8 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     if (selectedProvince) {
       fetchCities(selectedProvince);
       fetchUsers(selectedProvince);
-      if (activeTab === 'location') {
+      // Fetch for both location and trending tabs
+      if (activeTab === 'location' || activeTab === 'trending') {
         fetchLocationRecommendations(selectedProvince);
       }
     } else {
@@ -286,7 +287,8 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
   useEffect(() => {
     if (selectedCity) {
       fetchUsers(selectedProvince, selectedCity);
-      if (activeTab === 'location') {
+      // Fetch for both location and trending tabs
+      if (activeTab === 'location' || activeTab === 'trending') {
         fetchLocationRecommendations(selectedProvince, selectedCity);
       }
     }
@@ -308,6 +310,13 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       fetchComparisonData(compareProvinces);
     }
   }, [compareProvinces, fetchComparisonData]);
+
+  // When switching to trending tab with province already selected
+  useEffect(() => {
+    if (activeTab === 'trending' && selectedProvince) {
+      fetchLocationRecommendations(selectedProvince, selectedCity || undefined);
+    }
+  }, [activeTab, selectedProvince, selectedCity, fetchLocationRecommendations]);
 
   // Fetch trending data on initial load (use Punjab as default)
   useEffect(() => {
