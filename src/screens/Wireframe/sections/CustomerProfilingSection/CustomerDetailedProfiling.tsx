@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { formatCurrency, formatLargeNumber, formatPercentage } from '../../../../utils/formatters';
+import { getCustomersBySegment } from '../../../../services/api';
+import { RFMColumnTooltip } from '../../../../components/Tooltip';
 
 interface CustomerDetailedMetrics {
   totalCustomers: number;
@@ -11,8 +13,10 @@ interface CustomerDetailedMetrics {
   returningCustomers: number;
   topSpendingCustomers: Array<{
     customer_id: string;
+    customer_name: string;
     total_spent: number;
     orders_count: number;
+    segment: string;
   }>;
   customersByCity: Array<{
     city: string;
@@ -54,8 +58,19 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
     setLoading(true);
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
+      
+      // Fetch general metrics
       const response = await fetch(`${API_BASE_URL}/analytics/dashboard?time_filter=${selectedPeriod}`);
       const data = await response.json();
+
+      // Fetch Top Customers (Champions)
+      let topCustomers: any[] = [];
+      try {
+        // Fetch Champions as they are top spenders
+        topCustomers = await getCustomersBySegment('Champions', 5);
+      } catch (err) {
+        console.error("Failed to fetch top customers", err);
+      }
       
       if (data.success) {
         // Simulate additional customer analytics data
@@ -66,11 +81,13 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
           avgOrderValue: data.avg_order_value,
           newCustomers: Math.floor(data.total_customers * 0.25),
           returningCustomers: Math.floor(data.total_customers * 0.75),
-          topSpendingCustomers: [
-            { customer_id: "premium_customer_001", total_spent: 2500000, orders_count: 45 },
-            { customer_id: "premium_customer_002", total_spent: 1800000, orders_count: 32 },
-            { customer_id: "premium_customer_003", total_spent: 1200000, orders_count: 28 },
-          ],
+          topSpendingCustomers: topCustomers.map(c => ({
+            customer_id: c.customer_id,
+            customer_name: c.customer_name,
+            total_spent: c.total_spent,
+            orders_count: c.total_orders,
+            segment: c.segment || 'Champions'
+          })),
           customersByCity: [
             { city: "Karachi", customer_count: Math.floor(data.total_customers * 0.35), revenue: data.total_revenue * 0.4 },
             { city: "Lahore", customer_count: Math.floor(data.total_customers * 0.25), revenue: data.total_revenue * 0.3 },
@@ -342,36 +359,49 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
                     Avg. Order Value
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    <span className="inline-flex items-center gap-1">
+                      Status
+                      <RFMColumnTooltip />
+                    </span>
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {metrics.topSpendingCustomers.map((customer, index) => (
-                  <tr key={customer.customer_id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {customer.customer_id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                      {formatCurrency(customer.total_spent)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {customer.orders_count}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(customer.total_spent / customer.orders_count)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        index === 0 ? 'bg-yellow-100 text-yellow-800' : 
-                        index === 1 ? 'bg-gray-100 text-gray-800' :
-                        'bg-orange-100 text-orange-800'
-                      }`}>
-                        {index === 0 ? 'VIP' : index === 1 ? 'Premium' : 'High Value'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {metrics.topSpendingCustomers.map((customer, index) => {
+                  // Map segment to status
+                  const getStatus = (segment: string) => {
+                    if (segment.includes('Champions')) return { label: 'VIP', class: 'bg-yellow-100 text-yellow-800' };
+                    if (segment.includes('Loyal')) return { label: 'Premium', class: 'bg-green-100 text-green-800' };
+                    return { label: 'High Value', class: 'bg-orange-100 text-orange-800' };
+                  };
+                  
+                  const status = getStatus(customer.segment);
+
+                  return (
+                    <tr key={customer.customer_id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-900">{customer.customer_name || 'Unknown'}</span>
+                          <span className="text-xs text-gray-500">{customer.customer_id?.slice(0, 12)}...</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                        {formatCurrency(customer.total_spent)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {customer.orders_count}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatCurrency(customer.total_spent / (customer.orders_count || 1))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${status.class}`}>
+                          {status.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
