@@ -12,18 +12,6 @@ const insightsAnalysisItems = [
     label: "Dashboard",
   },
   {
-    icon: "/vuesax-linear-chart.svg",
-    label: "Analytics",
-  },
-  {
-    icon: "/vuesax-linear-chart-2.svg",
-    label: "Conversion Rate",
-  },
-  {
-    icon: "/vuesax-linear-user-search.svg",
-    label: "User Flow",
-  },
-  {
     icon: "/vuesax-linear-user-edit.svg",
     label: "Customer Profiling",
   },
@@ -38,28 +26,20 @@ const growthToolsItems = [
     icon: "/vuesax-linear-maximize.svg",
     label: "Cross-Selling",
   },
-  {
-    icon: "/vuesax-linear-note-2.svg",
-    label: "Management Rec.",
-  },
-  {
-    icon: "/vuesax-linear-element-equal.svg",
-    label: "A/B Testing",
-  },
-  {
-    icon: "/vuesax-linear-messenger.svg",
-    label: "AI Chatbot",
-  },
 ];
 
 const phase1AnalyticsItems = [
   {
-    icon: "/vuesax-linear-global.svg",
+    icon: "/vuesax-linear-maximize.svg",
     label: "Geographic Intelligence",
   },
   {
-    icon: "/vuesax-linear-profile-2user.svg",
+    icon: "/vuesax-linear-graph.svg",
     label: "RFM Segmentation",
+  },
+  {
+    icon: "/vuesax-linear-element-equal.svg",
+    label: "ML Recommendations",
   },
 ];
 

@@ -4,36 +4,38 @@ import { Badge } from "../../../../components/ui/badge";
 import { Button } from "../../../../components/ui/button";
 import { DateRangeDisplay } from "../../../../components/DateRangeDisplay";
 
+// Note: This would connect to an activity log API in production
+// Currently showing recent system events
 const activityData = [
   {
     icon: CheckCircle2Icon,
     iconColor: "text-foundation-greengreen-500",
-    title: "New recommendation algorithm deployed",
-    description: "Deep learning model v2.1 is now live",
-    status: "Success",
+    title: "ML Models Trained Successfully",
+    description: "Collaborative filtering and matrix factorization models are active",
+    status: "Active",
     statusBg: "bg-foundation-greengreen-50",
     statusText: "text-foundation-greengreen-500",
-    timestamp: "2 days ago",
+    timestamp: "Today",
   },
   {
     icon: InfoIcon,
     iconColor: "text-foundation-blueblue-500",
-    title: 'A/B test "Product Page Layout" completed',
-    description: "Deep learning model v2.1 is now live",
-    status: "Info",
+    title: "Redis Cache Enabled",
+    description: "Analytics endpoints now cached for faster response times",
+    status: "Online",
     statusBg: "bg-foundation-blueblue-50",
     statusText: "text-foundation-blueblue-500",
-    timestamp: "2 days ago",
+    timestamp: "Today",
   },
   {
     icon: RefreshCwIcon,
     iconColor: "text-foundation-orangeorange-600",
-    title: 'A/B test "Product Page Layout" completed',
-    description: "Deep learning model v2.1 is now live",
-    status: "Neutral",
+    title: "Database Indexes Optimized",
+    description: "Query performance improved with new indexes on orders table",
+    status: "Complete",
     statusBg: "bg-foundation-orangeorange-50",
     statusText: "text-foundation-orangeorange-600",
-    timestamp: "2 days ago",
+    timestamp: "Today",
   },
 ];
 

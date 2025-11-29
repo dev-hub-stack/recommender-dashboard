@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
+import { Badge } from '../../../../components/ui/badge';
 import { getCollaborativeProductPairs, CollaborativeProductPair, TimeFilter } from '../../../../services/api';
-import { formatCurrency, formatLargeNumber } from '../../../../utils/formatters';
+import { formatCurrency } from '../../../../utils/formatters';
 import { ExportButton } from '../../../../components/ExportButton';
 import { exportProductPairsDetail } from '../../../../services/exportApi';
+import { formatLargeNumber } from '../../../../utils/formatters';
+import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 
 interface CollaborativeProductPairsSectionProps {
   timeFilter?: TimeFilter;
@@ -16,16 +19,24 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  
+  // ML Integration
+  const { mlStatus, useML } = useMLRecommendations('product_pairs');
+  const [usingML, setUsingML] = useState(false);
 
   useEffect(() => {
     fetchProductPairs();
-  }, [timeFilter]);
+  }, [timeFilter, useML, mlStatus]);
 
   const fetchProductPairs = async () => {
     setLoading(true);
     setError(null);
     
     try {
+      // Decide whether to use ML
+      const shouldUseML = useML && mlStatus?.is_trained;
+      setUsingML(!!shouldUseML);
+      
       const data = await getCollaborativeProductPairs(timeFilter, 10);
       setPairs(data);
     } catch (err) {
@@ -134,7 +145,7 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
                   <td className="py-3 px-2">
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-foundation-greygrey-800 [font-family:'Poppins',Helvetica] truncate" style={{ maxWidth: '150px' }}>
-                        {pair.product_a_name}
+                        {pair.product_a_name || 'Unknown Product'}
                       </span>
                       <span className="text-xs text-foundation-greygrey-500 [font-family:'Poppins',Helvetica] truncate">
                         ID: {pair.product_a_id}
@@ -144,7 +155,7 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
                   <td className="py-3 px-2">
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica] truncate" style={{ maxWidth: '150px' }}>
-                        {pair.product_b_name}
+                        {pair.product_b_name || 'Unknown Product'}
                       </span>
                       <span className="text-xs text-foundation-greygrey-500 [font-family:'Poppins',Helvetica] truncate">
                         ID: {pair.product_b_id}
@@ -153,12 +164,12 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
                   </td>
                   <td className="py-3 px-2 text-center">
                     <span className="inline-flex items-center justify-center px-2 py-1 bg-foundation-blueblue-50 rounded-full text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica]">
-                      {formatLargeNumber(pair.co_recommendation_count)}
+                      {formatLargeNumber(pair.co_recommendation_count || 0)}
                     </span>
                   </td>
                   <td className="py-3 px-2 text-right">
                     <span className="text-sm font-semibold text-foundation-greengreen-500 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(pair.combined_revenue)}
+                      Rs {formatLargeNumber(pair.combined_revenue || 0)}
                     </span>
                   </td>
                 </tr>

@@ -1,17 +1,17 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "../../components/ui/button";
 import { DashboardHeaderSection } from "./sections/DashboardHeaderSection";
 import { PerformanceMetricsSection } from "./sections/PerformanceMetricsSection";
 import { RecentActivitySection } from "./sections/RecentActivitySection";
 import { RevenueTrendSection } from "./sections/RevenueTrendSection";
 import { TopProductsSection } from "./sections/TopProductsSection";
-import { CustomerProfilingSection } from "./sections/CustomerProfilingSection";
 import { CustomerDetailedProfiling } from "./sections/CustomerProfilingSection/CustomerDetailedProfiling";
 import { POSvsOESection } from "./sections/POSvsOESection";
 import { CrossSellingSection } from "./sections/CrossSellingSection";
 import CollaborativeRecommendationDashboard from "./sections/CollaborativeRecommendationSection";
 import { GeographicIntelligenceSection } from "./sections/GeographicIntelligenceSection";
 import { RFMSegmentationSection } from "./sections/RFMSegmentationSection";
+import { AWSPersonalizeSection } from "./sections/AWSPersonalizeSection";
 
 export const Wireframe = (): JSX.Element => {
   const [timeFilter, setTimeFilter] = useState<string>('7days'); // Changed default to 7 days
@@ -112,29 +112,8 @@ export const Wireframe = (): JSX.Element => {
           </>
         )}
         
-        {activeView === 'Analytics' && (
-          <>
-            <PerformanceMetricsSection timeFilter={timeFilter} />
-            <POSvsOESection timeFilter={timeFilter} />
-          </>
-        )}
-        
         {activeView === 'Customer Profiling' && (
           <CustomerDetailedProfiling timeFilter={timeFilter} />
-        )}
-        
-        {activeView === 'Conversion Rate' && (
-          <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Conversion Rate Analytics</h2>
-            <p className="text-gray-600">Coming Soon - Advanced conversion tracking and analytics</p>
-          </div>
-        )}
-        
-        {activeView === 'User Flow' && (
-          <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">User Flow Analysis</h2>
-            <p className="text-gray-600">Coming Soon - User journey and flow visualization</p>
-          </div>
         )}
         
         {activeView === 'Cross-Selling' && (
@@ -151,6 +130,10 @@ export const Wireframe = (): JSX.Element => {
         
         {activeView === 'RFM Segmentation' && (
           <RFMSegmentationSection timeFilter={timeFilter} />
+        )}
+        
+        {activeView === 'ML Recommendations' && (
+          <AWSPersonalizeSection timeFilter={timeFilter} />
         )}
       </main>
 

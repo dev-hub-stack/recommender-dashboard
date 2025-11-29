@@ -2,8 +2,8 @@
 // 100% LIVE DATA - NO MOCK DATA
 // Connects to recommendation engine (configurable via .env)
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
-const HEALTH_URL = import.meta.env.VITE_HEALTH_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/health';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://44.201.11.243:8001/api/v1';
+const HEALTH_URL = import.meta.env.VITE_HEALTH_URL || 'http://44.201.11.243:8001/health';
 
 // Helper function to get auth headers
 function getAuthHeaders(): HeadersInit {
@@ -588,7 +588,8 @@ export async function getProvincePerformance(
   }
   
   const data = await response.json();
-  const provinces = data.provinces || [];
+  // API returns array directly, not wrapped in {provinces: [...]}
+  const provinces = Array.isArray(data) ? data : (data.provinces || []);
   
   // Transform and validate data
   return provinces.map((p: any) => ({
@@ -620,7 +621,8 @@ export async function getCityPerformance(
   }
   
   const data = await response.json();
-  const cities = data.cities || [];
+  // API returns array directly, not wrapped in {cities: [...]}
+  const cities = Array.isArray(data) ? data : (data.cities || []);
   
   // Transform and validate data
   return cities.map((c: any) => ({
@@ -847,4 +849,165 @@ export function getTimePeriodLabel(filter: TimeFilter): string {
     case 'all':
       return 'All Time';
   }
+}
+
+// ==============================================
+// ML RECOMMENDATION ENGINE ENDPOINTS
+// ==============================================
+
+export interface MLStatus {
+  is_trained: boolean;
+  training_timestamp: string | null;
+  model_metadata: any;
+  algorithms: {
+    collaborative_filtering: boolean;
+    content_based: boolean;
+    matrix_factorization: boolean;
+    popularity_based: boolean;
+  };
+}
+
+export interface MLRecommendation {
+  product_id: string;
+  product_name: string;
+  score: number;
+  confidence: number;
+  price: number;
+  revenue: number;
+  algorithm: string;
+  algorithms_used?: string[];
+}
+
+// Get ML Service Status
+export async function getMLStatus(): Promise<MLStatus> {
+  const response = await fetch(`${API_BASE_URL.replace('/api/v1', '')}/api/v1/ml/status`, {
+    headers: getAuthHeaders(),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch ML status');
+  }
+  
+  return response.json();
+}
+
+// Train ML Models
+export async function trainMLModels(
+  timeFilter: string = '30days',
+  forceRetrain: boolean = false
+): Promise<any> {
+  const response = await fetch(
+    `${API_BASE_URL.replace('/api/v1', '')}/api/v1/ml/train?time_filter=${timeFilter}&force_retrain=${forceRetrain}`,
+    {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error('Failed to train ML models');
+  }
+  
+  return response.json();
+}
+
+// Get ML Recommendations for a User
+export async function getMLRecommendations(
+  userId: string,
+  nRecommendations: number = 10
+): Promise<MLRecommendation[]> {
+  const response = await fetch(
+    `${API_BASE_URL.replace('/api/v1', '')}/api/v1/ml/recommendations/${encodeURIComponent(userId)}?n_recommendations=${nRecommendations}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch ML recommendations');
+  }
+  
+  const data = await response.json();
+  return data.recommendations || [];
+}
+
+// Get ML Top Products
+export async function getMLTopProducts(
+  timeFilter: string = '30days',
+  limit: number = 10
+): Promise<Product[]> {
+  const response = await fetch(
+    `${API_BASE_URL.replace('/api/v1', '')}/api/v1/ml/top-products?time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch ML top products');
+  }
+  
+  const data = await response.json();
+  return data.products || [];
+}
+
+// Get ML Product Pairs (Frequently Bought Together)
+export async function getMLProductPairs(
+  timeFilter: string = '30days',
+  limit: number = 10
+): Promise<CollaborativeProductPair[]> {
+  const response = await fetch(
+    `${API_BASE_URL.replace('/api/v1', '')}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch ML product pairs');
+  }
+  
+  const data = await response.json();
+  return data.pairs || [];
+}
+
+// Get ML Customer Similarity
+export async function getMLCustomerSimilarity(
+  timeFilter: string = '30days',
+  limit: number = 10
+): Promise<CustomerSimilarityData[]> {
+  const response = await fetch(
+    `${API_BASE_URL.replace('/api/v1', '')}/api/v1/ml/customer-similarity?time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch ML customer similarity');
+  }
+  
+  const data = await response.json();
+  return data.customers || [];
+}
+
+// Get ML Collaborative Products
+export async function getMLCollaborativeProducts(
+  timeFilter: string = '30days',
+  limit: number = 20,
+  useML: boolean = true
+): Promise<CollaborativeProduct[]> {
+  const response = await fetch(
+    `${API_BASE_URL.replace('/api/v1', '')}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=${limit}&use_ml=${useML}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch ML collaborative products');
+  }
+  
+  const data = await response.json();
+  return data.products || [];
 }

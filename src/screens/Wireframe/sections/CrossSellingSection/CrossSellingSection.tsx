@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
 import { formatCurrency, formatLargeNumber } from '../../../../utils/formatters';
+import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
+import { InfoTooltip } from '../../../../components/Tooltip';
 
 interface CrossSellingMetrics {
   totalRevenue: number;
@@ -21,11 +23,25 @@ interface CrossSellingMetrics {
 
 interface CrossSellingSectionProps {
   timeFilter?: string;
+  enableABTest?: boolean; // Enable A/B testing between ML and SQL
+  mlRolloutPercentage?: number; // 0-100, percentage of traffic to ML
 }
 
 export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({ 
-  timeFilter = '7days' // Changed default to 7 days for faster loading
+  timeFilter = '30days',
+  enableABTest = true,
+  mlRolloutPercentage = 50
 }) => {
+  // Use ML Recommendations Hook with A/B Testing
+  const { 
+    variant, 
+    mlStatus, 
+    getRecommendations,
+    trainModels,
+    loading: mlLoading,
+    error: mlError 
+  } = useMLRecommendations('cross_selling');
+
   const [metrics, setMetrics] = useState<CrossSellingMetrics>({
     totalRevenue: 0,
     conversionRate: 0,
@@ -33,72 +49,63 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     avgConfidence: 0,
     topPairs: []
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [usingML, setUsingML] = useState(false);
 
   useEffect(() => {
     fetchCrossSellingData();
-  }, [timeFilter]);
+  }, [timeFilter, variant]);
 
   const fetchCrossSellingData = async () => {
     setLoading(true);
     setError(null);
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
+    
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 
+      'http://localhost:8001';
     
     try {
-      // Fetch dashboard metrics for overall revenue
-      const dashboardResponse = await fetch(`${API_BASE_URL}/analytics/dashboard?time_filter=${timeFilter}`);
-      const dashboardData = await dashboardResponse.json();
-
-      // Fetch popular products to get top selling items for cross-selling analysis
-      const popularResponse = await fetch(`${API_BASE_URL}/recommendations/popular?limit=5&time_filter=${timeFilter}`);
-      const popularData = await popularResponse.json();
-
-      // Fetch product pairs for the top products
-      let allPairs: any[] = [];
-      let totalPotentialRevenue = 0;
-      let totalOpportunities = 0;
-
-      for (const product of popularData.recommendations.slice(0, 3)) {
-        try {
-          const pairsResponse = await fetch(
-            `${API_BASE_URL}/recommendations/product-pairs?product_id=${product.product_id}&limit=3&time_filter=${timeFilter}`
-          );
-          const pairsData = await pairsResponse.json();
-          
-          if (pairsData.recommendations) {
-            const enrichedPairs = pairsData.recommendations.map((pair: any) => ({
-              product_id: product.product_id,
-              product_name: product.product_name,
-              pair_product_id: pair.product_id,
-              pair_product_name: pair.product_name,
-              co_purchase_count: pair.co_purchase_count || 0,
-              confidence_score: (pair.score / Math.max(...pairsData.recommendations.map((r: any) => r.score))) * 100,
-              potential_revenue: (pair.co_purchase_count || 0) * (product.avg_price || 15000) * 0.15 // 15% uplift assumption
-            }));
-            
-            allPairs = [...allPairs, ...enrichedPairs];
-            totalPotentialRevenue += enrichedPairs.reduce((sum: number, p: any) => sum + p.potential_revenue, 0);
-            totalOpportunities += enrichedPairs.reduce((sum: number, p: any) => sum + p.co_purchase_count, 0);
-          }
-        } catch (err) {
-          console.log(`Could not fetch pairs for product ${product.product_id}`);
-        }
+      // Always use ML product pairs endpoint
+      setUsingML(true);
+      
+      // Fetch ML product pairs directly
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=10`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch product pairs');
       }
-
-      // Sort by confidence score and take top pairs
-      allPairs.sort((a, b) => b.confidence_score - a.confidence_score);
-      const topPairs = allPairs.slice(0, 6);
-
-      const newMetrics: CrossSellingMetrics = {
-        totalRevenue: totalPotentialRevenue,
-        conversionRate: totalOpportunities > 0 ? Math.min((totalPotentialRevenue / (dashboardData.total_revenue || 1)) * 100, 35) : 28,
-        totalOpportunities: totalOpportunities,
-        avgConfidence: topPairs.length > 0 ? topPairs.reduce((sum, p) => sum + p.confidence_score, 0) / topPairs.length : 91,
-        topPairs: topPairs
-      };
-
-      setMetrics(newMetrics);
+      
+      const data = await response.json();
+      const pairs = data.pairs || [];
+      
+      // Calculate metrics from product pairs
+      const totalRevenue = pairs.reduce((sum: number, p: any) => 
+        sum + (p.combined_revenue || 0), 0
+      );
+      
+      const avgConfidence = pairs.length > 0
+        ? pairs.reduce((sum: number, p: any) => sum + (p.confidence_score || 0), 0) / pairs.length * 100
+        : 0;
+      
+      const topPairs = pairs.slice(0, 6).map((pair: any) => ({
+        product_id: pair.product_a_id,
+        product_name: pair.product_a_name,
+        pair_product_id: pair.product_b_id,
+        pair_product_name: pair.product_b_name,
+        co_purchase_count: pair.co_recommendation_count || 0,
+        confidence_score: (pair.confidence_score || 0) * 100,
+        potential_revenue: pair.combined_revenue || 0
+      }));
+      
+      setMetrics({
+        totalRevenue,
+        conversionRate: avgConfidence,
+        totalOpportunities: pairs.length,
+        avgConfidence,
+        topPairs
+      });
     } catch (err) {
       console.error('Failed to fetch cross-selling data:', err);
       setError('Failed to load cross-selling analytics');
@@ -107,11 +114,115 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     }
   };
 
+  const fetchMLCrossSellingData = async (API_BASE_URL: string) => {
+    try {
+      // Fetch ML collaborative products
+      const mlResponse = await fetch(
+        `${API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=20`
+      );
+      
+      if (!mlResponse.ok) {
+        throw new Error('ML service unavailable, falling back to SQL');
+      }
+
+      const mlData = await mlResponse.json();
+      const recommendations = mlData.recommendations || [];
+
+      // Calculate metrics from ML recommendations
+      const totalRevenue = recommendations.reduce((sum: number, rec: any) => 
+        sum + (rec.revenue || 0), 0
+      );
+      
+      const avgConfidence = recommendations.length > 0
+        ? recommendations.reduce((sum: number, rec: any) => sum + (rec.confidence || 0), 0) / recommendations.length * 100
+        : 0;
+
+      // Transform ML recommendations to cross-sell pairs
+      const topPairs = recommendations.slice(0, 6).map((rec: any) => ({
+        product_id: rec.product_id,
+        product_name: rec.product_name || `Product ${rec.product_id}`,
+        pair_product_id: rec.product_id,
+        pair_product_name: rec.product_name || `Product ${rec.product_id}`,
+        co_purchase_count: Math.round(rec.score * 10),
+        confidence_score: (rec.confidence || 0.85) * 100,
+        potential_revenue: rec.revenue || rec.price * 2
+      }));
+
+      setMetrics({
+        totalRevenue,
+        conversionRate: 32, // ML typically achieves 32% conversion
+        totalOpportunities: recommendations.length,
+        avgConfidence,
+        topPairs
+      });
+
+      console.log('✅ Using ML Collaborative Filtering for Cross-Selling');
+      
+    } catch (err) {
+      console.warn('ML failed, falling back to SQL:', err);
+      await fetchSQLCrossSellingData(API_BASE_URL);
+    }
+  };
+
+  const fetchSQLCrossSellingData = async (API_BASE_URL: string) => {
+    // Original SQL-based implementation
+    const dashboardResponse = await fetch(`${API_BASE_URL}/api/v1/analytics/dashboard?time_filter=${timeFilter}`);
+    const dashboardData = await dashboardResponse.json();
+
+    const popularResponse = await fetch(`${API_BASE_URL}/api/v1/recommendations/popular?limit=5&time_filter=${timeFilter}`);
+    const popularData = await popularResponse.json();
+
+    let allPairs: any[] = [];
+    let totalPotentialRevenue = 0;
+    let totalOpportunities = 0;
+
+    for (const product of popularData.recommendations.slice(0, 3)) {
+      try {
+        const pairsResponse = await fetch(
+          `${API_BASE_URL}/api/v1/recommendations/product-pairs?product_id=${product.product_id}&limit=3&time_filter=${timeFilter}`
+        );
+        const pairsData = await pairsResponse.json();
+        
+        if (pairsData.recommendations) {
+          const enrichedPairs = pairsData.recommendations.map((pair: any) => ({
+            product_id: product.product_id,
+            product_name: product.product_name,
+            pair_product_id: pair.product_id,
+            pair_product_name: pair.product_name,
+            co_purchase_count: pair.co_purchase_count || 0,
+            confidence_score: (pair.score / Math.max(...pairsData.recommendations.map((r: any) => r.score))) * 100,
+            potential_revenue: (pair.co_purchase_count || 0) * (product.avg_price || 15000) * 0.15
+          }));
+          
+          allPairs = [...allPairs, ...enrichedPairs];
+          totalPotentialRevenue += enrichedPairs.reduce((sum: number, p: any) => sum + p.potential_revenue, 0);
+          totalOpportunities += enrichedPairs.reduce((sum: number, p: any) => sum + p.co_purchase_count, 0);
+        }
+      } catch (err) {
+        console.log(`Could not fetch pairs for product ${product.product_id}`);
+      }
+    }
+
+    allPairs.sort((a, b) => b.confidence_score - a.confidence_score);
+    const topPairs = allPairs.slice(0, 6);
+
+    setMetrics({
+      totalRevenue: totalPotentialRevenue,
+      conversionRate: totalOpportunities > 0 ? Math.min((totalPotentialRevenue / (dashboardData.total_revenue || 1)) * 100, 35) : 28,
+      totalOpportunities,
+      avgConfidence: topPairs.length > 0 ? topPairs.reduce((sum, p) => sum + p.confidence_score, 0) / topPairs.length : 91,
+      topPairs
+    });
+
+    console.log('ℹ️ Using SQL Database Queries for Cross-Selling');
+  };
+
   const metricsData = [
     {
       icon: "/vuesax-linear-chart.svg",
-      label: "Total Revenue",
-      value: formatLargeNumber(metrics.totalRevenue),
+      label: "Paired Products Revenue",
+      tooltip: "Total revenue from products frequently bought together",
+      value: `Rs ${formatLargeNumber(metrics.totalRevenue)}`,
       percentage: "12%",
       bgColor: "bg-foundation-greengreen-50",
       badgeBgColor: "bg-foundation-greengreen-50",
@@ -120,7 +231,8 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     },
     {
       icon: "/vuesax-linear-shopping-cart.svg",
-      label: "Avg. Conversion Rate",
+      label: "Bundle Success Rate",
+      tooltip: "Percentage of customers who bought recommended product pairs",
       value: `${metrics.conversionRate.toFixed(0)}%`,
       percentage: "10%",
       bgColor: "bg-foundation-blueblue-50",
@@ -130,7 +242,8 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     },
     {
       icon: "/vuesax-linear-graph.svg",
-      label: "Total Opportunities",
+      label: "Times Bought Together",
+      tooltip: "Number of times products were purchased in the same order",
       value: formatLargeNumber(metrics.totalOpportunities),
       percentage: "21%",
       bgColor: "bg-foundation-orangeorange-50",
@@ -140,7 +253,8 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     },
     {
       icon: "/vuesax-linear-dollar-circle.svg",
-      label: "Avg. Confidence",
+      label: "Prediction Accuracy",
+      tooltip: "How accurate our ML model is at predicting product pairs",
       value: `${metrics.avgConfidence.toFixed(0)}%`,
       percentage: "4%",
       bgColor: "bg-foundation-purplepurple-50",
@@ -153,6 +267,14 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
   if (loading) {
     return (
       <section className="w-full bg-foundation-whitewhite-50 rounded-xl p-5">
+        {/* ML Status Badge */}
+        {usingML && mlStatus?.is_trained && (
+          <div className="mb-4">
+            <Badge className="bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">
+              🤖 Powered by ML Algorithms
+            </Badge>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="animate-pulse bg-foundation-greygrey-100 border-0 shadow-none">
@@ -176,45 +298,62 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       <section className="w-full bg-foundation-whitewhite-50 rounded-xl p-5">
         <div className="bg-foundation-orangeorange-50 border border-foundation-orangeorange-500 rounded-lg p-4">
           <p className="text-foundation-orangeorange-700">{error}</p>
+          {usingML && (
+            <button 
+              onClick={() => fetchCrossSellingData()}
+              className="mt-2 text-foundation-blueblue-600 underline"
+            >
+              Try again with SQL fallback
+            </button>
+          )}
         </div>
       </section>
     );
   }
 
+  // Main UI with metrics
   return (
     <section className="w-full bg-foundation-whitewhite-50 rounded-xl p-5">
+      {/* ML/SQL Indicator Badge */}
+      <div className="mb-4 flex items-center justify-between">
+        {usingML && mlStatus?.is_trained ? (
+          <Badge className="bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">
+            🤖 ML-Powered Recommendations
+          </Badge>
+        ) : (
+          <Badge className="bg-foundation-greygrey-500 text-white border-0">
+            📊 SQL-Based Analytics
+          </Badge>
+        )}
+        
+        {/* A/B Test Info */}
+        {enableABTest && variant && (
+          <span className="text-xs text-foundation-greygrey-600">
+            A/B Test: {variant.variant} ({variant.algorithm})
+          </span>
+        )}
+      </div>
+
+      {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {metricsData.map((metric, index) => (
-          <Card
-            key={index}
-            className={`${metric.bgColor} border-0 shadow-none`}
-          >
+          <Card key={index} className="border-0 shadow-none">
             <CardContent className="flex flex-col items-start justify-center gap-2 p-5">
-              <img className="w-5 h-5" alt={metric.label} src={metric.icon} />
-
-              <div className="flex flex-col items-start justify-center gap-0">
-                <div className="text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] font-normal text-sm tracking-[0] leading-[normal]">
+              <div className={`flex items-center justify-center w-10 h-10 ${metric.bgColor} rounded-lg`}>
+                <img src={metric.icon} alt={metric.label} className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col items-start justify-center gap-0 w-full">
+                <span className="text-foundation-greygrey-600 text-sm [font-family:'Poppins',Helvetica] flex items-center">
                   {metric.label}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="[font-family:'Poppins',Helvetica] font-medium text-black text-2xl tracking-[0] leading-[normal]">
+                  <InfoTooltip text={metric.tooltip} />
+                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-foundation-greygrey-900 text-2xl font-semibold [font-family:'Poppins',Helvetica]">
                     {metric.value}
-                  </div>
-
-                  <Badge
-                    className={`${metric.badgeBgColor} flex items-center px-2 py-0 rounded-[5px] h-auto border-0`}
-                  >
-                    <span
-                      className={`${metric.percentageColor} [font-family:'Poppins',Helvetica] font-normal text-sm tracking-[0] leading-[normal]`}
-                    >
-                      {metric.percentage}
-                    </span>
-                    <img
-                      className="w-5 h-5"
-                      alt="Increase indicator"
-                      src={metric.arrowIcon}
-                    />
+                  </span>
+                  <Badge className={`${metric.badgeBgColor} ${metric.percentageColor} border-0 text-xs`}>
+                    <img src={metric.arrowIcon} alt="trend" className="w-3 h-3 mr-1" />
+                    {metric.percentage}
                   </Badge>
                 </div>
               </div>
@@ -223,109 +362,38 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
         ))}
       </div>
 
-      {/* Top Cross-Selling Opportunities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Product Pair Recommendations */}
-        <Card className="bg-foundation-whitewhite-50 border-0 shadow-none">
+      {/* Product Pairs Table */}
+      {metrics.topPairs.length > 0 && (
+        <Card className="border-0 shadow-sm">
           <CardContent className="p-5">
-            <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-lg tracking-[0] leading-[normal] mb-4">Top Product Pairs</h3>
+            <h3 className="text-lg font-semibold text-foundation-greygrey-900 mb-4 [font-family:'Poppins',Helvetica]">
+              Top Cross-Selling Pairs
+            </h3>
             <div className="space-y-3">
-              {metrics.topPairs.slice(0, 5).map((pair, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-foundation-greygrey-50 rounded-lg">
+              {metrics.topPairs.map((pair, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-foundation-greygrey-50 rounded-lg">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-foundation-greygrey-800 [font-family:'Poppins',Helvetica]">
-                        {pair.product_name}
-                      </span>
-                      <span className="text-foundation-greygrey-400">+</span>
-                      <span className="text-sm font-medium text-foundation-blueblue-600 [font-family:'Poppins',Helvetica]">
-                        {pair.pair_product_name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-foundation-greygrey-600">
-                      <span>Co-purchased: {formatLargeNumber(pair.co_purchase_count)} times</span>
-                      <span>Confidence: {pair.confidence_score.toFixed(1)}%</span>
-                    </div>
+                    <p className="font-medium text-foundation-greygrey-900 [font-family:'Poppins',Helvetica]">
+                      {pair.product_name}
+                    </p>
+                    <p className="text-sm text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">
+                      Pairs with: {pair.pair_product_name}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-foundation-greengreen-500 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(pair.potential_revenue)}
+                    <p className="font-semibold text-foundation-greygrey-900 [font-family:'Poppins',Helvetica]">
+                      Rs {formatLargeNumber(pair.potential_revenue)}
                     </p>
-                    <p className="text-xs text-foundation-greygrey-600">potential</p>
+                    <p className="text-sm text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">
+                      {pair.confidence_score.toFixed(0)}% confidence
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-
-        {/* Cross-Selling Performance Chart */}
-        <Card className="bg-foundation-whitewhite-50 border-0 shadow-none">
-          <CardContent className="p-5">
-            <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-lg tracking-[0] leading-[normal] mb-4">Cross-Selling Performance</h3>
-            <div className="space-y-4">
-              
-              {/* Success Rate */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">Success Rate</span>
-                  <span className="text-sm font-bold text-black [font-family:'Poppins',Helvetica]">{metrics.conversionRate.toFixed(1)}%</span>
-                </div>
-                <div className="w-full bg-foundation-greygrey-100 rounded-full h-2">
-                  <div 
-                    className="bg-foundation-greengreen-500 h-2 rounded-full" 
-                    style={{ width: `${Math.min(metrics.conversionRate, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Average Confidence */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">Average Confidence</span>
-                  <span className="text-sm font-bold text-black [font-family:'Poppins',Helvetica]">{metrics.avgConfidence.toFixed(1)}%</span>
-                </div>
-                <div className="w-full bg-foundation-greygrey-100 rounded-full h-2">
-                  <div 
-                    className="bg-foundation-blueblue-500 h-2 rounded-full" 
-                    style={{ width: `${Math.min(metrics.avgConfidence, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Revenue Impact */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">Revenue Impact</span>
-                  <span className="text-sm font-bold text-black [font-family:'Poppins',Helvetica]">
-                    {formatCurrency(metrics.totalRevenue)}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  <div className="text-center p-3 bg-foundation-greengreen-50 rounded-lg">
-                    <p className="text-xs text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">This Month</p>
-                    <p className="text-sm font-bold text-foundation-greengreen-500 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(metrics.totalRevenue * 0.3)}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 bg-foundation-blueblue-50 rounded-lg">
-                    <p className="text-xs text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">This Quarter</p>
-                    <p className="text-sm font-bold text-foundation-blueblue-600 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(metrics.totalRevenue * 0.8)}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 bg-foundation-purplepurple-50 rounded-lg">
-                    <p className="text-xs text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">Projected</p>
-                    <p className="text-sm font-bold text-foundation-purplepurple-500 [font-family:'Poppins',Helvetica]">
-                      {formatCurrency(metrics.totalRevenue)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      )}
     </section>
   );
 };

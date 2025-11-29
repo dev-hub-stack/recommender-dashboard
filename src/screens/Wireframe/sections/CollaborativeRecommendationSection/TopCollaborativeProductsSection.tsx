@@ -6,6 +6,10 @@ import { getTopCollaborativeProducts, CollaborativeProduct, TimeFilter } from ".
 import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
 import { ExportButton } from "../../../../components/ExportButton";
 import { exportProductsDetail } from "../../../../services/exportApi";
+import { useMLRecommendations } from "../../../../hooks/useMLRecommendations";
+
+// API Configuration for ML endpoints
+const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8001';
 
 interface TopCollaborativeProductsSectionProps {
   timeFilter?: TimeFilter;
@@ -23,16 +27,34 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
   const [exporting, setExporting] = useState(false);
   const [sortField, setSortField] = useState<SortField>('recommendation_count');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  
+  // ML Integration
+  const { mlStatus } = useMLRecommendations('collaborative_products');
+  const [usingML, setUsingML] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getTopCollaborativeProducts(timeFilter, 10);
+        setUsingML(true); // Always use ML
+        
+        // Use ML endpoint directly - no SQL fallback
+        const mlResponse = await fetch(
+          `${ML_API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=10&use_ml=true`
+        );
+        
+        if (!mlResponse.ok) {
+          throw new Error('Failed to fetch ML collaborative products');
+        }
+        
+        const mlData = await mlResponse.json();
+        const data = mlData.products || [];
+        console.log('✅ Using ML Collaborative Products (/api/v1/ml/collaborative-products)');
+        
         setProducts(data);
         setError(null);
       } catch (err) {
-        setError('Failed to load collaborative products');
+        setError('Failed to load collaborative products. Please train ML models first.');
         console.error('Error fetching collaborative products:', err);
       } finally {
         setLoading(false);
@@ -95,10 +117,20 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
     try {
       setLoading(true);
       setError(null);
-      const data = await getTopCollaborativeProducts(timeFilter, 10);
-      setProducts(data);
+      
+      // Use ML endpoint directly
+      const mlResponse = await fetch(
+        `${ML_API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=10&use_ml=true`
+      );
+      
+      if (!mlResponse.ok) {
+        throw new Error('Failed to fetch ML collaborative products');
+      }
+      
+      const mlData = await mlResponse.json();
+      setProducts(mlData.products || []);
     } catch (err) {
-      setError('Failed to load collaborative products');
+      setError('Failed to load collaborative products. Please train ML models first.');
       console.error('Error fetching collaborative products:', err);
     } finally {
       setLoading(false);
@@ -151,11 +183,6 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
             size="sm"
             label="Export Report"
           />
-          <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
-            <span className="[font-family:'Poppins',Helvetica] font-normal text-green-800 text-xs">
-              🔴 Live Data
-            </span>
-          </Badge>
         </div>
 
         <div className="w-full overflow-x-auto">
@@ -262,7 +289,7 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
                   }`}
                 >
                   <span className="font-normal text-blue-600 text-sm">
-                    {product.avg_similarity_score.toFixed(2)}
+                    {(product.avg_similarity_score || 0).toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -289,7 +316,7 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
                   }`}
                 >
                   <span className="font-medium text-black text-sm">
-                    {formatCurrency(product.total_revenue)}
+                    Rs {formatLargeNumber(product.total_revenue)}
                   </span>
                 </div>
               ))}
