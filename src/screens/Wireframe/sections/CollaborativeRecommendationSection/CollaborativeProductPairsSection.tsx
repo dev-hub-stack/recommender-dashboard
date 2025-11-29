@@ -87,9 +87,18 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
     <Card className="bg-foundation-whitewhite-50 border-0 shadow-none rounded-xl h-[600px]">
       <CardContent className="p-5 flex flex-col h-full">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal]">
-            Collaborative Product Pairs
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal]">
+              Collaborative Product Pairs
+            </h3>
+            <div className="group relative">
+              <span className="text-gray-400 cursor-help">ⓘ</span>
+              <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                <p className="font-semibold mb-1">What is this?</p>
+                <p>Products that customers frequently buy together. Use this for "Frequently Bought Together" recommendations on your Shopify store.</p>
+              </div>
+            </div>
+          </div>
           {usingML && mlStatus?.is_trained ? (
             <Badge className="h-auto px-2 py-1 bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">
               <span className="font-normal text-xs">🤖 ML-Powered</span>

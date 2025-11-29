@@ -631,11 +631,16 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right group relative">
                         <p className="font-bold text-lg text-purple-600">
-                          {(rec.score * 100).toFixed(1)}%
+                          Rank #{index + 1}
                         </p>
-                        <p className="text-xs text-gray-500">confidence</p>
+                        <p className="text-xs text-gray-500 cursor-help">ML Priority ⓘ</p>
+                        {/* Tooltip */}
+                        <div className="absolute right-0 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                          <p className="font-semibold mb-1">What does Rank mean?</p>
+                          <p>AWS Personalize ranks products by how likely this user will purchase them. Rank #1 = highest probability.</p>
+                        </div>
                       </div>
                     </div>
                   ))}
