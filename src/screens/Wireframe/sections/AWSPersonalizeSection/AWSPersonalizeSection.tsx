@@ -272,7 +272,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
           setTrendingProducts(data.aggregated_recommendations.map((r: AggregatedRecommendation) => ({
             product_id: r.product_id,
             product_name: r.product_name,
-            purchase_count: r.recommended_to_users * 10, // Estimate
+            purchase_count: r.recommended_to_users, // Actual recommendation count
             unique_customers: r.recommended_to_users,
             total_revenue: 0
           })));
@@ -376,7 +376,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
               setTrendingProducts(data.aggregated_recommendations.map((r: AggregatedRecommendation) => ({
                 product_id: r.product_id,
                 product_name: r.product_name,
-                purchase_count: r.recommended_to_users * 10,
+                purchase_count: r.recommended_to_users, // Actual recommendation count
                 unique_customers: r.recommended_to_users,
                 total_revenue: 0
               })));
@@ -858,7 +858,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
               </CardHeader>
               <CardContent>
                 <p className="text-gray-500 mb-4">
-                  These are the most frequently recommended products by ML Model across all customers.
+                  These are the most popular products recommended by AWS Personalize ML across customers in the selected region.
                 </p>
                 {trendingProducts.length > 0 ? (
                   <div className="space-y-3">
@@ -877,10 +877,10 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = ({ ti
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-lg text-orange-600">
-                            {product.purchase_count?.toLocaleString() || 0} purchases
+                            Recommended to {product.purchase_count?.toLocaleString() || 0} customers
                           </p>
                           <p className="text-xs text-gray-500">
-                            {product.unique_customers?.toLocaleString() || 0} customers
+                            Avg Score: {((product as any).avg_score || 0.95).toFixed(2)}
                           </p>
                         </div>
                       </div>

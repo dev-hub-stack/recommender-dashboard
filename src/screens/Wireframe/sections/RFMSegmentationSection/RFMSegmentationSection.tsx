@@ -248,7 +248,14 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Last Order:</span>
-                <span className="font-semibold">{(segment.avg_days_since_last_order || 0).toFixed(0)} days ago</span>
+                <span className="font-semibold">
+                  {(() => {
+                    const days = Math.round(segment.avg_days_since_last_order || 0);
+                    if (days === 0) return 'Today';
+                    if (days === 1) return '1 day ago';
+                    return `${days} days ago`;
+                  })()}
+                </span>
               </div>
             </CardContent>
           </Card>

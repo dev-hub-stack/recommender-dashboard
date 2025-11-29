@@ -51,13 +51,15 @@ export const Wireframe = (): JSX.Element => {
             </h3>
           </div>
           
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Time Period:</label>
-            <select 
-              value={timeFilter} 
-              onChange={(e) => handleTimeFilterChange(e.target.value)}
-              className="px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
+          {/* Hide Time Period filter for ML Recommendations since ML uses all historical data */}
+          {activeView !== 'ML Recommendations' && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Time Period:</label>
+              <select 
+                value={timeFilter} 
+                onChange={(e) => handleTimeFilterChange(e.target.value)}
+                className="px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
               <option value="today">Today</option>
               <option value="7days">Last 7 Days</option>
               <option value="30days">Last 30 Days</option>
@@ -100,6 +102,7 @@ export const Wireframe = (): JSX.Element => {
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Render different views based on activeView */}
