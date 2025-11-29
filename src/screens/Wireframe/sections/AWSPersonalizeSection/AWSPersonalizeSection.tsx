@@ -796,8 +796,35 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-500 mb-4">
-                  These are the most popular products recommended by AWS Personalize ML across customers in the selected region.
+                  These are the most popular products recommended by AWS Personalize ML across customers{selectedProvince ? ` in ${selectedProvince}` : ''}{selectedCity ? `, ${selectedCity}` : ''}.
                 </p>
+                
+                {/* How It Works Info Box */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">💡</span>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="font-semibold text-blue-900">How It Works:</p>
+                        <ul className="text-sm text-blue-800 list-disc list-inside space-y-1 mt-1">
+                          <li>AWS Personalize analyzed <strong>180,000+ users</strong> and their purchase history</li>
+                          <li>For users in <strong>{selectedProvince || 'the selected region'}</strong>, it identified products they'd most likely want</li>
+                          <li><strong>"Recommended to X customers"</strong> means X users in that region received this product as a top recommendation</li>
+                          <li><strong>Avg Score (0-1)</strong> is the ML confidence score — higher means more confident</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-purple-900">Why These Products?</p>
+                        <ul className="text-sm text-purple-800 list-disc list-inside space-y-1 mt-1">
+                          <li>These are your <strong>top-performing products</strong> based on purchase patterns</li>
+                          <li>AWS Personalize learns: <em>"Users who bought X also bought Y"</em></li>
+                          <li>Products with high <strong>co-purchase rates</strong> rank higher</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
                 {trendingProducts.length > 0 ? (
                   <div className="space-y-3">
                     {trendingProducts.map((product, index) => (
