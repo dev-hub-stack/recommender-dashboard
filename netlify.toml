@@ -11,11 +11,24 @@
   # Node version
   NODE_VERSION = "18"
   
-  # Backend API URLs - PRODUCTION
-  VITE_API_BASE_URL = "http://44.201.11.243:8001/api/v1"
-  VITE_HEALTH_URL = "http://44.201.11.243:8001/health"
+  # Backend API URLs - Use Netlify proxy to avoid mixed content
+  VITE_API_BASE_URL = "/api/v1"
+  VITE_HEALTH_URL = "/health"
 
-# Redirect all routes to index.html for React Router
+# Proxy API requests to backend (MUST be before the catch-all)
+[[redirects]]
+  from = "/api/*"
+  to = "http://44.201.11.243:8001/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/health"
+  to = "http://44.201.11.243:8001/health"
+  status = 200
+  force = true
+
+# Redirect all other routes to index.html for React Router
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -52,17 +65,17 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Environment variables for production
+# Environment variables for production (uses proxy)
 [context.production.environment]
-  VITE_API_BASE_URL = "http://44.201.11.243:8001/api/v1"
-  VITE_HEALTH_URL = "http://44.201.11.243:8001/health"
+  VITE_API_BASE_URL = "/api/v1"
+  VITE_HEALTH_URL = "/health"
 
 # Deploy preview environment variables
 [context.deploy-preview.environment]
-  VITE_API_BASE_URL = "http://44.201.11.243:8001/api/v1"
-  VITE_HEALTH_URL = "http://44.201.11.243:8001/health"
+  VITE_API_BASE_URL = "/api/v1"
+  VITE_HEALTH_URL = "/health"
 
 # Branch deploy environment variables
 [context.branch-deploy.environment]
-  VITE_API_BASE_URL = "http://44.201.11.243:8001/api/v1"
-  VITE_HEALTH_URL = "http://44.201.11.243:8001/health"
+  VITE_API_BASE_URL = "/api/v1"
+  VITE_HEALTH_URL = "/health"
