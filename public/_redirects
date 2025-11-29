@@ -1,4 +1,6 @@
-# Redirects for React Router (SPA)
-# All routes should be handled by index.html
+# API Proxy - must be BEFORE catch-all
+/api/*  http://44.201.11.243:8001/api/:splat  200
+/health  http://44.201.11.243:8001/health  200
 
+# React Router catch-all (must be last)
 /*    /index.html    200
