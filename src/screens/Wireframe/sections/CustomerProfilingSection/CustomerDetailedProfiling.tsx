@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { formatCurrency, formatLargeNumber, formatPercentage } from '../../../../utils/formatters';
-import { RFMColumnTooltip, InfoTooltip } from '../../../../components/Tooltip';
+import { InfoTooltip } from '../../../../components/Tooltip';
 import { RFMMLCorrelationSection } from './RFMMLCorrelationSection';
 
 interface CustomerDetailedMetrics {
