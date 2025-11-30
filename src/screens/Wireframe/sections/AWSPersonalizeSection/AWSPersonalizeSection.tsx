@@ -578,7 +578,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                           <div className="text-right">
                             <p className="font-bold text-lg text-purple-600 flex items-center gap-1">
                               {Math.round((rec.recommended_to_users / 50) * 100)}% Match Rate
-                              <InfoTooltip text="Match Rate = % of sampled users who received this as a top recommendation. Higher % = stronger regional demand." />
+                              <InfoTooltip text="Match Rate = % of sampled users who could receive this as a top recommendation. Higher % = stronger regional potential. This shows opportunity, not actual recommendations delivered." />
                             </p>
                             <p className={`text-xs font-medium ${
                               rec.recommended_to_users >= 40 ? 'text-green-600' : 
@@ -860,8 +860,8 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                         <ul className="text-sm text-blue-800 list-disc list-inside space-y-1 mt-1">
                           <li>AWS Personalize analyzed <strong>180,000+ users</strong> and their purchase history</li>
                           <li>For users in <strong>{selectedProvince || 'the selected region'}</strong>, we sample 50 customers in real-time</li>
-                          <li><strong>Match Rate</strong> = % of sampled users who received this as a top recommendation</li>
-                          <li><strong>100% Match Rate</strong> = Every sampled customer wants this product = Very High Regional Demand</li>
+                          <li><strong>Match Rate</strong> = % of sampled users who could receive this as a top recommendation</li>
+                          <li><strong>100% Match Rate</strong> = Every sampled customer matches this product profile = Very High Regional Potential</li>
                         </ul>
                       </div>
                       <div>
@@ -894,7 +894,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                         <div className="text-right">
                           <p className="font-bold text-lg text-orange-600 flex items-center gap-1">
                             {Math.round(((product.purchase_count || 0) / 50) * 100)}% Match Rate
-                            <InfoTooltip text="Match Rate = % of sampled users who received this as a top recommendation. Higher % = stronger regional demand." />
+                            <InfoTooltip text="Match Rate = % of sampled users who could receive this as a top recommendation. Higher % = stronger regional potential. This shows opportunity, not actual recommendations delivered." />
                           </p>
                           <p className={`text-xs font-medium ${
                             (product.purchase_count || 0) >= 40 ? 'text-green-600' : 
