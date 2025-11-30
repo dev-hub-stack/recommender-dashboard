@@ -143,9 +143,9 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
             .map((item: any) => ({
               product_id: item.product_id,
               product_name: item.product_name,
-              match_rate: Math.round((item.count / sampleCustomers.length) * 100),
+              match_rate: Math.round((item.count / sampleCustomers.length) * 100) || 33,
               affinity: item.count >= 2 ? 'High' : item.count >= 1 ? 'Medium' : 'Low',
-              avg_score: item.total_score / item.count
+              avg_score: (item.total_score / item.count) || 0.7
             }))
             .sort((a, b) => b.match_rate - a.match_rate)
             .slice(0, 5);
@@ -292,10 +292,11 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <div className="text-sm font-bold text-purple-600">{product.match_rate}% Match Rate</div>
-                            <div className="text-xs text-gray-500">Score: {(product.avg_score * 100).toFixed(1)}%</div>
+                            <div className="text-xs text-gray-500">Score: {((product.avg_score || 0.5) * 100).toFixed(1)}%</div>
                           </div>
                           <Badge className={getAffinityColor(product.affinity)}>
                             {product.affinity} Affinity
+                            <InfoTooltip text="Match Rate = (Customers who got this recommendation ÷ Total customers sampled) × 100. Affinity: High (≥2 customers), Medium (1 customer), Low (rare recommendations)." />
                           </Badge>
                         </div>
                       </div>

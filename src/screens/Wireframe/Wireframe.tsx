@@ -30,7 +30,7 @@ export const Wireframe = (): JSX.Element => {
   };
 
   return (
-    <div className="bg-foundation-whitewhite-100 w-full min-w-[1440px] h-auto relative flex">
+    <div className="bg-foundation-whitewhite-100 w-full min-w-[1440px] h-screen relative flex overflow-hidden">
       <aside className="w-auto relative">
         <RevenueTrendSection 
           activeView={activeView}
@@ -38,7 +38,7 @@ export const Wireframe = (): JSX.Element => {
         />
       </aside>
 
-      <main className="flex-1 flex flex-col relative space-y-6 p-4">
+      <main className="flex-1 flex flex-col relative space-y-6 p-4 overflow-y-auto h-full">
         <DashboardHeaderSection />
         
         {/* Global Time Filter */}
