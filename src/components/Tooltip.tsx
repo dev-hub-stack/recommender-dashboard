@@ -17,7 +17,7 @@ export const InfoTooltip = ({ text }: { text: string }) => {
   };
   
   return (
-    <span className="relative inline-block ml-1">
+    <span className="relative inline-block ml-1 z-[10000]">
       <HelpCircle 
         className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help inline"
         onMouseEnter={() => setShow(true)}
@@ -25,13 +25,26 @@ export const InfoTooltip = ({ text }: { text: string }) => {
         onClick={() => setShow(!show)}
       />
       {show && (
-        <>
+        <div className="fixed z-[99999]">
           <span 
-            className="absolute z-[9999] left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700"
+            className="absolute w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700"
+            style={{
+              left: '50%',
+              transform: 'translateX(-50%) translateY(-100%)',
+              bottom: '100%',
+              marginBottom: '8px'
+            }}
             dangerouslySetInnerHTML={{ __html: formatText(text) }}
           />
-          <span className="absolute left-1/2 transform -translate-x-1/2 top-full border-4 border-transparent border-t-gray-900"></span>
-        </>
+          <span 
+            className="absolute border-4 border-transparent border-t-gray-900"
+            style={{
+              left: '50%',
+              transform: 'translateX(-50%)',
+              top: '-4px'
+            }}
+          />
+        </div>
       )}
     </span>
   );
