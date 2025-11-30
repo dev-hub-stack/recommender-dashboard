@@ -20,7 +20,7 @@ const insightsAnalysisItems = [
 const growthToolsItems = [
   {
     icon: "/vuesax-linear-lamp-charge.svg",
-    label: "Popularity Based",
+    label: "Collaborative Filtering",
   },
   {
     icon: "/vuesax-linear-maximize.svg",

@@ -4,6 +4,7 @@ import { Badge } from '../../../../components/ui/badge';
 import { getCollaborativeProductPairs, CollaborativeProductPair, TimeFilter } from '../../../../services/api';
 import { formatLargeNumber } from '../../../../utils/formatters';
 import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
+import { InfoTooltip } from '../../../../components/Tooltip';
 
 interface CollaborativeProductPairsSectionProps {
   timeFilter?: TimeFilter;
@@ -88,16 +89,10 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
       <CardContent className="p-5 flex flex-col h-full">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal]">
+            <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal] flex items-center gap-2">
               Collaborative Product Pairs
+              <InfoTooltip text="Market Basket Analysis: Identifies products frequently bought together. Algorithm: 1) Count co-purchase frequency, 2) Calculate lift ratio = P(A&B)/(P(A)×P(B)), 3) Filter by minimum support, 4) Rank by confidence. Use for 'Frequently Bought Together' recommendations and product bundling." />
             </h3>
-            <div className="group relative">
-              <span className="text-gray-400 cursor-help">ⓘ</span>
-              <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                <p className="font-semibold mb-1">What is this?</p>
-                <p>Products that customers frequently buy together. Use this for "Frequently Bought Together" recommendations on your Shopify store.</p>
-              </div>
-            </div>
           </div>
           {usingML && mlStatus?.is_trained ? (
             <Badge className="h-auto px-2 py-1 bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">

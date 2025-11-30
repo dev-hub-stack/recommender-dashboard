@@ -5,6 +5,7 @@ import { Card, CardContent } from "../../../../components/ui/card";
 import { CustomerSimilarityData, TimeFilter } from "../../../../services/api";
 import { formatLargeNumber } from "../../../../utils/formatters";
 import { useMLRecommendations } from "../../../../hooks/useMLRecommendations";
+import { InfoTooltip } from "../../../../components/Tooltip";
 
 // API Configuration for ML endpoints
 const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '';
@@ -96,8 +97,9 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
       <Card className="flex flex-col items-start gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl w-full">
         <CardContent className="p-0 w-full space-y-4">
           <div className="flex items-center gap-2.5 w-full">
-            <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base">
+            <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base flex items-center gap-2">
               Customer Similarity Insights
+              <InfoTooltip text="Finds customers with similar purchase patterns using collaborative filtering. Algorithm: 1) Create user-item matrix from purchase history, 2) Calculate cosine similarity between customers, 3) Find top similar customers, 4) Recommend products bought by similar customers but not by target customer." />
             </h2>
             <Badge className="h-auto px-2 py-1 bg-foundation-whitewhite-200 rounded-[5px]">
               <span className="[font-family:'Poppins',Helvetica] font-normal text-foundation-greygrey-800 text-xs">
@@ -164,16 +166,10 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
       <CardContent className="p-0 w-full flex flex-col h-full">
         <div className="flex items-center gap-2.5 w-full mb-4">
           <div className="flex-1 flex items-center gap-2">
-            <h2 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base">
+            <h2 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base flex items-center gap-2">
               Customer Similarity Insights
+              <InfoTooltip text="Finds customers with similar purchase patterns using collaborative filtering. Algorithm: 1) Create user-item matrix from purchase history, 2) Calculate cosine similarity between customers, 3) Find top similar customers, 4) Recommend products bought by similar customers but not by target customer." />
             </h2>
-            <div className="group relative">
-              <span className="text-gray-400 cursor-help">ⓘ</span>
-              <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                <p className="font-semibold mb-1">What is this?</p>
-                <p>Customers grouped by similar purchase behavior. "Similar" = customers who bought the same products. Use this to identify customer segments.</p>
-              </div>
-            </div>
           </div>
           {usingML && mlStatus?.is_trained ? (
             <Badge className="h-auto px-2 py-1 bg-gradient-to-r from-foundation-blueblue-500 to-foundation-purplepurple-500 text-white border-0">
@@ -206,7 +202,10 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
                   onClick={() => handleSort('similar_customers_count')}
                   className="flex-1 min-w-0 h-[41px] flex items-center justify-center gap-1 p-2.5 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer"
                 >
-                  <span className="font-normal text-foundation-greygrey-400 text-sm">Similar</span>
+                  <span className="font-normal text-foundation-greygrey-400 text-sm flex items-center gap-1">
+                    Similar
+                    <InfoTooltip text="Number of customers with high purchase pattern similarity. Higher count = more common buying behavior. Calculated using cosine similarity > 0.5 threshold." />
+                  </span>
                   <SortIcon field="similar_customers_count" />
                 </button>
                 <button
@@ -214,7 +213,10 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
                   className="flex-1 min-w-0 h-[41px] flex items-center justify-center gap-1 p-2.5 hover:bg-foundation-whitewhite-200 active:bg-foundation-whitewhite-300 cursor-pointer"
                   title="Actual products available for recommendation"
                 >
-                  <span className="font-normal text-foundation-greygrey-400 text-sm">Recommendations</span>
+                  <span className="font-normal text-foundation-greygrey-400 text-sm flex items-center gap-1">
+                    Recommendations
+                    <InfoTooltip text="Count of unique products recommended based on similar customers' purchases. Excludes products already owned. Higher count = more cross-sell opportunities." />
+                  </span>
                   <SortIcon field="actual_recommendations" />
                 </button>
               </div>

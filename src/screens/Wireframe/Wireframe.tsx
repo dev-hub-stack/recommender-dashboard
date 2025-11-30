@@ -30,7 +30,7 @@ export const Wireframe = (): JSX.Element => {
   };
 
   return (
-    <div className="bg-foundation-whitewhite-100 w-full min-w-[1440px] min-h-[1024px] relative flex">
+    <div className="bg-foundation-whitewhite-100 w-full min-w-[1440px] h-auto relative flex">
       <aside className="w-auto relative">
         <RevenueTrendSection 
           activeView={activeView}
@@ -46,7 +46,7 @@ export const Wireframe = (): JSX.Element => {
           <div className="flex items-center gap-4">
             <h3 className="text-lg font-semibold text-gray-800">
               {activeView === 'Dashboard' ? 'Analytics Dashboard' : 
-               activeView === 'Collaborative Recommendation' ? 'Collaborative Filtering' : 
+               activeView === 'Collaborative Filtering' ? 'Collaborative Filtering' : 
                activeView}
             </h3>
           </div>
@@ -123,7 +123,7 @@ export const Wireframe = (): JSX.Element => {
           <CrossSellingSection timeFilter={timeFilter} />
         )}
         
-        {activeView === 'Collaborative Recommendation' && (
+        {activeView === 'Collaborative Filtering' && (
           <CollaborativeRecommendationDashboard timeFilter={timeFilter} />
         )}
         
