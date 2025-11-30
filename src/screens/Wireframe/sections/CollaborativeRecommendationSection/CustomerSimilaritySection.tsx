@@ -142,19 +142,145 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
   };
 
   if (error) {
+    // Show sample data when ML engine is offline
+    const sampleCustomers = [
+      {
+        customer_id: "CUST_001",
+        customer_name: "Ahmed Hassan",
+        similar_customers_count: 1247,
+        recommendations_generated: 15,
+        top_shared_products: [
+          { product_name: "Premium Laptop Stand", shared_count: 8 },
+          { product_name: "Wireless Mouse", shared_count: 6 }
+        ]
+      },
+      {
+        customer_id: "CUST_002", 
+        customer_name: "Sarah Khan",
+        similar_customers_count: 892,
+        recommendations_generated: 12,
+        top_shared_products: [
+          { product_name: "USB-C Hub", shared_count: 7 },
+          { product_name: "Monitor Stand", shared_count: 5 }
+        ]
+      },
+      {
+        customer_id: "CUST_003",
+        customer_name: "Muhammad Ali",
+        similar_customers_count: 756,
+        recommendations_generated: 18,
+        top_shared_products: [
+          { product_name: "Mechanical Keyboard", shared_count: 9 },
+          { product_name: "Desk Lamp", shared_count: 4 }
+        ]
+      }
+    ];
+
     return (
-      <Card className="flex flex-col items-start gap-4 p-5 bg-red-50 rounded-xl w-full">
-        <CardContent className="p-0 w-full">
-          <div className="flex flex-col items-center justify-center gap-4 py-6">
-            <div className="text-red-600 text-center">
-              {error}
+      <Card className="flex flex-col items-start gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl w-full">
+        <CardContent className="p-0 w-full space-y-4">
+          <div className="flex items-center gap-2.5 w-full">
+            <div className="flex-1 flex items-center gap-2">
+              <h2 className="[font-family:'Poppins',Helvetica] font-semibold text-black text-base flex items-center gap-2">
+                Customer Similarity Insights
+                <InfoTooltip text="Finds customers with similar purchase patterns using collaborative filtering. Sample data shown when ML engine is offline." />
+              </h2>
             </div>
-            <button
-              onClick={handleRetry}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors text-sm touch-manipulation"
-            >
-              Retry
-            </button>
+            <Badge className="h-auto px-2 py-1 bg-yellow-100 text-yellow-800 border-yellow-300">
+              <span className="[font-family:'Poppins',Helvetica] font-normal text-xs">
+                Sample Data
+              </span>
+            </Badge>
+          </div>
+          
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              <strong>Sample Data:</strong> ML engine is offline. This shows sample customer similarity insights. Start the ML engine to see live data.
+            </p>
+          </div>
+
+          <div className="flex flex-col h-full">
+            {/* Table Header */}
+            <div className="grid grid-cols-[3fr,2fr,1fr,1fr] gap-2 border-b border-foundation-greygrey-200 pb-2 mb-2">
+              <button className="flex-1 min-w-0 h-[41px] flex items-center justify-center gap-1 p-2.5 hover:bg-foundation-whitewhite-200 cursor-pointer">
+                <span className="font-normal text-foundation-greygrey-400 text-sm flex items-center gap-1">
+                  Customer
+                  <InfoTooltip text="Customer base for similarity analysis. Sample customers represent different buying patterns." />
+                </span>
+              </button>
+              <button className="flex-1 min-w-0 h-[41px] flex items-center justify-center gap-1 p-2.5 hover:bg-foundation-whitewhite-200 cursor-pointer">
+                <span className="font-normal text-foundation-greygrey-400 text-sm flex items-center gap-1">
+                  Shared Products
+                  <InfoTooltip text="Products commonly bought by similar customers. These indicate purchase patterns." />
+                </span>
+              </button>
+              <button className="flex-1 min-w-0 h-[41px] flex items-center justify-center gap-1 p-2.5 hover:bg-foundation-whitewhite-200 cursor-pointer">
+                <span className="font-normal text-foundation-greygrey-400 text-sm flex items-center gap-1">
+                  Similar
+                  <InfoTooltip text="Number of customers with high purchase pattern similarity. Sample data shows pattern groups." />
+                </span>
+              </button>
+              <button className="flex-1 min-w-0 h-[41px] flex items-center justify-center gap-1 p-2.5 hover:bg-foundation-whitewhite-200 cursor-pointer">
+                <span className="font-normal text-foundation-greygrey-400 text-sm flex items-center gap-1">
+                  Recommendations
+                  <InfoTooltip text="Potential cross-sell products based on similar customers. Sample shows opportunity count." />
+                </span>
+              </button>
+            </div>
+
+            {/* Sample Data Rows */}
+            <div className="flex-1 overflow-y-auto">
+              {sampleCustomers.map((customer, index) => (
+                <div key={customer.customer_id} className="grid grid-cols-[3fr,2fr,1fr,1fr] gap-2 border-b border-foundation-greygrey-100 hover:bg-foundation-whitewhite-100">
+                  {/* Customer Column */}
+                  <div className="flex-[3] min-w-0 flex items-center px-2.5 py-4">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-gray-900 truncate block">
+                          {customer.customer_name}
+                        </span>
+                        <span className="text-xs text-gray-500 truncate">
+                          ID: {customer.customer_id}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Shared Products Column */}
+                  <div className="flex-[2] min-w-0 flex items-center px-2.5 py-4">
+                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                      {customer.top_shared_products.map((product, idx) => (
+                        <div key={idx} className="flex items-center gap-1">
+                          <span className="text-xs text-foundation-greygrey-600 truncate">
+                            {product.product_name}
+                          </span>
+                          <span className="text-xs text-foundation-blueblue-600 font-medium flex-shrink-0">
+                            ({product.shared_count})
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Similar Customers Column */}
+                  <div className="flex-1 min-w-0 flex items-center justify-center px-2.5 py-4">
+                    <span className="font-normal text-foundation-blueblue-600 text-sm">
+                      {formatLargeNumber(customer.similar_customers_count)}
+                    </span>
+                  </div>
+
+                  {/* Recommendations Column */}
+                  <div className="flex-1 min-w-0 flex items-center justify-center px-2.5 py-4">
+                    <span className="font-medium text-sm text-gray-600">
+                      {formatLargeNumber(customer.recommendations_generated)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

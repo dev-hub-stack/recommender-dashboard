@@ -26,14 +26,6 @@ const growthToolsItems = [
     icon: "/vuesax-linear-maximize.svg",
     label: "Cross-Selling",
   },
-  {
-    icon: "/vuesax-linear-home-trend-up.svg",
-    label: "Trending Products",
-  },
-  {
-    icon: "/vuesax-linear-shopping-bag.svg",
-    label: "Inventory Insights",
-  },
 ];
 
 const phase1AnalyticsItems = [
@@ -114,15 +106,11 @@ export const RevenueTrendSection: React.FC<RevenueTrendSectionProps> = ({
               <Button
                 key={index}
                 onClick={() => {
-                  // Handle navigation for implemented features
+                  // Handle navigation for implemented features only
                   if (item.label === "Cross-Selling") {
                     onNavigate("Cross-Selling");
                   } else if (item.label === "Collaborative Filtering") {
                     onNavigate("Collaborative Filtering");
-                  } else if (item.label === "Trending Products") {
-                    onNavigate("Dashboard"); // Navigate to Dashboard for now
-                  } else if (item.label === "Inventory Insights") {
-                    alert(`${item.label} - Coming Soon! This feature is under development.`);
                   }
                 }}
                 variant={isActive ? "default" : "ghost"}
