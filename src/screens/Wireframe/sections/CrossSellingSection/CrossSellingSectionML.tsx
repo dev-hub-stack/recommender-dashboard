@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
-import { formatCurrency, formatLargeNumber } from '../../../../utils/formatters';
-import { useMLRecommendations, formatPKR, formatConfidence, getAlgorithmColor } from '../../../../hooks/useMLRecommendations';
+import { formatLargeNumber } from '../../../../utils/formatters';
+import { useMLRecommendations, formatPKR, getAlgorithmColor } from '../../../../hooks/useMLRecommendations';
+import { InfoTooltip } from '../../../../components/Tooltip';
 import { Bot, TrendingUp, Users, Target, Sparkles } from 'lucide-react';
 
 interface CollaborativeProduct {

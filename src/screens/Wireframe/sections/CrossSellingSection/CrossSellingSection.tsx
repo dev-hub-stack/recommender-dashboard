@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
-import { formatCurrency, formatLargeNumber } from '../../../../utils/formatters';
+import { formatLargeNumber } from '../../../../utils/formatters';
 import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 import { InfoTooltip } from '../../../../components/Tooltip';
 
@@ -24,20 +24,16 @@ interface CrossSellingMetrics {
 interface CrossSellingSectionProps {
   timeFilter?: string;
   enableABTest?: boolean; // Enable A/B testing between ML and SQL
-  mlRolloutPercentage?: number; // 0-100, percentage of traffic to ML
 }
 
 export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({ 
   timeFilter = '30days',
-  enableABTest = true,
-  mlRolloutPercentage = 50
+  enableABTest = true
 }) => {
   // Use ML Recommendations Hook with A/B Testing
   const { 
     variant, 
     mlStatus, 
-    getRecommendations,
-    trainModels,
     loading: mlLoading,
     error: mlError 
   } = useMLRecommendations('cross_selling');
@@ -111,56 +107,6 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       setError('Failed to load cross-selling analytics');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchMLCrossSellingData = async (API_BASE_URL: string) => {
-    try {
-      // Fetch ML collaborative products
-      const mlResponse = await fetch(
-        `${API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=20`
-      );
-      
-      if (!mlResponse.ok) {
-        throw new Error('ML service unavailable, falling back to SQL');
-      }
-
-      const mlData = await mlResponse.json();
-      const recommendations = mlData.recommendations || [];
-
-      // Calculate metrics from ML recommendations
-      const totalRevenue = recommendations.reduce((sum: number, rec: any) => 
-        sum + (rec.revenue || 0), 0
-      );
-      
-      const avgConfidence = recommendations.length > 0
-        ? recommendations.reduce((sum: number, rec: any) => sum + (rec.confidence || 0), 0) / recommendations.length * 100
-        : 0;
-
-      // Transform ML recommendations to cross-sell pairs
-      const topPairs = recommendations.slice(0, 6).map((rec: any) => ({
-        product_id: rec.product_id,
-        product_name: rec.product_name || `Product ${rec.product_id}`,
-        pair_product_id: rec.product_id,
-        pair_product_name: rec.product_name || `Product ${rec.product_id}`,
-        co_purchase_count: Math.round(rec.score * 10),
-        confidence_score: (rec.confidence || 0.85) * 100,
-        potential_revenue: rec.revenue || rec.price * 2
-      }));
-
-      setMetrics({
-        totalRevenue,
-        conversionRate: 32, // ML typically achieves 32% conversion
-        totalOpportunities: recommendations.length,
-        avgConfidence,
-        topPairs
-      });
-
-      console.log('✅ Using ML Collaborative Filtering for Cross-Selling');
-      
-    } catch (err) {
-      console.warn('ML failed, falling back to SQL:', err);
-      await fetchSQLCrossSellingData(API_BASE_URL);
     }
   };
 
