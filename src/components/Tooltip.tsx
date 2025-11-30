@@ -2,8 +2,11 @@
 import { useState } from 'react';
 import { InfoIcon, HelpCircle } from 'lucide-react';
 
-// Simple inline info tooltip for metric labels - RELIABLE VERSION
+// Simple inline info tooltip for metric labels - FIXED FOR CONTAINER OVERFLOW AND SORTING
 export const InfoTooltip = ({ text }: { text: string }) => {
+  const [show, setShow] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  
   // Convert markdown-style formatting to HTML
   const formatText = (text: string) => {
     return text
@@ -14,21 +17,56 @@ export const InfoTooltip = ({ text }: { text: string }) => {
       .replace(/\n/g, '<br/>');                          // Line breaks
   };
   
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const tooltipWidth = 256; // w-64 = 16rem = 256px
+    const tooltipHeight = 120; // Approximate height
+    
+    let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+    let top = rect.top - tooltipHeight - 8;
+    
+    // Keep tooltip within viewport bounds
+    if (left < 8) left = 8;
+    if (left + tooltipWidth > window.innerWidth - 8) {
+      left = window.innerWidth - tooltipWidth - 8;
+    }
+    if (top < 8) {
+      top = rect.bottom + 8; // Show below if no space above
+    }
+    
+    setPosition({ top, left });
+    setShow(true);
+  };
+  
+  const handleMouseLeave = () => {
+    setShow(false);
+  };
+  
   return (
-    <div className="group relative inline-block ml-1">
-      <HelpCircle className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
+    <>
+      <span 
+        className="inline-block ml-1"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <HelpCircle className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
+      </span>
       
-      {/* Tooltip content - using CSS group-hover for reliability */}
-      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-        <div className="w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700">
-          <div dangerouslySetInnerHTML={{ __html: formatText(text) }} />
+      {show && (
+        <div 
+          className="fixed z-[9999] pointer-events-none"
+          style={{ top: position.top, left: position.left }}
+        >
+          <div className="w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700">
+            <div dangerouslySetInnerHTML={{ __html: formatText(text) }} />
+          </div>
+          {/* Arrow */}
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mt-1">
+            <div className="border-4 border-transparent border-t-gray-900"></div>
+          </div>
         </div>
-        {/* Arrow */}
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-          <div className="border-4 border-transparent border-t-gray-900"></div>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
