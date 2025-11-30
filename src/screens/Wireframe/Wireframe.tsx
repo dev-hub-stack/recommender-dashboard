@@ -136,7 +136,7 @@ export const Wireframe = (): JSX.Element => {
         )}
         
         {activeView === 'ML Recommendations' && (
-          <AWSPersonalizeSection timeFilter={timeFilter} />
+          <AWSPersonalizeSection />
         )}
       </main>
 
