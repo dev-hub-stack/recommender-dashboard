@@ -44,7 +44,7 @@ interface RecentActivitySectionProps {
 
 export const RecentActivitySection = ({ timeFilter = '7days' }: RecentActivitySectionProps): JSX.Element => {
   return (
-    <section className="flex flex-col gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl overflow-hidden">
+    <section className="flex flex-col gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-lg">Recent Activity</h2>
         <div className="flex items-center gap-4">

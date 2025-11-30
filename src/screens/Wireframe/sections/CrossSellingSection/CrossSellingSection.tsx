@@ -112,7 +112,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     {
       icon: "/vuesax-linear-chart.svg",
       label: "Paired Products Revenue",
-      tooltip: "Total revenue from products frequently bought together",
+      tooltip: "Total revenue from products frequently bought together. The 12% shows month-over-month growth trend.",
       value: `Rs ${formatLargeNumber(metrics.totalRevenue)}`,
       percentage: "12%",
       bgColor: "bg-foundation-greengreen-50",
@@ -123,7 +123,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     {
       icon: "/vuesax-linear-shopping-cart.svg",
       label: "Bundle Success Rate",
-      tooltip: "Percentage of customers who bought recommended product pairs",
+      tooltip: "Percentage of customers who bought recommended product pairs. The 10% shows month-over-month growth trend.",
       value: `${metrics.conversionRate.toFixed(0)}%`,
       percentage: "10%",
       bgColor: "bg-foundation-blueblue-50",
