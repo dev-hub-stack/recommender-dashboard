@@ -276,7 +276,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
               <div className="lg:col-span-2">
                 <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   🤖 Segment-Specific Recommendations
-                  <InfoTooltip text="Products most frequently recommended to customers in this segment. Match rate shows % of sampled customers who received this recommendation. Higher match rates indicate strong segment preference. Use these for targeted marketing campaigns to this specific customer group." />
+                  <InfoTooltip text="Products with highest recommendation potential for this segment. These are ML-predicted recommendations based on segment behavior patterns, not actual recommendations already made to customers. Use these for targeted marketing campaigns." />
                 </h5>
                 <div className="space-y-2">
                   {segmentData.recommendations.length > 0 ? (
@@ -296,7 +296,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
                           </div>
                           <Badge className={getAffinityColor(product.affinity)}>
                             {product.affinity} Affinity
-                            <InfoTooltip text="Match Rate = (Customers who got this recommendation ÷ Total customers sampled) × 100. Affinity: High (≥2 customers), Medium (1 customer), Low (rare recommendations)." />
+                            <InfoTooltip text="Match Rate = Potential recommendation strength for this segment. Higher % = stronger recommendation potential. Affinity: High (strong potential), Medium (moderate potential), Low (limited potential). These are ML-predicted recommendations, not actual customer recommendations." />
                           </Badge>
                         </div>
                       </div>
