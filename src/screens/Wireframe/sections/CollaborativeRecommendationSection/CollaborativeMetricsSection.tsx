@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { useCollaborativeMetrics } from "../../../../hooks/useCollaborativeMetrics";
-import { formatLargeNumber } from "../../../../utils/formatters";
+import { formatLargeNumber, formatPercentage } from "../../../../utils/formatters";
 import { InfoTooltip } from "../../../../components/Tooltip";
 
 interface CollaborativeMetricsSectionProps {
@@ -44,7 +44,7 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
         icon: "/vuesax-linear-lamp-charge.svg",
         label: "High-Value Product Pairs",
         tooltip: "Product combinations with >5,000 PKR average order value. These pairs drive premium revenue and should be prioritized for bundle promotions.",
-        value: "247",
+        value: "3,960",
         percentage: "Premium",
         bgColor: "bg-foundation-greengreen-50",
         percentageColor: "text-foundation-greengreen-500",
@@ -53,10 +53,10 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
       },
       {
         icon: "/vuesax-linear-user-search.svg",
-        label: "Cross-Region Opportunities",
-        tooltip: "Products popular in multiple regions. These have expansion potential and should be stocked in new markets.",
-        value: "89",
-        percentage: "Growth",
+        label: "Customer Connections",
+        tooltip: "Number of customer pairs with similar buying patterns. Higher connections indicate stronger collaborative filtering signals and more reliable recommendations.",
+        value: "1,630",
+        percentage: "Network",
         bgColor: "bg-foundation-blueblue-50",
         percentageColor: "text-foundation-blueblue-600",
         percentageBg: "bg-foundation-blueblue-50",
@@ -64,10 +64,10 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
       },
       {
         icon: "/vuesax-linear-user-edit.svg",
-        label: "Seasonal Trend Products",
-        tooltip: "Products with strong seasonal patterns. Use these for timed campaigns and inventory planning.",
-        value: "156",
-        percentage: "Seasonal",
+        label: "Pattern Strength",
+        tooltip: "Average similarity score between connected customers (0-1 scale). Higher scores indicate stronger purchase pattern similarities and more accurate recommendations.",
+        value: "22.2%",
+        percentage: "Similarity",
         bgColor: "bg-foundation-orangeorange-50",
         percentageColor: "text-foundation-orangeorange-500",
         percentageBg: "bg-foundation-orangeorange-50",
@@ -75,10 +75,10 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
       },
       {
         icon: "/vuesax-linear-chart-2.svg",
-        label: "Undiscovered Gems",
-        tooltip: "Low-volume products with high customer satisfaction. These have growth potential with proper marketing.",
-        value: "423",
-        percentage: "Hidden",
+        label: "Recommendation Coverage",
+        tooltip: "Percentage of customer pairs with collaborative connections. Higher coverage means more customers can benefit from collaborative recommendations.",
+        value: "0.0%",
+        percentage: "Coverage",
         bgColor: "bg-foundation-purplepurple-50",
         percentageColor: "text-foundation-purplepurple-500",
         percentageBg: "bg-foundation-purplepurple-50",
@@ -154,10 +154,10 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
     },
     {
       icon: "/vuesax-linear-user-search.svg",
-      label: "Cross-Region Opportunities",
-      tooltip: "Products popular in multiple regions. These have expansion potential and should be stocked in new markets.",
-      value: formatLargeNumber((metrics?.avgSimilarityScore || 0.89) * 100),
-      percentage: "Growth",
+      label: "Customer Connections",
+      tooltip: "Number of customer pairs with similar buying patterns. Higher connections indicate stronger collaborative filtering signals and more reliable recommendations.",
+      value: formatLargeNumber(metrics?.activeCustomerPairs || 89),
+      percentage: "Network",
       bgColor: "bg-foundation-blueblue-50",
       percentageColor: "text-foundation-blueblue-600",
       percentageBg: "bg-foundation-blueblue-50",
@@ -165,10 +165,10 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
     },
     {
       icon: "/vuesax-linear-user-edit.svg",
-      label: "Seasonal Trend Products",
-      tooltip: "Products with strong seasonal patterns. Use these for timed campaigns and inventory planning.",
-      value: formatLargeNumber(metrics?.activeCustomerPairs || 156),
-      percentage: "Seasonal",
+      label: "Pattern Strength",
+      tooltip: "Average similarity score between connected customers (0-1 scale). Higher scores indicate stronger purchase pattern similarities and more accurate recommendations.",
+      value: formatPercentage(metrics?.avgSimilarityScore || 0, 2),
+      percentage: "Similarity",
       bgColor: "bg-foundation-orangeorange-50",
       percentageColor: "text-foundation-orangeorange-500",
       percentageBg: "bg-foundation-orangeorange-50",
@@ -176,10 +176,10 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
     },
     {
       icon: "/vuesax-linear-chart-2.svg",
-      label: "Undiscovered Gems",
-      tooltip: "Low-volume products with high customer satisfaction. These have growth potential with proper marketing.",
-      value: formatLargeNumber((metrics?.algorithmAccuracy || 0.846) * 500),
-      percentage: "Hidden",
+      label: "Recommendation Coverage",
+      tooltip: "Percentage of customer pairs with collaborative connections. Higher coverage means more customers can benefit from collaborative recommendations.",
+      value: formatPercentage(metrics?.algorithmAccuracy || 0, 2),
+      percentage: "Coverage",
       bgColor: "bg-foundation-purplepurple-50",
       percentageColor: "text-foundation-purplepurple-500",
       percentageBg: "bg-foundation-purplepurple-50",
