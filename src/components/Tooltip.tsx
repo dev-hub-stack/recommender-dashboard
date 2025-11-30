@@ -15,9 +15,9 @@ export const InfoTooltip = ({ text }: { text: string }) => {
         onClick={() => setShow(!show)}
       />
       {show && (
-        <span className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg">
+        <span className="absolute z-50 right-0 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg">
           {text}
-          <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-800"></span>
+          <span className="absolute right-4 top-full border-4 border-transparent border-t-gray-800"></span>
         </span>
       )}
     </span>

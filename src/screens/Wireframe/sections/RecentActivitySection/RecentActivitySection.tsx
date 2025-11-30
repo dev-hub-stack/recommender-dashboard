@@ -80,7 +80,7 @@ export const RecentActivitySection = ({ timeFilter = '7days' }: RecentActivitySe
                   </p>
                 </div>
 
-                <div className="flex flex-col w-[173px] items-center gap-2.5">
+                <div className="flex flex-col items-center gap-2.5 min-w-fit">
                   <Badge
                     variant="secondary"
                     className={`h-auto px-2 py-1 ${activity.statusBg} rounded-[5px] hover:${activity.statusBg}`}
