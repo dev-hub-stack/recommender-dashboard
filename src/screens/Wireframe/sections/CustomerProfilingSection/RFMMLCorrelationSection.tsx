@@ -33,6 +33,21 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
     fetchCorrelationData();
   }, [timeFilter]);
 
+  const getSegmentInsight = (segment: string) => {
+    switch (segment) {
+      case 'Champions':
+        return 'your most valuable customers who buy frequently and spend the most. Focus on retention and exclusive offers.';
+      case 'Loyal Customers':
+        return 'repeat customers with good spending habits. Consider loyalty programs and cross-selling opportunities.';
+      case 'At Risk':
+        return 'previously valuable customers who haven\'t purchased recently. Re-engagement campaigns recommended.';
+      case 'New Customers':
+        return 'recent first-time buyers. Focus on education and encouraging second purchases.';
+      default:
+        return 'customers with specific behavioral patterns. Tailor marketing strategies accordingly.';
+    }
+  };
+
   const fetchCorrelationData = async () => {
     setLoading(true);
     try {
@@ -266,14 +281,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
             {/* Segment Insights */}
             <div className="mt-4 p-4 bg-blue-50 rounded-lg">
               <div className="text-sm text-blue-800">
-                <strong>Segment Insights:</strong> This {segmentData.segment.toLowerCase()} segment represents 
-                {(
-                  segmentData.segment === 'Champions' ? ' your most valuable customers who buy frequently and spend the most. Focus on retention and exclusive offers.' :
-                  segmentData.segment === 'Loyal Customers' ? ' repeat customers with good spending habits. Consider loyalty programs and cross-selling opportunities.' :
-                  segmentData.segment === 'At Risk' ? ' previously valuable customers who haven't purchased recently. Re-engagement campaigns recommended.' :
-                  segmentData.segment === 'New Customers' ? ' recent first-time buyers. Focus on education and encouraging second purchases.' :
-                  ' customers with specific behavioral patterns. Tailor marketing strategies accordingly.'
-                )}
+                <strong>Segment Insights:</strong> This {segmentData.segment.toLowerCase()} segment represents {getSegmentInsight(segmentData.segment)}
               </div>
             </div>
           </CardContent>
