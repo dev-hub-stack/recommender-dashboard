@@ -1,4 +1,5 @@
 // Tooltip Component for explaining metrics
+import { useState } from 'react';
 import { InfoIcon, HelpCircle } from 'lucide-react';
 
 // Simple inline info tooltip for metric labels - RELIABLE VERSION
