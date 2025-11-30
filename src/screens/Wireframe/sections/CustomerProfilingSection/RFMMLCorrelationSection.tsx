@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
-import { getCustomersBySegment, RFMSegment, TimeFilter } from '../../../../services/api';
-import { RFMColumnTooltip, InfoTooltip } from '../../../../components/Tooltip';
+import { getCustomersBySegment, RFMSegment } from '../../../../services/api';
+import { InfoTooltip } from '../../../../components/Tooltip';
 import { formatCurrency } from '../../../../utils/formatters';
 
 interface RFMMLCorrelationSectionProps {
@@ -28,7 +28,6 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
 }) => {
   const [segments, setSegments] = useState<SegmentRecommendations[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCorrelationData();
@@ -190,7 +189,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
                   </Badge>
                 </div>
                 <div className="text-sm text-gray-600">
-                  Avg RFM Score: {segmentData.segmentInfo.avg_rfm_score?.toFixed(1) || 'N/A'}
+                  Avg Days Since Last Order: {segmentData.segmentInfo.avg_days_since_last_order?.toFixed(1) || 'N/A'}
                 </div>
               </div>
               <div className="text-right text-sm text-gray-600">
@@ -268,11 +267,13 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
             <div className="mt-4 p-4 bg-blue-50 rounded-lg">
               <div className="text-sm text-blue-800">
                 <strong>Segment Insights:</strong> This {segmentData.segment.toLowerCase()} segment represents 
-                {segmentData.segment === 'Champions' && ' your most valuable customers who buy frequently and spend the most. Focus on retention and exclusive offers.'}
-                {segmentData.segment === 'Loyal Customers' && ' repeat customers with good spending habits. Consider loyalty programs and cross-selling opportunities.'}
-                {segmentData.segment === 'At Risk' && ' previously valuable customers who haven't purchased recently. Re-engagement campaigns recommended.'}
-                {segmentData.segment === 'New Customers' && ' recent first-time buyers. Focus on education and encouraging second purchases.'}
-                {['Champions', 'Loyal Customers', 'At Risk', 'New Customers'].includes(segmentData.segment) === false && ' customers with specific behavioral patterns. Tailor marketing strategies accordingly.'}
+                {(
+                  segmentData.segment === 'Champions' ? ' your most valuable customers who buy frequently and spend the most. Focus on retention and exclusive offers.' :
+                  segmentData.segment === 'Loyal Customers' ? ' repeat customers with good spending habits. Consider loyalty programs and cross-selling opportunities.' :
+                  segmentData.segment === 'At Risk' ? ' previously valuable customers who haven't purchased recently. Re-engagement campaigns recommended.' :
+                  segmentData.segment === 'New Customers' ? ' recent first-time buyers. Focus on education and encouraging second purchases.' :
+                  ' customers with specific behavioral patterns. Tailor marketing strategies accordingly.'
+                )}
               </div>
             </div>
           </CardContent>
