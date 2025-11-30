@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { formatCurrency, formatLargeNumber, formatPercentage } from '../../../../utils/formatters';
-import { getCustomersBySegment } from '../../../../services/api';
 import { RFMColumnTooltip, InfoTooltip } from '../../../../components/Tooltip';
 import { RFMMLCorrelationSection } from './RFMMLCorrelationSection';
 
@@ -12,13 +11,6 @@ interface CustomerDetailedMetrics {
   avgOrderValue: number;
   newCustomers: number;
   returningCustomers: number;
-  topSpendingCustomers: Array<{
-    customer_id: string;
-    customer_name: string;
-    total_spent: number;
-    orders_count: number;
-    segment: string;
-  }>;
   customersByCity: Array<{
     city: string;
     customer_count: number;
@@ -45,7 +37,6 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
     avgOrderValue: 0,
     newCustomers: 0,
     returningCustomers: 0,
-    topSpendingCustomers: [],
     customersByCity: [],
     monthlyGrowth: { customers: 0, revenue: 0 }
   });
@@ -64,42 +55,23 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
       const response = await fetch(`${API_BASE_URL}/analytics/dashboard?time_filter=${selectedPeriod}`);
       const data = await response.json();
 
-      // Fetch Top Customers (Champions)
-      let topCustomers: any[] = [];
-      try {
-        // Fetch Champions as they are top spenders
-        topCustomers = await getCustomersBySegment('Champions', 5);
-      } catch (err) {
-        console.error("Failed to fetch top customers", err);
-      }
-      
       if (data.success) {
         // Simulate additional customer analytics data
         const newMetrics: CustomerDetailedMetrics = {
           totalCustomers: data.total_customers,
           totalRevenue: data.total_revenue,
-          avgLifetimeValue: data.total_customers > 0 ? data.total_revenue / data.total_customers : 0,
+          avgLifetimeValue: data.avg_lifetime_value,
           avgOrderValue: data.avg_order_value,
-          newCustomers: Math.floor(data.total_customers * 0.25),
-          returningCustomers: Math.floor(data.total_customers * 0.75),
-          topSpendingCustomers: topCustomers.map(c => ({
-            customer_id: c.customer_id,
-            customer_name: c.customer_name,
-            total_spent: c.total_spent,
-            orders_count: c.total_orders,
-            segment: c.segment || 'Champions'
-          })),
+          newCustomers: Math.floor(data.total_customers * 0.35), // Mock data
+          returningCustomers: Math.floor(data.total_customers * 0.65), // Mock data
           customersByCity: [
             { city: "Karachi", customer_count: Math.floor(data.total_customers * 0.35), revenue: data.total_revenue * 0.4 },
             { city: "Lahore", customer_count: Math.floor(data.total_customers * 0.25), revenue: data.total_revenue * 0.3 },
             { city: "Islamabad", customer_count: Math.floor(data.total_customers * 0.15), revenue: data.total_revenue * 0.15 },
-            { city: "Faisalabad", customer_count: Math.floor(data.total_customers * 0.10), revenue: data.total_revenue * 0.08 },
-            { city: "Others", customer_count: Math.floor(data.total_customers * 0.15), revenue: data.total_revenue * 0.07 },
+            { city: "Peshawar", customer_count: Math.floor(data.total_customers * 0.10), revenue: data.total_revenue * 0.08 },
+            { city: "Others", customer_count: Math.floor(data.total_customers * 0.15), revenue: data.total_revenue * 0.07 }
           ],
-          monthlyGrowth: {
-            customers: 12.5,
-            revenue: 18.3
-          }
+          monthlyGrowth: { customers: 12.5, revenue: 15.3 } // Mock data
         };
         setMetrics(newMetrics);
       }
@@ -353,77 +325,6 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
           </CardContent>
         </Card>
       </div>
-
-      {/* Top Spending Customers */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Top Spending Customers</h3>
-          
-          <div className="overflow-hidden rounded-lg border border-gray-200">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Spent
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Orders
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Avg. Order Value
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <span className="inline-flex items-center gap-1">
-                      Status
-                      <RFMColumnTooltip />
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {metrics.topSpendingCustomers.map((customer) => {
-                  // Map segment to status
-                  const getStatus = (segment: string) => {
-                    if (segment.includes('Champions')) return { label: 'VIP', class: 'bg-yellow-100 text-yellow-800' };
-                    if (segment.includes('Loyal')) return { label: 'Premium', class: 'bg-green-100 text-green-800' };
-                    return { label: 'High Value', class: 'bg-orange-100 text-orange-800' };
-                  };
-                  
-                  const status = getStatus(customer.segment);
-
-                  return (
-                    <tr key={customer.customer_id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900">{customer.customer_name || 'Unknown'}</span>
-                          <span className="text-xs text-gray-500">{customer.customer_id?.slice(0, 12)}...</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                        {formatCurrency(customer.total_spent)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {customer.orders_count}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(customer.total_spent / (customer.orders_count || 1))}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${status.class}`}>
-                          {status.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

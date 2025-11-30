@@ -250,8 +250,8 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
               {/* Top Customers */}
               <div>
                 <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  🏆 Top Customers
-                  <InfoTooltip text="Highest value customers in this segment based on total spending" />
+                  🏆 Top Customers in Segment
+                  <InfoTooltip text="Highest-value customers within this RFM segment. These customers have the highest spending/order volume in their segment and are prime candidates for targeted recommendations based on their segment behavior patterns." />
                 </h5>
                 <div className="space-y-2">
                   {segmentData.topCustomers.map((customer, idx) => (
@@ -275,8 +275,8 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
               {/* ML Recommendations */}
               <div className="lg:col-span-2">
                 <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  🤖 Personalized Recommendations
-                  <InfoTooltip text="Products most frequently recommended to customers in this segment. Match rate shows % of sampled customers who received this recommendation." />
+                  🤖 Segment-Specific Recommendations
+                  <InfoTooltip text="Products most frequently recommended to customers in this segment. Match rate shows % of sampled customers who received this recommendation. Higher match rates indicate strong segment preference. Use these for targeted marketing campaigns to this specific customer group." />
                 </h5>
                 <div className="space-y-2">
                   {segmentData.recommendations.length > 0 ? (
