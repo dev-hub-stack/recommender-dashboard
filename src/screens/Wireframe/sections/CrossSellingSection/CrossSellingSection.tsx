@@ -33,9 +33,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
   // Use ML Recommendations Hook with A/B Testing
   const { 
     variant, 
-    mlStatus, 
-    loading: mlLoading,
-    error: mlError 
+    mlStatus
   } = useMLRecommendations('cross_selling');
 
   const [metrics, setMetrics] = useState<CrossSellingMetrics>({
@@ -108,59 +106,6 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchSQLCrossSellingData = async (API_BASE_URL: string) => {
-    // Original SQL-based implementation
-    const dashboardResponse = await fetch(`${API_BASE_URL}/api/v1/analytics/dashboard?time_filter=${timeFilter}`);
-    const dashboardData = await dashboardResponse.json();
-
-    const popularResponse = await fetch(`${API_BASE_URL}/api/v1/recommendations/popular?limit=5&time_filter=${timeFilter}`);
-    const popularData = await popularResponse.json();
-
-    let allPairs: any[] = [];
-    let totalPotentialRevenue = 0;
-    let totalOpportunities = 0;
-
-    for (const product of popularData.recommendations.slice(0, 3)) {
-      try {
-        const pairsResponse = await fetch(
-          `${API_BASE_URL}/api/v1/recommendations/product-pairs?product_id=${product.product_id}&limit=3&time_filter=${timeFilter}`
-        );
-        const pairsData = await pairsResponse.json();
-        
-        if (pairsData.recommendations) {
-          const enrichedPairs = pairsData.recommendations.map((pair: any) => ({
-            product_id: product.product_id,
-            product_name: product.product_name,
-            pair_product_id: pair.product_id,
-            pair_product_name: pair.product_name,
-            co_purchase_count: pair.co_purchase_count || 0,
-            confidence_score: (pair.score / Math.max(...pairsData.recommendations.map((r: any) => r.score))) * 100,
-            potential_revenue: (pair.co_purchase_count || 0) * (product.avg_price || 15000) * 0.15
-          }));
-          
-          allPairs = [...allPairs, ...enrichedPairs];
-          totalPotentialRevenue += enrichedPairs.reduce((sum: number, p: any) => sum + p.potential_revenue, 0);
-          totalOpportunities += enrichedPairs.reduce((sum: number, p: any) => sum + p.co_purchase_count, 0);
-        }
-      } catch (err) {
-        console.log(`Could not fetch pairs for product ${product.product_id}`);
-      }
-    }
-
-    allPairs.sort((a, b) => b.confidence_score - a.confidence_score);
-    const topPairs = allPairs.slice(0, 6);
-
-    setMetrics({
-      totalRevenue: totalPotentialRevenue,
-      conversionRate: totalOpportunities > 0 ? Math.min((totalPotentialRevenue / (dashboardData.total_revenue || 1)) * 100, 35) : 28,
-      totalOpportunities,
-      avgConfidence: topPairs.length > 0 ? topPairs.reduce((sum, p) => sum + p.confidence_score, 0) / topPairs.length : 91,
-      topPairs
-    });
-
-    console.log('ℹ️ Using SQL Database Queries for Cross-Selling');
   };
 
   const metricsData = [
