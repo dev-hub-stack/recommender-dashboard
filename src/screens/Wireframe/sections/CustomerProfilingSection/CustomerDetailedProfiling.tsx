@@ -3,8 +3,7 @@ import { Card, CardContent } from '../../../../components/ui/card';
 import { formatCurrency, formatLargeNumber, formatPercentage } from '../../../../utils/formatters';
 import { getCustomersBySegment, RFMSegment, TimeFilter } from '../../../../services/api';
 import { RFMColumnTooltip, InfoTooltip } from '../../../../components/Tooltip';
-import { RFMSegmentationSection } from '../RFMSegmentationSection/RFMSegmentationSection';
-import { AWSPersonalizeSection } from '../AWSPersonalizeSection/AWSPersonalizeSection';
+import { RFMMLCorrelationSection } from './RFMMLCorrelationSection';
 
 interface CustomerDetailedMetrics {
   totalCustomers: number;
@@ -221,35 +220,19 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
         </Card>
       </div>
 
-      {/* RFM Segmentation Integration */}
-      <Card className="border-0 shadow-sm bg-gradient-to-br from-indigo-50 to-blue-50">
+      {/* RFM + ML Correlation Analysis */}
+      <Card className="border-0 shadow-sm bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
         <CardContent className="p-6">
-          <div className="mb-4">
+          <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              🎯 RFM Customer Segmentation
-              <RFMColumnTooltip />
+              🎯 RFM Segments & Personalized Recommendations
+              <InfoTooltip text="Shows correlation between customer segments and their ML-recommended products. Understand what each segment is most likely to buy next." />
             </h3>
             <p className="text-sm text-gray-600 mt-1">
-              Understand customer behavior through Recency, Frequency, and Monetary analysis
+              Discover how different customer segments respond to personalized product recommendations
             </p>
           </div>
-          <RFMSegmentationSection timeFilter={selectedPeriod} />
-        </CardContent>
-      </Card>
-
-      {/* ML Recommendations Integration */}
-      <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-pink-50">
-        <CardContent className="p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              🤖 Personalized Product Recommendations
-              <InfoTooltip text="AI-powered recommendations based on customer behavior patterns and purchase history" />
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Discover what products your customers are most likely to buy next
-            </p>
-          </div>
-          <AWSPersonalizeSection timeFilter={selectedPeriod} />
+          <RFMMLCorrelationSection timeFilter={selectedPeriod} />
         </CardContent>
       </Card>
 
