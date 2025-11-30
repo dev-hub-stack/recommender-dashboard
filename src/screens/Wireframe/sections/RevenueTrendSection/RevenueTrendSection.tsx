@@ -26,6 +26,14 @@ const growthToolsItems = [
     icon: "/vuesax-linear-maximize.svg",
     label: "Cross-Selling",
   },
+  {
+    icon: "/vuesax-linear-home-trend-up.svg",
+    label: "Trending Products",
+  },
+  {
+    icon: "/vuesax-linear-shopping-bag.svg",
+    label: "Inventory Insights",
+  },
 ];
 
 const phase1AnalyticsItems = [
@@ -100,18 +108,20 @@ export const RevenueTrendSection: React.FC<RevenueTrendSectionProps> = ({
           {growthToolsItems.map((item, index) => {
             const isActive = 
               (activeView === "Cross-Selling" && item.label === "Cross-Selling") ||
-              (activeView === "Collaborative Recommendation" && item.label === "Popularity Based");
+              (activeView === "Collaborative Filtering" && item.label === "Collaborative Filtering");
             
             return (
               <Button
                 key={index}
                 onClick={() => {
-                  // Handle Cross-Selling and Collaborative Filtering navigation, show coming soon for others
+                  // Handle navigation for implemented features
                   if (item.label === "Cross-Selling") {
                     onNavigate("Cross-Selling");
-                  } else if (item.label === "Popularity Based") {
-                    onNavigate("Collaborative Recommendation");
-                  } else {
+                  } else if (item.label === "Collaborative Filtering") {
+                    onNavigate("Collaborative Filtering");
+                  } else if (item.label === "Trending Products") {
+                    onNavigate("Dashboard"); // Navigate to Dashboard for now
+                  } else if (item.label === "Inventory Insights") {
                     alert(`${item.label} - Coming Soon! This feature is under development.`);
                   }
                 }}
