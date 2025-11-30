@@ -117,30 +117,6 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
     );
   }
 
-  const handleRetry = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Use ML endpoint directly
-      const response = await fetch(
-        `${ML_API_BASE_URL}/api/v1/ml/customer-similarity?time_filter=${timeFilter}&limit=10`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch ML customer similarity');
-      }
-      
-      const result = await response.json();
-      setCustomers(result.customers || []);
-    } catch (err) {
-      setError('Failed to load customer similarity data. Please train ML models first.');
-      console.error('Error fetching customer similarity data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (error) {
     // Show sample data when ML engine is offline
     const sampleCustomers = [

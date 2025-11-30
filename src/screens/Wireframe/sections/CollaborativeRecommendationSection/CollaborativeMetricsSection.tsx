@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { useCollaborativeMetrics } from "../../../../hooks/useCollaborativeMetrics";
-import { formatLargeNumber, formatPercentage } from "../../../../utils/formatters";
+import { formatLargeNumber } from "../../../../utils/formatters";
 import { InfoTooltip } from "../../../../components/Tooltip";
 
 interface CollaborativeMetricsSectionProps {
@@ -156,7 +156,7 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
       icon: "/vuesax-linear-user-search.svg",
       label: "Cross-Region Opportunities",
       tooltip: "Products popular in multiple regions. These have expansion potential and should be stocked in new markets.",
-      value: formatLargeNumber(metrics?.avgSimilarityScore * 100 || 89),
+      value: formatLargeNumber((metrics?.avgSimilarityScore || 0.89) * 100),
       percentage: "Growth",
       bgColor: "bg-foundation-blueblue-50",
       percentageColor: "text-foundation-blueblue-600",
@@ -178,7 +178,7 @@ export const CollaborativeMetricsSection: React.FC<CollaborativeMetricsSectionPr
       icon: "/vuesax-linear-chart-2.svg",
       label: "Undiscovered Gems",
       tooltip: "Low-volume products with high customer satisfaction. These have growth potential with proper marketing.",
-      value: formatLargeNumber(metrics?.algorithmAccuracy * 500 || 423),
+      value: formatLargeNumber((metrics?.algorithmAccuracy || 0.846) * 500),
       percentage: "Hidden",
       bgColor: "bg-foundation-purplepurple-50",
       percentageColor: "text-foundation-purplepurple-500",
