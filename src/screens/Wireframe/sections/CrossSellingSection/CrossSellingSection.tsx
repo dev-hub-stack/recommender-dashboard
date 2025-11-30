@@ -254,7 +254,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     {
       icon: "/vuesax-linear-dollar-circle.svg",
       label: "Prediction Accuracy",
-      tooltip: "How accurate our ML model is at predicting product pairs",
+      tooltip: "Average confidence score across all product pairs. Calculated as: (Co-purchase frequency ÷ Total product orders) × 100. Higher accuracy = more reliable cross-sell recommendations.",
       value: `${metrics.avgConfidence.toFixed(0)}%`,
       percentage: "4%",
       bgColor: "bg-foundation-purplepurple-50",
@@ -384,8 +384,9 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
                     <p className="font-semibold text-foundation-greygrey-900 [font-family:'Poppins',Helvetica]">
                       Rs {formatLargeNumber(pair.potential_revenue)}
                     </p>
-                    <p className="text-sm text-foundation-greygrey-600 [font-family:'Poppins',Helvetica]">
+                    <p className="text-sm text-foundation-greygrey-600 [font-family:'Poppins',Helvetica] flex items-center gap-1">
                       {pair.confidence_score.toFixed(0)}% confidence
+                      <InfoTooltip text="Confidence = (Co-purchase count ÷ Total orders with main product) × 100. Higher confidence means customers who buy the main product frequently also buy this paired product." />
                     </p>
                   </div>
                 </div>

@@ -215,6 +215,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
                     </th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                       Cross-Sell Score
+                      <InfoTooltip text="Score = (Product customer count ÷ Highest customer count) × 100. Shows relative cross-sell potential compared to other products. Higher score = more customers likely to buy this with other products." />
                     </th>
                   </tr>
                 </thead>
