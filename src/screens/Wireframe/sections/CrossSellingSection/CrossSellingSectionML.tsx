@@ -99,8 +99,9 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1">
                   Cross-Sell Revenue
+                  <InfoTooltip text="AWS Personalize calculates this from item-to-item collaborative filtering. Revenue = Sum of all orders where products were purchased together based on ML similarity scores." />
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                   {formatPKR(totalRevenue)}
@@ -115,8 +116,9 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1">
                   Unique Customers
+                  <InfoTooltip text="AWS Personalize identifies customers with similar purchase patterns using collaborative filtering. Count = Number of unique customers in the ML training dataset who bought these products." />
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                   {formatLargeNumber(totalCustomers)}
@@ -131,8 +133,9 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1">
                   Avg Orders/Product
+                  <InfoTooltip text="AWS Personalize SIMS algorithm calculates this from implicit feedback. Average = Total orders ÷ Number of products, weighted by ML confidence scores for cross-sell potential." />
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                   {avgOrdersPerProduct.toFixed(1)}
