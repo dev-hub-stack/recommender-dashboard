@@ -100,8 +100,8 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                  Cross-Sell Revenue
-                  <InfoTooltip text="AWS Personalize calculates this from item-to-item collaborative filtering. Revenue = Sum of all orders where products were purchased together based on ML similarity scores." />
+                  Potential Cross-Sell Revenue
+                  <InfoTooltip text="Potential revenue if ML recommendations were implemented. AWS Personalize calculates this from historical co-purchase patterns using item-to-item collaborative filtering. This shows opportunity, not actual results." />
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                   {formatPKR(totalRevenue)}
@@ -117,8 +117,8 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                  Unique Customers
-                  <InfoTooltip text="AWS Personalize identifies customers with similar purchase patterns using collaborative filtering. Count = Number of unique customers in the ML training dataset who bought these products." />
+                  Targetable Customers
+                  <InfoTooltip text="Number of customers who could receive these ML recommendations. AWS Personalize identifies customers with similar purchase patterns using collaborative filtering. This shows target audience size, not actual recommendations delivered." />
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                   {formatLargeNumber(totalCustomers)}
@@ -134,8 +134,8 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                  Avg Orders/Product
-                  <InfoTooltip text="AWS Personalize SIMS algorithm calculates this from implicit feedback. Average = Total orders ÷ Number of products, weighted by ML confidence scores for cross-sell potential." />
+                  Avg Orders/Product Pair
+                  <InfoTooltip text="Average orders per product pair based on ML similarity analysis. AWS Personalize SIMS algorithm calculates this from historical patterns. Higher average = stronger cross-sell potential, not actual bundle performance." />
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                   {avgOrdersPerProduct.toFixed(1)}
@@ -219,7 +219,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
                     </th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                       Cross-Sell Score
-                      <InfoTooltip text="Score = (Product customer count ÷ Highest customer count) × 100. Shows relative cross-sell potential compared to other products. Higher score = more customers likely to buy this with other products." />
+                      <InfoTooltip text="Potential cross-sell score = (Product customer count ÷ Highest customer count) × 100. Shows relative cross-sell opportunity, not actual results. Higher score = stronger potential for cross-selling, not current performance." />
                     </th>
                   </tr>
                 </thead>
