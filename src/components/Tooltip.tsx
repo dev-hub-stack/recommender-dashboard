@@ -1,11 +1,8 @@
 // Tooltip Component for explaining metrics
-import { useState } from 'react';
 import { InfoIcon, HelpCircle } from 'lucide-react';
 
-// Simple inline info tooltip for metric labels
+// Simple inline info tooltip for metric labels - RELIABLE VERSION
 export const InfoTooltip = ({ text }: { text: string }) => {
-  const [show, setShow] = useState(false);
-  
   // Convert markdown-style formatting to HTML
   const formatText = (text: string) => {
     return text
@@ -17,36 +14,20 @@ export const InfoTooltip = ({ text }: { text: string }) => {
   };
   
   return (
-    <span className="relative inline-block ml-1 z-[10000]">
-      <HelpCircle 
-        className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help inline"
-        onMouseEnter={() => setShow(true)}
-        onMouseLeave={() => setShow(false)}
-        onClick={() => setShow(!show)}
-      />
-      {show && (
-        <div className="fixed z-[99999]">
-          <span 
-            className="absolute w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700"
-            style={{
-              left: '50%',
-              transform: 'translateX(-50%) translateY(-100%)',
-              bottom: '100%',
-              marginBottom: '8px'
-            }}
-            dangerouslySetInnerHTML={{ __html: formatText(text) }}
-          />
-          <span 
-            className="absolute border-4 border-transparent border-t-gray-900"
-            style={{
-              left: '50%',
-              transform: 'translateX(-50%)',
-              top: '-4px'
-            }}
-          />
+    <div className="group relative inline-block ml-1">
+      <HelpCircle className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
+      
+      {/* Tooltip content - using CSS group-hover for reliability */}
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+        <div className="w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700">
+          <div dangerouslySetInnerHTML={{ __html: formatText(text) }} />
         </div>
-      )}
-    </span>
+        {/* Arrow */}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+          <div className="border-4 border-transparent border-t-gray-900"></div>
+        </div>
+      </div>
+    </div>
   );
 };
 
