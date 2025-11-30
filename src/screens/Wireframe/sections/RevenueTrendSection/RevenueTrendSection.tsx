@@ -20,11 +20,11 @@ const insightsAnalysisItems = [
 const growthToolsItems = [
   {
     icon: "/vuesax-linear-lamp-charge.svg",
-    label: "Collaborative Filtering",
+    label: "Product Insights",
   },
   {
     icon: "/vuesax-linear-maximize.svg",
-    label: "Cross-Selling",
+    label: "Revenue Optimization",
   },
 ];
 
@@ -99,17 +99,17 @@ export const RevenueTrendSection: React.FC<RevenueTrendSectionProps> = ({
         <div className="flex flex-col items-start gap-3 w-full">
           {growthToolsItems.map((item, index) => {
             const isActive = 
-              (activeView === "Cross-Selling" && item.label === "Cross-Selling") ||
-              (activeView === "Collaborative Filtering" && item.label === "Collaborative Filtering");
+              (activeView === "Cross-Selling" && item.label === "Revenue Optimization") ||
+              (activeView === "Collaborative Filtering" && item.label === "Product Insights");
             
             return (
               <Button
                 key={index}
                 onClick={() => {
                   // Handle navigation for implemented features only
-                  if (item.label === "Cross-Selling") {
+                  if (item.label === "Revenue Optimization") {
                     onNavigate("Cross-Selling");
-                  } else if (item.label === "Collaborative Filtering") {
+                  } else if (item.label === "Product Insights") {
                     onNavigate("Collaborative Filtering");
                   }
                 }}

@@ -46,7 +46,8 @@ export const Wireframe = (): JSX.Element => {
           <div className="flex items-center gap-4">
             <h3 className="text-lg font-semibold text-gray-800">
               {activeView === 'Dashboard' ? 'Analytics Dashboard' : 
-               activeView === 'Collaborative Filtering' ? 'Collaborative Filtering' : 
+               activeView === 'Collaborative Filtering' ? 'Product Insights' : 
+               activeView === 'Cross-Selling' ? 'Revenue Optimization' : 
                activeView}
             </h3>
           </div>

@@ -6,6 +6,16 @@ import { InfoIcon, HelpCircle } from 'lucide-react';
 export const InfoTooltip = ({ text }: { text: string }) => {
   const [show, setShow] = useState(false);
   
+  // Convert markdown-style formatting to HTML
+  const formatText = (text: string) => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold text
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')              // Italic text
+      .replace(/`(.*?)`/g, '<code>$1</code>')             // Code
+      .replace(/\n\n/g, '<br/><br/>')                    // Paragraph breaks
+      .replace(/\n/g, '<br/>');                          // Line breaks
+  };
+  
   return (
     <span className="relative inline-block ml-1">
       <HelpCircle 
@@ -15,10 +25,13 @@ export const InfoTooltip = ({ text }: { text: string }) => {
         onClick={() => setShow(!show)}
       />
       {show && (
-        <span className="absolute z-[9999] left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700">
-          {text}
+        <>
+          <span 
+            className="absolute z-[9999] left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700"
+            dangerouslySetInnerHTML={{ __html: formatText(text) }}
+          />
           <span className="absolute left-1/2 transform -translate-x-1/2 top-full border-4 border-transparent border-t-gray-900"></span>
-        </span>
+        </>
       )}
     </span>
   );
