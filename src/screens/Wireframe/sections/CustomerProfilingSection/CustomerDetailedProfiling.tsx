@@ -55,23 +55,25 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
       const response = await fetch(`${API_BASE_URL}/analytics/dashboard?time_filter=${selectedPeriod}`);
       const data = await response.json();
 
-      if (data.success) {
-        // Simulate additional customer analytics data
+      // Fetch real geographic distribution data
+      const geoResponse = await fetch(`${API_BASE_URL}/analytics/geographic-distribution?time_filter=${selectedPeriod}`);
+      const geoData = await geoResponse.json();
+
+      if (data.success && geoData.success) {
+        // Use real data instead of mock data
         const newMetrics: CustomerDetailedMetrics = {
           totalCustomers: data.total_customers,
           totalRevenue: data.total_revenue,
-          avgLifetimeValue: data.avg_lifetime_value || (data.total_revenue / data.total_customers) || 25000,
+          avgLifetimeValue: data.total_revenue / data.total_customers || 25000,
           avgOrderValue: data.avg_order_value || 3000,
-          newCustomers: Math.floor(data.total_customers * 0.35), // Mock data
-          returningCustomers: Math.floor(data.total_customers * 0.65), // Mock data
-          customersByCity: [
-            { city: "Karachi", customer_count: Math.floor(data.total_customers * 0.35), revenue: data.total_revenue * 0.4 },
-            { city: "Lahore", customer_count: Math.floor(data.total_customers * 0.25), revenue: data.total_revenue * 0.3 },
-            { city: "Islamabad", customer_count: Math.floor(data.total_customers * 0.15), revenue: data.total_revenue * 0.15 },
-            { city: "Peshawar", customer_count: Math.floor(data.total_customers * 0.10), revenue: data.total_revenue * 0.08 },
-            { city: "Others", customer_count: Math.floor(data.total_customers * 0.15), revenue: data.total_revenue * 0.07 }
-          ],
-          monthlyGrowth: { customers: 12.5, revenue: 15.3 } // Mock data
+          newCustomers: Math.floor(data.total_customers * 0.35), // Mock data - could be calculated from first-time orders
+          returningCustomers: Math.floor(data.total_customers * 0.65), // Mock data - could be calculated from repeat orders
+          customersByCity: geoData.distribution.map((city: any) => ({
+            city: city.city,
+            customer_count: city.customer_count,
+            revenue: city.revenue
+          })),
+          monthlyGrowth: { customers: 12.5, revenue: 15.3 } // Mock data - could be calculated from time series
         };
         setMetrics(newMetrics);
       }

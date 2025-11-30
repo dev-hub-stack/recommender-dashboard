@@ -1,0 +1,76 @@
+{
+  "real_metrics": {
+    "total_customers": 7482,
+    "total_revenue": "286982421.45",
+    "avg_order_value": "33373.929695313409",
+    "avg_lifetime_value": "38356.37816760224538893344026"
+  },
+  "real_cities": [
+    [
+      "Lahore",
+      2652,
+      2919,
+      "99608892.09"
+    ],
+    [
+      "Karachi",
+      889,
+      954,
+      "22066968.25"
+    ],
+    [
+      "Rawalpindi",
+      529,
+      688,
+      "31818431.00"
+    ],
+    [
+      "Islamabad",
+      395,
+      452,
+      "9428700.26"
+    ],
+    [
+      "Faisalabad",
+      394,
+      420,
+      "13270458.79"
+    ],
+    [
+      "Sialkot",
+      388,
+      529,
+      "24851268.00"
+    ],
+    [
+      "Jhang City",
+      250,
+      259,
+      "6840741.00"
+    ],
+    [
+      "Okara",
+      182,
+      194,
+      "8163983.00"
+    ],
+    [
+      "Wah Cantonment",
+      166,
+      170,
+      "5522613.00"
+    ],
+    [
+      "Multan",
+      97,
+      115,
+      "2476432.06"
+    ]
+  ],
+  "frontend_issues": [
+    "Uses mock geographic distribution instead of real data",
+    "Shows incorrect city rankings",
+    "Uses fixed percentages instead of real calculations",
+    "Missing actual top cities like Sialkot, Jhang City"
+  ]
+}
