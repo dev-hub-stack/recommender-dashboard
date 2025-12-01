@@ -14,14 +14,21 @@ export const DashboardHeaderSection = (): JSX.Element => {
 
   return (
     <header className="flex w-full items-center gap-2.5 p-6">
-      <div className="inline-flex flex-col items-start justify-center flex-1">
-        <h1 className="font-semibold text-black text-xl">
-          MasterGroup Recommendation Analytics Dashboard
-        </h1>
+      <div className="flex items-center gap-4 flex-1">
+        <img 
+          src="/master-group-logo.webp" 
+          alt="Master Group Logo" 
+          className="h-12 w-auto"
+        />
+        <div className="inline-flex flex-col items-start justify-center">
+          <h1 className="font-semibold text-black text-xl">
+            MasterGroup Recommendation Analytics Dashboard
+          </h1>
 
-        <p className="font-normal text-foundation-greygrey-400 text-sm">
-          Welcome back! Here's what's happening with your recommendation engine - 100% Live Data.
-        </p>
+          <p className="font-normal text-foundation-greygrey-400 text-sm">
+            Welcome back! Here's what's happening with your recommendation engine - 100% Live Data.
+          </p>
+        </div>
       </div>
       
       <div className="flex items-center gap-3">

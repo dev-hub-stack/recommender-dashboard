@@ -29,6 +29,13 @@ export const LoginScreen: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-xl shadow-2xl">
         <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/master-group-logo.webp" 
+              alt="Master Group Logo" 
+              className="h-16 w-auto"
+            />
+          </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
             Master Group
           </h2>
