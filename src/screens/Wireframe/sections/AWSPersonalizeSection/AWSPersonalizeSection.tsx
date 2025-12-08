@@ -63,6 +63,25 @@ interface User {
   total_spent: number;
 }
 
+// RFM Customer Segments
+interface CustomerSegment {
+  id: string;
+  name: string;
+  description: string;
+  criteria: string;
+  color: string;
+}
+
+const RFM_SEGMENTS: CustomerSegment[] = [
+  { id: 'champions', name: 'Champions', description: 'Best customers - high value, frequent, recent', criteria: 'R≤30, F≥5, M≥50K', color: 'bg-green-500' },
+  { id: 'loyal', name: 'Loyal Customers', description: 'Regular buyers with good spending', criteria: 'R≤60, F≥3, M≥30K', color: 'bg-blue-500' },
+  { id: 'potential', name: 'Potential Loyalists', description: 'Recent customers with growth potential', criteria: 'R≤30, F≥2', color: 'bg-purple-500' },
+  { id: 'new', name: 'New Customers', description: 'First-time buyers', criteria: 'F=1, R≤30', color: 'bg-cyan-500' },
+  { id: 'at_risk', name: 'At Risk', description: 'Good customers who haven\'t purchased recently', criteria: 'R>90, F≥3, M≥20K', color: 'bg-orange-500' },
+  { id: 'hibernating', name: 'Hibernating', description: 'Low activity, need re-engagement', criteria: 'R>120, F≤2', color: 'bg-yellow-500' },
+  { id: 'lost', name: 'Lost', description: 'Haven\'t purchased in a long time', criteria: 'R>180', color: 'bg-red-500' },
+];
+
 interface UserRecommendation {
   customer_id: string;
   customer_name: string;
@@ -109,6 +128,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<string>('');
+  const [selectedSegment, setSelectedSegment] = useState<string>('');
   
   const [userRecommendations, setUserRecommendations] = useState<Recommendation[]>([]);
   const [locationRecommendations, setLocationRecommendations] = useState<{
@@ -466,25 +486,30 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
               </select>
             </div>
 
-            {/* User Select */}
+            {/* Customer Segment Select */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Customer Segment</label>
               <select
-                value={selectedUser}
+                value={selectedSegment}
                 onChange={(e) => {
-                  setSelectedUser(e.target.value);
+                  setSelectedSegment(e.target.value);
                   if (e.target.value) setActiveTab('user');
                 }}
                 className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
                 disabled={!selectedProvince}
               >
-                <option value="">Select Customer...</option>
-                {users.map(u => (
-                  <option key={u.customer_id} value={u.customer_id}>
-                    {u.customer_name || u.customer_id} ({u.order_count} orders)
+                <option value="">Select Segment...</option>
+                {RFM_SEGMENTS.map(segment => (
+                  <option key={segment.id} value={segment.id}>
+                    {segment.name} - {segment.description}
                   </option>
                 ))}
               </select>
+              {selectedSegment && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Criteria: {RFM_SEGMENTS.find(s => s.id === selectedSegment)?.criteria}
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -514,7 +539,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
             activeTab === 'user' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          <User className="w-4 h-4" /> By User
+          <Target className="w-4 h-4" /> By Segment
         </button>
         <button
           onClick={() => setActiveTab('trending')}
@@ -641,60 +666,144 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
             )}
           </div>
         ) : activeTab === 'user' ? (
-          /* User-Specific Recommendations */
+          /* Segment-Based Recommendations */
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span>🎯</span> Personalized Recommendations
+                <span>🎯</span> Segment-Based Recommendations
                 <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs">
-                  ML Model
+                  RFM Targeting
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {!selectedUser ? (
+              {!selectedSegment ? (
                 <div className="text-center py-12 text-gray-500">
-                  <p className="text-lg mb-2">👤 Select a Customer to see their recommendations</p>
-                  <p className="text-sm">ML Model will generate personalized product suggestions</p>
+                  <p className="text-lg mb-2">🎯 Select a Customer Segment to see targeted recommendations</p>
+                  <p className="text-sm mb-6">Target specific customer groups based on RFM analysis</p>
+                  
+                  {/* Segment Cards Preview */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+                    {RFM_SEGMENTS.slice(0, 4).map(segment => (
+                      <div 
+                        key={segment.id}
+                        onClick={() => {
+                          setSelectedSegment(segment.id);
+                        }}
+                        className="p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow text-left"
+                      >
+                        <div className={`w-3 h-3 rounded-full ${segment.color} mb-2`}></div>
+                        <p className="font-medium text-sm text-gray-800">{segment.name}</p>
+                        <p className="text-xs text-gray-500">{segment.criteria}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <div className="p-3 bg-purple-50 rounded-lg mb-4">
-                    <p className="text-sm text-purple-700">
-                      Showing recommendations for: <strong>{users.find(u => u.customer_id === selectedUser)?.customer_name || selectedUser}</strong>
-                    </p>
-                  </div>
-                  {userRecommendations.map((rec, index) => (
-                    <div key={rec.product_id} className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg hover:from-purple-100 hover:to-pink-100 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-medium">{rec.product_name}</p>
-                          <p className="text-sm text-gray-500">
-                            Product ID: {rec.product_id}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right group relative">
-                        <p className="font-bold text-lg text-purple-600">
-                          Rank #{index + 1}
+                <div className="space-y-4">
+                  {/* Selected Segment Info */}
+                  <div className={`p-4 rounded-lg ${RFM_SEGMENTS.find(s => s.id === selectedSegment)?.color.replace('bg-', 'bg-opacity-10 bg-')} border`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full ${RFM_SEGMENTS.find(s => s.id === selectedSegment)?.color}`}></div>
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {RFM_SEGMENTS.find(s => s.id === selectedSegment)?.name}
                         </p>
-                        <p className="text-xs text-gray-500 cursor-help">ML Priority ⓘ</p>
-                        {/* Tooltip */}
-                        <div className="absolute right-0 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                          <p className="font-semibold mb-1">What does Rank mean?</p>
-                          <p>AWS Personalize ranks products by how likely this user will purchase them. Rank #1 = highest probability.</p>
-                        </div>
+                        <p className="text-sm text-gray-600">
+                          {RFM_SEGMENTS.find(s => s.id === selectedSegment)?.description}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                  {userRecommendations.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      No recommendations available for this user
+                    <div className="mt-3 flex items-center gap-4 text-sm">
+                      <span className="text-gray-500">
+                        📍 {selectedProvince || 'All Provinces'} {selectedCity ? `> ${selectedCity}` : ''}
+                      </span>
+                      <span className="text-gray-500">
+                        📊 Criteria: {RFM_SEGMENTS.find(s => s.id === selectedSegment)?.criteria}
+                      </span>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Recommended Products for Segment */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-700">Top Products for this Segment:</h4>
+                    {locationRecommendations.aggregated.length > 0 ? (
+                      locationRecommendations.aggregated.slice(0, 10).map((rec, index) => (
+                        <div key={rec.product_id} className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg hover:from-purple-100 hover:to-pink-100 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium">{rec.product_name}</p>
+                              <p className="text-sm text-gray-500">
+                                Recommended to {rec.recommended_to_users} customers in segment
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg text-purple-600">
+                              {Math.round(rec.avg_score * 100)}% Match
+                            </p>
+                            <p className="text-xs text-gray-500">Segment Affinity</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>Select a province/city to see segment-specific recommendations</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Segment Marketing Tips */}
+                  <div className="p-4 bg-blue-50 rounded-lg mt-4">
+                    <h4 className="font-medium text-blue-800 mb-2">💡 Marketing Tips for {RFM_SEGMENTS.find(s => s.id === selectedSegment)?.name}</h4>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      {selectedSegment === 'champions' && (
+                        <>
+                          <li>• Offer exclusive early access to new products</li>
+                          <li>• Create VIP loyalty rewards program</li>
+                          <li>• Ask for referrals and reviews</li>
+                        </>
+                      )}
+                      {selectedSegment === 'loyal' && (
+                        <>
+                          <li>• Upsell premium products</li>
+                          <li>• Offer bundle deals</li>
+                          <li>• Invite to loyalty program</li>
+                        </>
+                      )}
+                      {selectedSegment === 'at_risk' && (
+                        <>
+                          <li>• Send win-back campaigns with special offers</li>
+                          <li>• Personalized "We miss you" emails</li>
+                          <li>• Offer time-limited discounts</li>
+                        </>
+                      )}
+                      {selectedSegment === 'new' && (
+                        <>
+                          <li>• Welcome series with product education</li>
+                          <li>• First-purchase discount for second order</li>
+                          <li>• Showcase best-sellers and reviews</li>
+                        </>
+                      )}
+                      {selectedSegment === 'lost' && (
+                        <>
+                          <li>• Deep discount reactivation offers</li>
+                          <li>• Survey to understand why they left</li>
+                          <li>• Highlight new products since last purchase</li>
+                        </>
+                      )}
+                      {!['champions', 'loyal', 'at_risk', 'new', 'lost'].includes(selectedSegment) && (
+                        <>
+                          <li>• Personalized product recommendations</li>
+                          <li>• Targeted promotions based on purchase history</li>
+                          <li>• Re-engagement campaigns</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
                 </div>
               )}
             </CardContent>
