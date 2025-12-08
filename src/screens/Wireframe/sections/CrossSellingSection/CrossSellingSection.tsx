@@ -114,7 +114,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       label: "Co-Purchase Opportunities",
       tooltip: "Number of product pairs frequently bought together based on historical order data. Higher count = more cross-sell opportunities.",
       value: formatLargeNumber(metrics.totalOpportunities),
-      percentage: "21%",
+      percentage: metrics.totalOpportunities > 0 ? null : null, // Remove hardcoded percentage
       bgColor: "bg-foundation-greengreen-50",
       badgeBgColor: "bg-foundation-greengreen-50",
       percentageColor: "text-foundation-greengreen-500",
@@ -125,7 +125,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       label: "Cross-Sell Potential",
       tooltip: "Percentage of orders containing products that have cross-sell potential. Based on product pairs analysis.",
       value: `${metrics.conversionRate.toFixed(0)}%`,
-      percentage: "10%",
+      percentage: null, // Remove hardcoded percentage
       bgColor: "bg-foundation-blueblue-50",
       badgeBgColor: "bg-foundation-blueblue-50",
       percentageColor: "text-foundation-blueblue-600",
@@ -136,7 +136,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       label: "Top Product Pairs",
       tooltip: "Number of high-frequency product pairs identified for cross-selling. These are the most promising combinations.",
       value: metrics.topPairs.length,
-      percentage: "15%",
+      percentage: null, // Remove hardcoded percentage
       bgColor: "bg-foundation-orangeorange-50",
       badgeBgColor: "bg-foundation-orangeorange-50",
       percentageColor: "text-foundation-orangeorange-500",
@@ -147,7 +147,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       label: "Avg Pair Value",
       tooltip: "Average revenue potential per product pair. Calculated from historical co-purchase data: (Combined revenue ÷ Number of pairs).",
       value: `Rs ${formatLargeNumber(Math.round(metrics.totalRevenue / Math.max(metrics.topPairs.length, 1)))}`,
-      percentage: "8%",
+      percentage: null, // Remove hardcoded percentage
       bgColor: "bg-foundation-purplepurple-50",
       badgeBgColor: "bg-foundation-purplepurple-50",
       percentageColor: "text-foundation-purplepurple-500",
@@ -242,10 +242,12 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
                   <span className="text-foundation-greygrey-900 text-2xl font-semibold [font-family:'Poppins',Helvetica]">
                     {metric.value}
                   </span>
-                  <Badge className={`${metric.badgeBgColor} ${metric.percentageColor} border-0 text-xs`}>
-                    <img src={metric.arrowIcon} alt="trend" className="w-3 h-3 mr-1" />
-                    {metric.percentage}
-                  </Badge>
+                  {metric.percentage && (
+                    <Badge className={`${metric.badgeBgColor} ${metric.percentageColor} border-0 text-xs`}>
+                      <img src={metric.arrowIcon} alt="trend" className="w-3 h-3 mr-1" />
+                      {metric.percentage}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </CardContent>

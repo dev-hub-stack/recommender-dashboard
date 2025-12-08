@@ -100,10 +100,20 @@ export const calculateGrowth = (current: number, previous: number): number => {
 
 /**
  * Format growth percentage with appropriate color class
- * @param growth - Growth percentage
+ * @param growth - Growth percentage (null if no comparison data available)
  * @returns Object with formatted growth and color class
  */
-export const formatGrowthWithColor = (growth: number) => {
+export const formatGrowthWithColor = (growth: number | null) => {
+  // Handle null/undefined growth (no comparison data)
+  if (growth === null || growth === undefined) {
+    return {
+      text: 'N/A',
+      colorClass: 'text-gray-500',
+      bgClass: 'bg-gray-50',
+      isPositive: null
+    };
+  }
+  
   const isPositive = growth >= 0;
   const formatted = formatPercentage(Math.abs(growth));
   

@@ -779,6 +779,73 @@ export async function getAtRiskCustomers(
 }
 
 // ==============================================
+// PRODUCT CATEGORIES ENDPOINTS
+// ==============================================
+
+export interface ProductCategory {
+  category: string;
+  total_orders: number;
+  total_revenue: number;
+  unique_customers: number;
+  top_products: Array<{
+    product_name: string;
+    revenue: number;
+    orders: number;
+  }>;
+}
+
+export interface ProductByCategory {
+  productId: string;
+  productName: string;
+  category: string;
+  totalOrders: number;
+  totalRevenue: number;
+  avgPrice: number;
+}
+
+// Get Product Categories with metrics
+export async function getProductCategories(
+  timeFilter: TimeFilter = 'all'
+): Promise<ProductCategory[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/product-categories?time_filter=${timeFilter}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch product categories');
+  }
+  
+  const data = await response.json();
+  return data.categories || [];
+}
+
+// Get Products filtered by category
+export async function getProductsByCategory(
+  category: string,
+  timeFilter: TimeFilter = 'all',
+  limit: number = 20
+): Promise<ProductByCategory[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/analytics/products-by-category?category=${encodeURIComponent(category)}&time_filter=${timeFilter}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch products by category');
+  }
+  
+  const data = await response.json();
+  return data.products || [];
+}
+
+// ==============================================
 // PHASE 1: BRAND PERFORMANCE ENDPOINTS
 // ==============================================
 

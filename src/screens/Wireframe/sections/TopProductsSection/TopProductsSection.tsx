@@ -2,7 +2,7 @@ import { ArrowUpIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent } from "../../../../components/ui/card";
-import { getRevenueTrend, getPopularProducts, Product } from "../../../../services/api";
+import { getRevenueTrend, getPopularProducts, Product, getProductCategories, ProductCategory } from "../../../../services/api";
 import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
 
 // Live data from recommendation engine - no static data needed
@@ -28,19 +28,37 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
   const [localTimeFilter, setLocalTimeFilter] = useState<string>(timeFilter);
   const [revenueTrend, setRevenueTrend] = useState<any>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>('daily');
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
+        // Fetch categories for filter dropdown
+        const categoryData = await getProductCategories(localTimeFilter as any || timeFilter as any);
+        setCategories(categoryData);
+        
         // Use regular API endpoint for top products
         const popularProducts = await getPopularProducts(5, localTimeFilter || timeFilter);
+        
+        // Filter by category if selected
+        const filteredProducts = selectedCategory 
+          ? popularProducts.filter((p: Product) => {
+              const productName = p.product_name?.toLowerCase() || '';
+              const category = selectedCategory.toLowerCase();
+              // Simple category matching based on product name
+              if (category === 'mattresses') return productName.includes('foam') || productName.includes('mattress');
+              if (category === 'pillows & accessories') return productName.includes('pillow') || productName.includes('cushion');
+              return true;
+            })
+          : popularProducts;
         
         // Fetch revenue trend data
         const trendData = await getRevenueTrend(localTimeFilter || timeFilter, trendPeriod);
         
-        setProducts(popularProducts);
+        setProducts(filteredProducts.slice(0, 5));
         setRevenueTrend(trendData);
         setError(null);
       } catch (err) {
@@ -52,7 +70,7 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
     };
 
     fetchData();
-  }, [timeFilter, localTimeFilter, trendPeriod]);
+  }, [timeFilter, localTimeFilter, trendPeriod, selectedCategory]);
 
   // Update local filter when prop changes
   useEffect(() => {
@@ -108,6 +126,18 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
             <h2 className="flex-1 font-semibold text-black text-base">
               Top Performing Products (Live)
             </h2>
+            <select 
+              value={selectedCategory} 
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-3 py-1 text-sm border rounded bg-white"
+            >
+              <option value="">All Categories</option>
+              {categories.slice(0, 10).map((cat) => (
+                <option key={cat.category} value={cat.category}>
+                  {cat.category}
+                </option>
+              ))}
+            </select>
             <select 
               value={localTimeFilter} 
               onChange={(e) => setLocalTimeFilter(e.target.value)}

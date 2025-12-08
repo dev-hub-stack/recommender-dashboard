@@ -121,8 +121,8 @@ export const CustomerProfilingSection: React.FC<CustomerProfilingProps> = ({
     }
   };
 
-  const calculateGrowth = (current: number, previous?: number): number => {
-    if (!previous || previous === 0) return 0;
+  const calculateGrowth = (current: number, previous?: number): number | null => {
+    if (!previous || previous === 0) return null; // Return null instead of 0 to indicate no comparison data
     return ((current - previous) / previous) * 100;
   };
 
@@ -228,7 +228,9 @@ export const CustomerProfilingSection: React.FC<CustomerProfilingProps> = ({
                   {stat.previousValue && (
                     <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${growthFormatted.bgClass} ${growthFormatted.colorClass}`}>
                       <span>{growthFormatted.text}</span>
-                      <span className="ml-1">{growthFormatted.isPositive ? '↗' : '↘'}</span>
+                      {growthFormatted.isPositive !== null && (
+                        <span className="ml-1">{growthFormatted.isPositive ? '↗' : '↘'}</span>
+                      )}
                     </div>
                   )}
                 </div>
