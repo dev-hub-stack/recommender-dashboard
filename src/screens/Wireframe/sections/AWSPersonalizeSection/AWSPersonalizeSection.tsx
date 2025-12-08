@@ -775,9 +775,9 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg text-purple-600">
-                              {Math.round(rec.avg_score * 100)}% Match
+                              {rec.recommended_to_users} users
                             </p>
-                            <p className="text-xs text-gray-500">Segment Affinity</p>
+                            <p className="text-xs text-gray-500">Segment Reach</p>
                           </div>
                         </div>
                       ))
