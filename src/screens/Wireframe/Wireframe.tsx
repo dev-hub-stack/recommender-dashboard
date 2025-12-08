@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { DashboardHeaderSection } from "./sections/DashboardHeaderSection";
 import { PerformanceMetricsSection } from "./sections/PerformanceMetricsSection";
@@ -12,6 +12,7 @@ import CollaborativeRecommendationDashboard from "./sections/CollaborativeRecomm
 import { GeographicIntelligenceSection } from "./sections/GeographicIntelligenceSection";
 import { RFMSegmentationSection } from "./sections/RFMSegmentationSection";
 import { AWSPersonalizeSection } from "./sections/AWSPersonalizeSection";
+import { getProductCategories, ProductCategory } from "../../services/api";
 
 export const Wireframe = (): JSX.Element => {
   const [timeFilter, setTimeFilter] = useState<string>('7days'); // Changed default to 7 days
@@ -19,6 +20,21 @@ export const Wireframe = (): JSX.Element => {
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
   const [showCustomDatePicker, setShowCustomDatePicker] = useState<boolean>(false);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getProductCategories(timeFilter as any);
+        setCategories(data);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+    fetchCategories();
+  }, [timeFilter]);
 
   const handleTimeFilterChange = (value: string) => {
     setTimeFilter(value);
@@ -54,23 +70,43 @@ export const Wireframe = (): JSX.Element => {
           
           {/* Hide Time Period filter for ML Recommendations since ML uses all historical data */}
           {activeView !== 'ML Recommendations' && (
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Time Period:</label>
-              <select 
-                value={timeFilter} 
-                onChange={(e) => handleTimeFilterChange(e.target.value)}
-                className="px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-              <option value="today">Today</option>
-              <option value="7days">Last 7 Days</option>
-              <option value="30days">Last 30 Days</option>
-              <option value="mtd">Month to Date</option>
-              <option value="90days">Last 3 Months</option>
-              <option value="6months">Last 6 Months</option>
-              <option value="1year">Last 1 Year</option>
-              <option value="custom">Custom Date Range</option>
-              <option value="all">All Time</option>
-            </select>
+            <div className="flex items-center gap-4">
+              {/* Category Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Category:</label>
+                <select 
+                  value={selectedCategory} 
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                >
+                  <option value="">All Categories</option>
+                  {categories.slice(0, 10).map((cat) => (
+                    <option key={cat.category} value={cat.category}>
+                      {cat.category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Time Period Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Time Period:</label>
+                <select 
+                  value={timeFilter} 
+                  onChange={(e) => handleTimeFilterChange(e.target.value)}
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="today">Today</option>
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="mtd">Month to Date</option>
+                  <option value="90days">Last 3 Months</option>
+                  <option value="6months">Last 6 Months</option>
+                  <option value="1year">Last 1 Year</option>
+                  <option value="custom">Custom Date Range</option>
+                  <option value="all">All Time</option>
+                </select>
+              </div>
             
             {/* Custom Date Range Picker */}
             {showCustomDatePicker && (
@@ -105,6 +141,21 @@ export const Wireframe = (): JSX.Element => {
           </div>
           )}
         </div>
+
+        {/* Selected Category Badge */}
+        {selectedCategory && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-lg border border-purple-200">
+            <span className="text-sm text-purple-700">
+              Filtering by: <strong>{selectedCategory}</strong>
+            </span>
+            <button 
+              onClick={() => setSelectedCategory('')}
+              className="text-purple-500 hover:text-purple-700 text-lg"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {/* Render different views based on activeView */}
         {activeView === 'Dashboard' && (
