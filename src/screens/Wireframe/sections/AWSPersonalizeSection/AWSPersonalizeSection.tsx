@@ -252,6 +252,31 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     }
   }, []);
 
+  // Fetch Segment-based Recommendations
+  const fetchSegmentRecommendations = useCallback(async (segment: string, province?: string, city?: string) => {
+    if (!segment) return;
+    
+    setLoadingRecs(true);
+    try {
+      let url = `${API_BASE_URL}/personalize/recommendations/by-segment?segment=${encodeURIComponent(segment)}&limit=10`;
+      if (province) url += `&province=${encodeURIComponent(province)}`;
+      if (city) url += `&city=${encodeURIComponent(city)}`;
+      
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        setLocationRecommendations({
+          users: [],
+          aggregated: data.aggregated_recommendations || []
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch segment recommendations:', err);
+    } finally {
+      setLoadingRecs(false);
+    }
+  }, []);
+
   // Fetch Comparison Data for multiple provinces
   const fetchComparisonData = useCallback(async (provincesToCompare: string[]) => {
     if (provincesToCompare.length === 0) return;
@@ -324,6 +349,13 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       setUserRecommendations([]);
     }
   }, [selectedUser, fetchUserRecommendations]);
+
+  // When segment changes - fetch segment-based recommendations
+  useEffect(() => {
+    if (selectedSegment) {
+      fetchSegmentRecommendations(selectedSegment, selectedProvince || undefined, selectedCity || undefined);
+    }
+  }, [selectedSegment, selectedProvince, selectedCity, fetchSegmentRecommendations]);
 
   // When compare provinces change
   useEffect(() => {
