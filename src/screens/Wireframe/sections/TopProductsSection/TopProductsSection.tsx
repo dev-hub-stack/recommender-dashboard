@@ -2,7 +2,7 @@ import { ArrowUpIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent } from "../../../../components/ui/card";
-import { getRevenueTrend, getPopularProducts, Product, getProductCategories, ProductCategory } from "../../../../services/api";
+import { getRevenueTrend, getPopularProducts, Product } from "../../../../services/api";
 import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
 
 // Live data from recommendation engine - no static data needed
@@ -19,35 +19,30 @@ const chartBars = [
 
 interface TopProductsSectionProps {
   timeFilter?: string;
+  category?: string;
 }
 
-export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilter = '7days' }) => {
+export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilter = '7days', category = '' }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [localTimeFilter, setLocalTimeFilter] = useState<string>(timeFilter);
   const [revenueTrend, setRevenueTrend] = useState<any>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>('daily');
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const selectedCategory = category; // Use prop from parent
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Fetch categories for filter dropdown
-        const categoryData = await getProductCategories(localTimeFilter as any || timeFilter as any);
-        setCategories(categoryData);
-        
         // Use API endpoint with category filter - backend handles filtering
-        const popularProducts = await getPopularProducts(10, localTimeFilter || timeFilter, selectedCategory || undefined);
+        const popularProducts = await getPopularProducts(10, timeFilter, category || undefined);
         
         // No client-side filtering needed - backend handles it
         const filteredProducts = popularProducts;
         
         // Fetch revenue trend data
-        const trendData = await getRevenueTrend(localTimeFilter || timeFilter, trendPeriod);
+        const trendData = await getRevenueTrend(timeFilter, trendPeriod);
         
         setProducts(filteredProducts.slice(0, 5));
         setRevenueTrend(trendData);
@@ -61,12 +56,7 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
     };
 
     fetchData();
-  }, [timeFilter, localTimeFilter, trendPeriod, selectedCategory]);
-
-  // Update local filter when prop changes
-  useEffect(() => {
-    setLocalTimeFilter(timeFilter);
-  }, [timeFilter]);
+  }, [timeFilter, trendPeriod, category]);
 
   if (loading) {
     return (
@@ -117,32 +107,12 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
             <h2 className="flex-1 font-semibold text-black text-base">
               Top Performing Products (Live)
             </h2>
-            <select 
-              value={selectedCategory} 
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-1 text-sm border rounded bg-white"
-            >
-              <option value="">All Categories</option>
-              {categories.slice(0, 10).map((cat) => (
-                <option key={cat.category} value={cat.category}>
-                  {cat.category}
-                </option>
-              ))}
-            </select>
-            <select 
-              value={localTimeFilter} 
-              onChange={(e) => setLocalTimeFilter(e.target.value)}
-              className="px-3 py-1 text-sm border rounded bg-white"
-            >
-              <option value="today">Today</option>
-              <option value="7days">Last 7 Days</option>
-              <option value="30days">Last 30 Days</option>
-              <option value="mtd">Month to Date</option>
-              <option value="90days">Last 3 Months</option>
-              <option value="6months">Last 6 Months</option>
-              <option value="1year">Last 1 Year</option>
-              <option value="all">All Time</option>
-            </select>
+            {/* Category badge - shows selected category from global filter */}
+            {selectedCategory && (
+              <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">
+                {selectedCategory}
+              </span>
+            )}
             <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
               <span className="font-normal text-green-800 text-xs">
                 🔴 Live Data

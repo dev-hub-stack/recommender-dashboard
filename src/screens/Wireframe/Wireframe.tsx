@@ -161,7 +161,7 @@ export const Wireframe = (): JSX.Element => {
         {activeView === 'Dashboard' && (
           <>
             <PerformanceMetricsSection timeFilter={timeFilter} />
-            <TopProductsSection timeFilter={timeFilter} />
+            <TopProductsSection timeFilter={timeFilter} category={selectedCategory} />
             <POSvsOESection timeFilter={timeFilter} />
             <RecentActivitySection timeFilter={timeFilter} />
           </>
