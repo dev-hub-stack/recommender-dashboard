@@ -33,10 +33,12 @@ interface POSvsOEData {
 
 interface POSvsOESectionProps {
   timeFilter?: string;
+  category?: string;
 }
 
 export const POSvsOESection: React.FC<POSvsOESectionProps> = ({ 
-  timeFilter = 'all' 
+  timeFilter = 'all',
+  category = ''
 }) => {
   const [data, setData] = useState<POSvsOEData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,14 +46,18 @@ export const POSvsOESection: React.FC<POSvsOESectionProps> = ({
 
   useEffect(() => {
     fetchPOSvsOEData();
-  }, [timeFilter]);
+  }, [timeFilter, category]);
 
   const fetchPOSvsOEData = async () => {
     setLoading(true);
     setError(null);
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
-      const response = await fetch(`${API_BASE_URL}/analytics/pos-vs-oe-revenue?time_filter=${timeFilter}`);
+      let url = `${API_BASE_URL}/analytics/pos-vs-oe-revenue?time_filter=${timeFilter}`;
+      if (category && category !== '') {
+        url += `&category=${encodeURIComponent(category)}`;
+      }
+      const response = await fetch(url);
       const result = await response.json();
       
       if (result.success) {

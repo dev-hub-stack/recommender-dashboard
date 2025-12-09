@@ -26,6 +26,7 @@ export interface DashboardStats {
 
 export interface UseDashboardMetricsOptions {
   timeFilter?: TimeFilter;
+  category?: string;
   autoRefresh?: boolean;
   refreshInterval?: number; // in milliseconds
 }
@@ -33,6 +34,7 @@ export interface UseDashboardMetricsOptions {
 export function useDashboardMetrics(options: UseDashboardMetricsOptions = {}) {
   const {
     timeFilter = '7days', // Changed default to 7 days for faster loading
+    category = '',
     autoRefresh = true,
     refreshInterval = 60000 // 60 seconds default
   } = options;
@@ -56,8 +58,8 @@ export function useDashboardMetrics(options: UseDashboardMetricsOptions = {}) {
         throw new Error('Recommendation engine is offline');
       }
 
-      // Fetch REAL dashboard metrics
-      const data: DashboardMetrics = await getDashboardMetrics(timeFilter);
+      // Fetch REAL dashboard metrics with optional category filter
+      const data: DashboardMetrics = await getDashboardMetrics(timeFilter, category);
 
       const dashboardStats: DashboardStats = {
         totalRevenue: formatPKR(data.total_revenue),
@@ -95,7 +97,7 @@ export function useDashboardMetrics(options: UseDashboardMetricsOptions = {}) {
       const interval = setInterval(fetchMetrics, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [timeFilter, autoRefresh, refreshInterval]);
+  }, [timeFilter, category, autoRefresh, refreshInterval]);
 
   return {
     metrics,

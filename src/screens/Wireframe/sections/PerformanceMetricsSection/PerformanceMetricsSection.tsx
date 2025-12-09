@@ -5,12 +5,14 @@ import { DateRangeDisplay } from "../../../../components/DateRangeDisplay";
 
 interface PerformanceMetricsSectionProps {
   timeFilter?: string;
+  category?: string;
 }
 
-export const PerformanceMetricsSection = ({ timeFilter: propTimeFilter }: PerformanceMetricsSectionProps): JSX.Element => {
+export const PerformanceMetricsSection = ({ timeFilter: propTimeFilter, category }: PerformanceMetricsSectionProps): JSX.Element => {
   // Use prop directly, do not duplicate into state
   const { metrics, loading, error, isEngineOnline } = useDashboardMetrics({
     timeFilter: (propTimeFilter || '7days') as any,
+    category: category || '',
     autoRefresh: false,
     refreshInterval: 0
   });

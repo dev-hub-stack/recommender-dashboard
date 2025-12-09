@@ -160,9 +160,9 @@ export const Wireframe = (): JSX.Element => {
         {/* Render different views based on activeView */}
         {activeView === 'Dashboard' && (
           <>
-            <PerformanceMetricsSection timeFilter={timeFilter} />
+            <PerformanceMetricsSection timeFilter={timeFilter} category={selectedCategory} />
             <TopProductsSection timeFilter={timeFilter} category={selectedCategory} />
-            <POSvsOESection timeFilter={timeFilter} />
+            <POSvsOESection timeFilter={timeFilter} category={selectedCategory} />
             <RecentActivitySection timeFilter={timeFilter} />
           </>
         )}
