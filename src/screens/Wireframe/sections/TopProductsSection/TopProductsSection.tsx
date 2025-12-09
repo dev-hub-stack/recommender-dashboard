@@ -40,20 +40,11 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
         const categoryData = await getProductCategories(localTimeFilter as any || timeFilter as any);
         setCategories(categoryData);
         
-        // Use regular API endpoint for top products
-        const popularProducts = await getPopularProducts(5, localTimeFilter || timeFilter);
+        // Use API endpoint with category filter - backend handles filtering
+        const popularProducts = await getPopularProducts(10, localTimeFilter || timeFilter, selectedCategory || undefined);
         
-        // Filter by category if selected
-        const filteredProducts = selectedCategory 
-          ? popularProducts.filter((p: Product) => {
-              const productName = p.product_name?.toLowerCase() || '';
-              const category = selectedCategory.toLowerCase();
-              // Simple category matching based on product name
-              if (category === 'mattresses') return productName.includes('foam') || productName.includes('mattress');
-              if (category === 'pillows & accessories') return productName.includes('pillow') || productName.includes('cushion');
-              return true;
-            })
-          : popularProducts;
+        // No client-side filtering needed - backend handles it
+        const filteredProducts = popularProducts;
         
         // Fetch revenue trend data
         const trendData = await getRevenueTrend(localTimeFilter || timeFilter, trendPeriod);

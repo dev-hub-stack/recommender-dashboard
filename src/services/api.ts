@@ -221,14 +221,15 @@ export async function getHealthStatus(): Promise<HealthStatus> {
   };
 }
 
-// Get Recommendations (Popular Products) with time filter
-export async function getPopularProducts(limit: number = 10, timeFilter: string = 'all'): Promise<Product[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/recommendations/popular?limit=${limit}&time_filter=${timeFilter}`,
-    {
-      headers: getAuthHeaders(),
-    }
-  );
+// Get Recommendations (Popular Products) with time filter and category
+export async function getPopularProducts(limit: number = 10, timeFilter: string = 'all', category?: string): Promise<Product[]> {
+  let url = `${API_BASE_URL}/recommendations/popular?limit=${limit}&time_filter=${timeFilter}`;
+  if (category && category !== '') {
+    url += `&category=${encodeURIComponent(category)}`;
+  }
+  const response = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
   
   if (!response.ok) {
     throw new Error('Failed to fetch popular products');
