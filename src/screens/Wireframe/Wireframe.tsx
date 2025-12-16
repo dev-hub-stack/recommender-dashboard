@@ -13,6 +13,7 @@ import { GeographicIntelligenceSection } from "./sections/GeographicIntelligence
 import { RFMSegmentationSection } from "./sections/RFMSegmentationSection";
 import { AWSPersonalizeSection } from "./sections/AWSPersonalizeSection";
 import { getProductCategories, ProductCategory } from "../../services/api";
+import { MultiSelectFilter } from "../../components/MultiSelectFilter";
 
 export const Wireframe = (): JSX.Element => {
   const [timeFilter, setTimeFilter] = useState<string>('7days'); // Changed default to 7 days
@@ -21,7 +22,10 @@ export const Wireframe = (): JSX.Element => {
   const [customEndDate, setCustomEndDate] = useState<string>('');
   const [showCustomDatePicker, setShowCustomDatePicker] = useState<boolean>(false);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  // Keep single category for backward compatibility
+  const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : 
+                          selectedCategories.length > 1 ? selectedCategories.join(',') : '';
 
   // Fetch categories on mount
   useEffect(() => {
@@ -71,22 +75,18 @@ export const Wireframe = (): JSX.Element => {
           {/* Hide Time Period filter for ML Recommendations since ML uses all historical data */}
           {activeView !== 'ML Recommendations' && (
             <div className="flex items-center gap-4">
-              {/* Category Filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Category:</label>
-                <select 
-                  value={selectedCategory} 
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                >
-                  <option value="">All Categories</option>
-                  {categories.slice(0, 10).map((cat) => (
-                    <option key={cat.category} value={cat.category}>
-                      {cat.category}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Multi-Select Category Filter */}
+              <MultiSelectFilter
+                options={categories.slice(0, 20).map(cat => ({
+                  value: cat.category,
+                  label: cat.category,
+                  count: (cat as any).product_count || (cat as any).count
+                }))}
+                selectedValues={selectedCategories}
+                onChange={setSelectedCategories}
+                label="Categories:"
+                placeholder="All Categories"
+              />
 
               {/* Time Period Filter */}
               <div className="flex items-center gap-2">
@@ -142,15 +142,27 @@ export const Wireframe = (): JSX.Element => {
           )}
         </div>
 
-        {/* Selected Category Badge */}
-        {selectedCategory && (
+        {/* Selected Categories Badge */}
+        {selectedCategories.length > 0 && (
           <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-lg border border-purple-200">
             <span className="text-sm text-purple-700">
-              Filtering by: <strong>{selectedCategory}</strong>
+              Filtering by: <strong>{selectedCategories.length === 1 ? selectedCategories[0] : `${selectedCategories.length} categories`}</strong>
             </span>
+            <div className="flex flex-wrap gap-1 ml-2">
+              {selectedCategories.slice(0, 3).map(cat => (
+                <span key={cat} className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">
+                  {cat}
+                </span>
+              ))}
+              {selectedCategories.length > 3 && (
+                <span className="px-2 py-0.5 text-xs bg-purple-200 text-purple-800 rounded">
+                  +{selectedCategories.length - 3} more
+                </span>
+              )}
+            </div>
             <button 
-              onClick={() => setSelectedCategory('')}
-              className="text-purple-500 hover:text-purple-700 text-lg"
+              onClick={() => setSelectedCategories([])}
+              className="text-purple-500 hover:text-purple-700 text-lg ml-2"
             >
               ×
             </button>

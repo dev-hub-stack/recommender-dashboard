@@ -1,9 +1,10 @@
-import { ArrowUpIcon } from "lucide-react";
+import { ArrowUpIcon, Download } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { getRevenueTrend, getPopularProducts, Product } from "../../../../services/api";
 import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
+import { exportTopProducts, exportRevenueTrend } from "../../../../utils/csvExport";
 
 // Live data from recommendation engine - no static data needed
 
@@ -113,6 +114,15 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
                 {selectedCategory}
               </span>
             )}
+            {/* Export Button */}
+            <button
+              onClick={() => exportTopProducts(products, selectedCategory)}
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
+              title="Export to CSV"
+            >
+              <Download className="w-3 h-3" />
+              <span>Export</span>
+            </button>
             <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
               <span className="font-normal text-green-800 text-xs">
                 🔴 Live Data
@@ -215,6 +225,16 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
             <h2 className="flex-1 [font-family:'Poppins',Helvetica] font-semibold text-black text-base tracking-[0] leading-[normal]">
               Revenue Trend
             </h2>
+            {/* Export Button */}
+            {revenueTrend?.trend_data && (
+              <button
+                onClick={() => exportRevenueTrend(revenueTrend.trend_data)}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
+                title="Export to CSV"
+              >
+                <Download className="w-3 h-3" />
+              </button>
+            )}
             <select 
               value={trendPeriod} 
               onChange={(e) => setTrendPeriod(e.target.value)}
