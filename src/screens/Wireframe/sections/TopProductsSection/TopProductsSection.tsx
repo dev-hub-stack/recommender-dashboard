@@ -155,7 +155,10 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
                       {product.product_name || `Product ${product.product_id}`}
                     </span>
                     <span className="text-xs text-gray-500">
-                      ID: {product.product_id} • Score: {product.score?.toFixed(0) || 'N/A'}
+                      SKU: {(() => {
+                        const dimensions = product.product_name?.match(/\d{2}-\d{2}(-\d{1,2})?/);
+                        return dimensions ? dimensions[0] : product.product_id;
+                      })()} • Score: {product.score?.toFixed(0) || 'N/A'}
                     </span>
                   </div>
                 </div>
