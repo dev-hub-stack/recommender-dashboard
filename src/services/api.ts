@@ -2,8 +2,9 @@
 // 100% LIVE DATA - NO MOCK DATA
 // Connects to recommendation engine (configurable via .env)
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://44.201.11.243:8001/api/v1';
-const HEALTH_URL = import.meta.env.VITE_HEALTH_URL || 'http://44.201.11.243:8001/health';
+// Use environment variable for local dev, or relative path for production (Netlify proxy)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const HEALTH_URL = import.meta.env.VITE_HEALTH_URL || '/health';
 
 // Helper function to get auth headers
 function getAuthHeaders(): HeadersInit {

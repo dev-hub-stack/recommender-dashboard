@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import { InfoTooltip } from '../../../../components/Tooltip';
 
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://44.201.11.243:8001/api/v1';
+// API Configuration - Use environment variable or relative path for Netlify proxy
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 // CSV Export helper
 const exportToCSV = (data: any[], filename: string) => {
