@@ -15,18 +15,8 @@
   VITE_API_BASE_URL = "/api/v1"
   VITE_HEALTH_URL = "/health"
 
-# Proxy API requests to backend (MUST be before the catch-all)
-[[redirects]]
-  from = "/api/*"
-  to = "http://3.209.80.206:8001/api/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/health"
-  to = "http://3.209.80.206:8001/health"
-  status = 200
-  force = true
+# API proxy is handled by Edge Function (netlify/edge-functions/api-proxy.ts)
+# Edge Functions are more reliable than redirect-based proxies
 
 # Redirect all other routes to index.html for React Router
 [[redirects]]
