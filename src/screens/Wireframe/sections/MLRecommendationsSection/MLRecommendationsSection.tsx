@@ -8,6 +8,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
 import { formatLargeNumber } from '../../../../utils/formatters';
+import { Download } from 'lucide-react';
+import { MultiSelectFilter } from '../../../../components/MultiSelectFilter';
+import { getProductCategories, ProductCategory } from '../../../../services/api';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '';
@@ -74,6 +77,12 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'products' | 'pairs' | 'customers' | 'personal'>('products');
   const [training, setTraining] = useState(false);
+  
+  // Category filter state
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : 
+                          selectedCategories.length > 1 ? selectedCategories.join(',') : '';
 
   // Fetch ML Status
   const fetchMLStatus = useCallback(async () => {
@@ -186,6 +195,19 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
       setLoading(false);
     }
   }, [fetchTopProducts, fetchProductPairs, fetchCustomerSimilarity, fetchUserRecommendations, customerId]);
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getProductCategories(timeFilter as any);
+        setCategories(data);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+    fetchCategories();
+  }, [timeFilter]);
 
   // Initial load
   useEffect(() => {
@@ -310,12 +332,57 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
         {activeTab === 'products' && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span>🏆</span> ML-Powered Top Products
-                <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 text-xs">
-                  ML
-                </Badge>
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <span>🏆</span> ML-Powered Top Products
+                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 text-xs">
+                    ML
+                  </Badge>
+                </CardTitle>
+                <div className="flex items-center gap-3">
+                  {/* Category Filter */}
+                  <MultiSelectFilter
+                    options={categories.slice(0, 20).map(cat => ({
+                      value: cat.category,
+                      label: cat.category,
+                      count: (cat as any).product_count || (cat as any).count
+                    }))}
+                    selectedValues={selectedCategories}
+                    onChange={setSelectedCategories}
+                    placeholder="All Categories"
+                  />
+                  {/* CSV Export */}
+                  <button
+                    onClick={() => {
+                      const filtered = selectedCategory ? 
+                        topProducts.filter(p => (p as any).category?.toLowerCase().includes(selectedCategory.toLowerCase())) :
+                        topProducts;
+                      const csv = [
+                        ['Rank', 'Product ID', 'Product Name', 'Score', 'Purchase Count', 'Confidence'].join(','),
+                        ...filtered.map((p, i) => [
+                          i + 1,
+                          p.product_id,
+                          `"${p.product_name}"`,
+                          p.score?.toFixed(2) || 'N/A',
+                          p.purchase_count || 'N/A',
+                          p.confidence ? `${(p.confidence * 100).toFixed(0)}%` : 'N/A'
+                        ].join(','))
+                      ].join('\n');
+                      const blob = new Blob([csv], { type: 'text/csv' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `ml_top_products_${selectedCategory || 'all'}_${new Date().toISOString().split('T')[0]}.csv`;
+                      a.click();
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
+                    title="Export to CSV"
+                  >
+                    <Download className="w-3 h-3" />
+                    <span>Export</span>
+                  </button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
