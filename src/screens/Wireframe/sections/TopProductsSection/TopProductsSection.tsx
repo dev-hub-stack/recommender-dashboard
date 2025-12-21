@@ -2,9 +2,10 @@ import { ArrowUpIcon, Download } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent } from "../../../../components/ui/card";
-import { getRevenueTrend, getPopularProducts, Product } from "../../../../services/api";
+import { getRevenueTrend, getPopularProducts, Product, getProductCategories, ProductCategory } from "../../../../services/api";
 import { formatCurrency, formatLargeNumber } from "../../../../utils/formatters";
 import { exportTopProducts, exportRevenueTrend } from "../../../../utils/csvExport";
+import { MultiSelectFilter } from "../../../../components/MultiSelectFilter";
 
 // Live data from recommendation engine - no static data needed
 
@@ -23,29 +24,45 @@ interface TopProductsSectionProps {
   category?: string;
 }
 
-export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilter = '7days', category = '' }) => {
+export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilter: globalTimeFilter, category: globalCategory }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [revenueTrend, setRevenueTrend] = useState<any>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>('daily');
-  const selectedCategory = category; // Use prop from parent
+  
+  // Component-level filters (independent of global filters)
+  const [localTimeFilter, setLocalTimeFilter] = useState<string>('7days');
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : 
+                          selectedCategories.length > 1 ? selectedCategories.join(',') : '';
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getProductCategories(localTimeFilter as any);
+        setCategories(data);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+    fetchCategories();
+  }, [localTimeFilter]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Use API endpoint with category filter - backend handles filtering
-        const popularProducts = await getPopularProducts(10, timeFilter, category || undefined);
-        
-        // No client-side filtering needed - backend handles it
-        const filteredProducts = popularProducts;
+        // Use component-level filters
+        const popularProducts = await getPopularProducts(10, localTimeFilter, selectedCategory || undefined);
         
         // Fetch revenue trend data
-        const trendData = await getRevenueTrend(timeFilter, trendPeriod);
+        const trendData = await getRevenueTrend(localTimeFilter, trendPeriod);
         
-        setProducts(filteredProducts.slice(0, 5));
+        setProducts(popularProducts.slice(0, 5));
         setRevenueTrend(trendData);
         setError(null);
       } catch (err) {
@@ -57,7 +74,7 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
     };
 
     fetchData();
-  }, [timeFilter, trendPeriod, category]);
+  }, [localTimeFilter, trendPeriod, selectedCategory]);
 
   if (loading) {
     return (
@@ -104,30 +121,61 @@ export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ timeFilt
     <section className="flex items-start gap-6 w-full">
       <Card className="flex flex-col items-start gap-4 p-5 bg-foundation-whitewhite-50 rounded-xl flex-1">
         <CardContent className="p-0 w-full space-y-4">
-          <div className="flex items-center gap-2.5 w-full">
-            <h2 className="flex-1 font-semibold text-black text-base">
-              Top Performing Products (Live)
-            </h2>
-            {/* Category badge - shows selected category from global filter */}
-            {selectedCategory && (
-              <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">
-                {selectedCategory}
-              </span>
-            )}
-            {/* Export Button */}
-            <button
-              onClick={() => exportTopProducts(products, selectedCategory)}
-              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
-              title="Export to CSV"
-            >
-              <Download className="w-3 h-3" />
-              <span>Export</span>
-            </button>
-            <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
-              <span className="font-normal text-green-800 text-xs">
-                🔴 Live Data
-              </span>
-            </Badge>
+          <div className="flex flex-col gap-3 w-full">
+            {/* Header Row */}
+            <div className="flex items-center gap-2.5 w-full">
+              <h2 className="flex-1 font-semibold text-black text-base">
+                Top Performing Products (Live)
+              </h2>
+              {/* Export Button */}
+              <button
+                onClick={() => exportTopProducts(products, selectedCategory)}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
+                title="Export to CSV"
+              >
+                <Download className="w-3 h-3" />
+                <span>Export</span>
+              </button>
+              <Badge className="h-auto px-2 py-1 bg-green-100 rounded-[5px]">
+                <span className="font-normal text-green-800 text-xs">
+                  🔴 Live Data
+                </span>
+              </Badge>
+            </div>
+
+            {/* Filters Row */}
+            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+              {/* Multi-Select Category Filter */}
+              <div className="flex items-center gap-2">
+                <MultiSelectFilter
+                  options={categories.slice(0, 20).map(cat => ({
+                    value: cat.category,
+                    label: cat.category,
+                    count: (cat as any).product_count || (cat as any).count
+                  }))}
+                  selectedValues={selectedCategories}
+                  onChange={setSelectedCategories}
+                  label="Categories:"
+                  placeholder="All Categories"
+                />
+              </div>
+
+              {/* Time Period Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Time Period:</label>
+                <select 
+                  value={localTimeFilter} 
+                  onChange={(e) => setLocalTimeFilter(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                >
+                  <option value="today">Today</option>
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="90days">Last 90 Days</option>
+                  <option value="all">All Time</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className="flex w-full">
