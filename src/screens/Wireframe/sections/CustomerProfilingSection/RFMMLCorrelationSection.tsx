@@ -292,7 +292,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <div className="text-sm font-bold text-purple-600">{product.match_rate}% Match Rate</div>
-                            <div className="text-xs text-gray-500">Score: {((product.avg_score || 0.5) * 100).toFixed(1)}%</div>
+                            <div className="text-xs text-gray-500">Score: {(product.avg_score || 0).toFixed(1)}</div>
                           </div>
                           <Badge className={getAffinityColor(product.affinity)}>
                             {product.affinity} Affinity
