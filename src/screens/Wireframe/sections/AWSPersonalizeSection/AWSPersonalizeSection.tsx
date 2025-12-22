@@ -9,8 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { Badge } from '../../../../components/ui/badge';
 import { 
   Cpu, MapPin, User, GitCompare, Search, 
-  Rocket, Info, Brain, BarChart3, Flame, Target, Award
+  Info, Brain, BarChart3, Flame, Target, Award, Download
 } from 'lucide-react';
+import { MultiSelectFilter } from '../../../../components/MultiSelectFilter';
+import { getProductCategories, ProductCategory } from '../../../../services/api';
 import { InfoTooltip } from '../../../../components/Tooltip';
 
 // API Configuration - Use environment variable or relative path for Netlify proxy
@@ -112,7 +114,7 @@ interface TrendingProduct {
 }
 
 interface AWSPersonalizeSectionProps {
-  // No props needed - AWS Personalize uses all historical data
+  // No props needed - ML uses all historical data
 }
 
 export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () => {
@@ -129,6 +131,10 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [selectedSegment, setSelectedSegment] = useState<string>('');
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : 
+                          selectedCategories.length > 1 ? selectedCategories.join(',') : '';
   
   const [userRecommendations, setUserRecommendations] = useState<Recommendation[]>([]);
   const [locationRecommendations, setLocationRecommendations] = useState<{
@@ -226,6 +232,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       let url = `${API_BASE_URL}/personalize/recommendations/by-location?limit_users=50&num_results=10`;
       if (province) url += `&province=${encodeURIComponent(province)}`;
       if (city) url += `&city=${encodeURIComponent(city)}`;
+      if (selectedCategory) url += `&category=${encodeURIComponent(selectedCategory)}`;
       
       const response = await fetch(url);
       if (response.ok) {
@@ -250,7 +257,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     } finally {
       setLoadingRecs(false);
     }
-  }, []);
+  }, [selectedCategory]);
 
   // Fetch Segment-based Recommendations
   const fetchSegmentRecommendations = useCallback(async (segment: string, province?: string, city?: string) => {
@@ -261,6 +268,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       let url = `${API_BASE_URL}/personalize/recommendations/by-segment?segment=${encodeURIComponent(segment)}&limit=10`;
       if (province) url += `&province=${encodeURIComponent(province)}`;
       if (city) url += `&city=${encodeURIComponent(city)}`;
+      if (selectedCategory) url += `&category=${encodeURIComponent(selectedCategory)}`;
       
       const response = await fetch(url);
       if (response.ok) {
@@ -275,7 +283,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     } finally {
       setLoadingRecs(false);
     }
-  }, []);
+  }, [selectedCategory]);
 
   // Fetch Comparison Data for multiple provinces
   const fetchComparisonData = useCallback(async (provincesToCompare: string[]) => {
@@ -306,7 +314,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
   useEffect(() => {
     const loadInitialData = async () => {
       setLoading(true);
-      await Promise.all([fetchStatus(), fetchProvinces()]);
+      await Promise.all([fetchStatus(), fetchProvinces(), getProductCategories().then(setCategories)]);
       setLoading(false);
     };
     loadInitialData();
@@ -443,17 +451,29 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                   score: r.avg_score,
                   recommended_to_users: r.recommended_to_users,
                   province: selectedProvince,
-                  city: selectedCity
+                  city: selectedCity,
+                  category: selectedCategory || 'All'
                 })),
                 ...userRecommendations.map(r => ({
                   type: 'user_recommendation',
                   product_id: r.product_id,
                   product_name: r.product_name,
                   score: r.score,
-                  customer_id: selectedUser
+                  customer_id: selectedUser,
+                  category: selectedCategory || 'All'
+                })),
+                ...trendingProducts.map(r => ({
+                  type: 'trending_product',
+                  product_id: r.product_id,
+                  product_name: r.product_name,
+                  purchase_count: r.purchase_count,
+                  unique_customers: r.unique_customers,
+                  total_revenue: r.total_revenue,
+                  province: selectedProvince || 'All',
+                  category: selectedCategory || 'All'
                 }))
               ];
-              if (allData.length > 0) exportToCSV(allData, 'ml_recommendations');
+              if (allData.length > 0) exportToCSV(allData, `ml_recommendations_${selectedCategory || 'all'}_${selectedProvince || 'all'}`);
             }}
             className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2"
           >
@@ -462,14 +482,14 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
         </div>
       </div>
 
-      {/* AWS Personalize Info Banner */}
+      {/* ML Info Banner */}
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <Rocket className="w-6 h-6 text-purple-600" />
+          <Brain className="w-6 h-6 text-purple-600" />
           <div>
-            <p className="font-medium text-purple-900">Powered by AWS Personalize</p>
+            <p className="font-medium text-purple-900">Powered by Machine Learning</p>
             <p className="text-sm text-purple-700 mt-1">
-              Recommendations are generated using <strong>Personalize ML</strong> trained on <strong>180,000+ users</strong> and <strong>4,000+ products</strong>. 
+              Recommendations are generated using <strong>ML algorithms</strong> trained on <strong>180,000+ users</strong> and <strong>4,000+ products</strong>. 
               Select a location below to see trending products and personalized recommendations for that region.
             </p>
           </div>
@@ -482,10 +502,25 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
           <CardTitle className="text-lg flex items-center gap-2"><Search className="w-5 h-5" /> Filter by Location</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Category Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Categories</label>
+              <MultiSelectFilter
+                options={categories.slice(0, 20).map(cat => ({
+                  value: cat.category,
+                  label: cat.category,
+                  count: (cat as any).product_count || (cat as any).count
+                }))}
+                selectedValues={selectedCategories}
+                onChange={setSelectedCategories}
+                placeholder="All Categories"
+              />
+            </div>
+            
             {/* Province Select */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Province</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Province</label>
               <select
                 value={selectedProvince}
                 onChange={(e) => setSelectedProvince(e.target.value)}
@@ -988,7 +1023,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-500 mb-4">
-                  These are the most popular products recommended by AWS Personalize ML across customers{selectedProvince ? ` in ${selectedProvince}` : ''}{selectedCity ? `, ${selectedCity}` : ''}.
+                  These are the most popular products recommended by ML across customers{selectedProvince ? ` in ${selectedProvince}` : ''}{selectedCity ? `, ${selectedCity}` : ''}{selectedCategory ? ` (${selectedCategory})` : ''}.
                 </p>
                 
                 {/* How It Works Info Box */}
@@ -999,7 +1034,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                       <div>
                         <p className="font-semibold text-blue-900">How It Works:</p>
                         <ul className="text-sm text-blue-800 list-disc list-inside space-y-1 mt-1">
-                          <li>AWS Personalize analyzed <strong>180,000+ users</strong> and their purchase history</li>
+                          <li>ML algorithms analyzed <strong>180,000+ users</strong> and their purchase history</li>
                           <li>For users in <strong>{selectedProvince || 'the selected region'}</strong>, we sample 50 customers in real-time</li>
                           <li><strong>Match Rate</strong> = % of sampled users who could receive this as a top recommendation</li>
                           <li><strong>100% Match Rate</strong> = Every sampled customer matches this product profile = Very High Regional Potential</li>
