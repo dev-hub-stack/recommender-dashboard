@@ -294,9 +294,10 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     
     try {
       for (const province of provincesToCompare) {
-        const response = await fetch(
-          `${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(province)}&limit_users=50&num_results=10`
-        );
+        let url = `${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(province)}&limit_users=50&num_results=10`;
+        if (selectedCategory) url += `&category=${encodeURIComponent(selectedCategory)}`;
+        
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
           newComparisonData[province] = data.aggregated_recommendations || [];
@@ -308,7 +309,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     } finally {
       setLoadingRecs(false);
     }
-  }, []);
+  }, [selectedCategory]);
 
   // Initial load
   useEffect(() => {
@@ -365,19 +366,19 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     }
   }, [selectedSegment, selectedProvince, selectedCity, fetchSegmentRecommendations]);
 
-  // When compare provinces change
+  // When compare provinces or category change
   useEffect(() => {
     if (compareProvinces.length > 0) {
       fetchComparisonData(compareProvinces);
     }
-  }, [compareProvinces, fetchComparisonData]);
+  }, [compareProvinces, selectedCategory, fetchComparisonData]);
 
-  // When switching to trending tab with province already selected
+  // When switching to trending tab with province already selected or category changes
   useEffect(() => {
     if (activeTab === 'trending' && selectedProvince) {
       fetchLocationRecommendations(selectedProvince, selectedCity || undefined);
     }
-  }, [activeTab, selectedProvince, selectedCity, fetchLocationRecommendations]);
+  }, [activeTab, selectedProvince, selectedCity, selectedCategory, fetchLocationRecommendations]);
 
   // Fetch trending data on initial load (use Punjab as default)
   useEffect(() => {
@@ -385,7 +386,10 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       // Fetch trending from the largest province
       const largestProvince = provinces[0]?.province;
       if (largestProvince) {
-        fetch(`${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(largestProvince)}&limit_users=50&num_results=10`)
+        let url = `${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(largestProvince)}&limit_users=50&num_results=10`;
+        if (selectedCategory) url += `&category=${encodeURIComponent(selectedCategory)}`;
+        
+        fetch(url)
           .then(res => res.json())
           .then(data => {
             if (data.aggregated_recommendations?.length > 0) {
