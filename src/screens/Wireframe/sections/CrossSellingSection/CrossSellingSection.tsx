@@ -62,9 +62,19 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       // Always use ML product pairs endpoint
       setUsingML(true);
       
+      // Get auth token
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       // Fetch ML product pairs directly
       const response = await fetch(
-        `${API_BASE_URL}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=10`
+        `${API_BASE_URL}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=10`,
+        { headers }
       );
       
       if (!response.ok) {

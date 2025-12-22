@@ -184,7 +184,7 @@ export const Wireframe = (): JSX.Element => {
         )}
         
         {activeView === 'Cross-Selling' && (
-          <CrossSellingSection timeFilter={timeFilter} />
+          <CrossSellingSection timeFilter="30days" />
         )}
         
         {activeView === 'Collaborative Filtering' && (
