@@ -36,13 +36,23 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
         setLoading(true);
         setUsingML(true); // Always use ML
         
+        // Get auth token
+        const token = localStorage.getItem('auth_token');
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json'
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         // Use ML endpoint directly - no SQL fallback
         const response = await fetch(
-          `${ML_API_BASE_URL}/api/v1/ml/customer-similarity?time_filter=${timeFilter}&limit=10`
+          `${ML_API_BASE_URL}/api/v1/ml/customer-similarity?time_filter=${timeFilter}&limit=10`,
+          { headers }
         );
         
         if (!response.ok) {
-          throw new Error('Failed to fetch ML customer similarity');
+          throw new Error('Failed to fetch customer similarity');
         }
         
         const result = await response.json();

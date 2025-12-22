@@ -35,9 +35,19 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
         setLoading(true);
         setUsingML(true); // Always use ML
         
+        // Get auth token
+        const token = localStorage.getItem('auth_token');
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json'
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         // Use ML endpoint directly - no SQL fallback
         const mlResponse = await fetch(
-          `${ML_API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=10&use_ml=true`
+          `${ML_API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=10&use_ml=true`,
+          { headers }
         );
         
         if (!mlResponse.ok) {
