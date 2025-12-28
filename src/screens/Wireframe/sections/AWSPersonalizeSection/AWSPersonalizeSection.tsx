@@ -434,15 +434,9 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
           <Badge className="bg-purple-100 text-purple-700 border-purple-300">
             Collaborative Filtering
           </Badge>
-          {status?.is_configured ? (
-            <Badge className="bg-green-100 text-green-700 border-green-300">
-              ✓ ML Model Active
-            </Badge>
-          ) : (
-            <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">
-              ⏳ Loading Model...
-            </Badge>
-          )}
+          <Badge className="bg-green-100 text-green-700 border-green-300">
+            ✓ Collaborative Filtering
+          </Badge>
         </div>
         <div className="flex items-center gap-4">
           <button

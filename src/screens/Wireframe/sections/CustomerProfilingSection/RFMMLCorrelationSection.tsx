@@ -56,9 +56,10 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
       
       let segmentsResult;
       try {
-        const segmentsResponse = await fetch(
-          `${ML_API_BASE_URL}/api/v1/ml/rfm-segments?time_filter=${timeFilter}`
-        );
+        const segmentsResponse = await Promise.race([
+          fetch(`${ML_API_BASE_URL}/api/v1/ml/rfm-segments?time_filter=${timeFilter}`),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+        ]) as Response;
         
         if (!segmentsResponse.ok) {
           throw new Error('Failed to fetch RFM segments');
@@ -80,15 +81,16 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
       
       const rfmSegments = segmentsResult.segments || [];
 
-      // For each segment, get customers and their recommendations
-      const segmentData: SegmentRecommendations[] = [];
-      
-      for (const segment of rfmSegments.slice(0, 4)) { // Top 4 segments only
+      // Process all segments in parallel for better performance
+      const segmentPromises = rfmSegments.slice(0, 4).map(async (segment) => {
         try {
-          // Get customers in this segment
+          // Get customers in this segment with timeout
           let customers;
           try {
-            customers = await getCustomersBySegment(segment.segment_name, 10);
+            customers = await Promise.race([
+              getCustomersBySegment(segment.segment_name, 10),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+            ]) as any[];
           } catch (err) {
             console.error(`Failed to get customers for segment ${segment.segment_name}, using fallback:`, err);
             // Create fallback customers
@@ -99,28 +101,33 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
             ];
           }
           
-          // Get ML recommendations for sample customers from this segment
+          // Get ML recommendations for sample customers - PARALLEL requests
           const sampleCustomers = customers.slice(0, 3); // Sample 3 customers
-          const allRecommendations: any[] = [];
-          
-          for (const customer of sampleCustomers) {
+          const recommendationPromises = sampleCustomers.map(async (customer) => {
             try {
-              const recResponse = await fetch(
-                `${ML_API_BASE_URL}/api/v1/personalize/recommendations/${customer.customer_id}?num_results=5`
-              );
+              const recResponse = await Promise.race([
+                fetch(`${ML_API_BASE_URL}/api/v1/personalize/recommendations/${customer.customer_id}?num_results=5`),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+              ]) as Response;
+              
               if (recResponse.ok) {
                 const recs = await recResponse.json();
-                allRecommendations.push(...(recs.recommendations || []));
+                return recs.recommendations || [];
               }
+              return [];
             } catch (err) {
               console.log(`No recommendations for customer ${customer.customer_id}, using fallback`);
               // Add fallback recommendations
-              allRecommendations.push(
+              return [
                 { product_id: `prod_${segment.segment_name}_1`, product_name: `Premium Product for ${segment.segment_name}`, score: 0.8 },
                 { product_id: `prod_${segment.segment_name}_2`, product_name: `Popular Product for ${segment.segment_name}`, score: 0.6 }
-              );
+              ];
             }
-          }
+          });
+          
+          // Wait for all recommendation requests in parallel
+          const recommendationResults = await Promise.all(recommendationPromises);
+          const allRecommendations = recommendationResults.flat();
           
           // Aggregate recommendations by product
           const productAggregation: { [key: string]: any } = {};
@@ -150,20 +157,31 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
             .sort((a, b) => b.match_rate - a.match_rate)
             .slice(0, 5);
           
-          segmentData.push({
+          return {
             segment: segment.segment_name,
             segmentInfo: segment,
             customers: customers,
             recommendations: recommendations,
             topCustomers: customers.slice(0, 3)
-          });
+          };
           
         } catch (err) {
           console.error(`Error processing segment ${segment.segment_name}:`, err);
+          // Return minimal data on error
+          return {
+            segment: segment.segment_name,
+            segmentInfo: segment,
+            customers: [],
+            recommendations: [],
+            topCustomers: []
+          };
         }
-      }
+      });
       
-      setSegments(segmentData);
+      // Wait for all segments to be processed in parallel
+      const segmentData = await Promise.all(segmentPromises);
+      setSegments(segmentData.filter(s => s.customers.length > 0)); // Only show segments with data
+      
     } catch (error) {
       console.error('Error fetching correlation data:', error);
     } finally {
