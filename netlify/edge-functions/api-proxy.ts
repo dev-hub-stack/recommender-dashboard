@@ -1,6 +1,6 @@
 import type { Context } from "https://edge.netlify.com";
 
-const BACKEND_URL = "http://3.209.80.206:8001";
+const BACKEND_URL = "http://3.209.80.206";
 
 export default async function handler(request: Request, context: Context) {
   const url = new URL(request.url);
@@ -18,13 +18,14 @@ export default async function handler(request: Request, context: Context) {
     headers.set("X-Forwarded-For", context.ip);
     headers.set("X-Forwarded-Proto", "https");
     
-    // Make the request to backend
+    // Make the request to backend with timeout
     const backendResponse = await fetch(backendUrl, {
       method: request.method,
       headers: headers,
       body: request.method !== "GET" && request.method !== "HEAD" 
         ? await request.text() 
         : undefined,
+      signal: AbortSignal.timeout(25000), // 25 second timeout
     });
     
     // Clone response headers

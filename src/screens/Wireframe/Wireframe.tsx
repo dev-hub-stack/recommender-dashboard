@@ -103,8 +103,10 @@ export const Wireframe = (): JSX.Element => {
                   <option value="90days">Last 3 Months</option>
                   <option value="6months">Last 6 Months</option>
                   <option value="1year">Last 1 Year</option>
+                  <option value="2years">Last 2 Years</option>
+                  <option value="3years">Last 3 Years</option>
                   <option value="custom">Custom Date Range</option>
-                  <option value="all">All Time</option>
+                  <option value="all">All Time (Slower)</option>
                 </select>
               </div>
             
