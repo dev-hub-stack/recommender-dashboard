@@ -6,7 +6,7 @@ import { RecentActivitySection } from "./sections/RecentActivitySection";
 import { RevenueTrendSection } from "./sections/RevenueTrendSection";
 import { TopProductsSection } from "./sections/TopProductsSection";
 import { CustomerDetailedProfiling } from "./sections/CustomerProfilingSection/CustomerDetailedProfiling";
-import { POSvsOESection } from "./sections/POSvsOESection";
+import { POSvsOESection } from "./sections/POSvsOESection/POSvsOESection";
 import { CrossSellingSection } from "./sections/CrossSellingSection";
 import CollaborativeRecommendationDashboard from "./sections/CollaborativeRecommendationSection";
 import { GeographicIntelligenceSection } from "./sections/GeographicIntelligenceSection";
