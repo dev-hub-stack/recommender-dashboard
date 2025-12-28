@@ -14,6 +14,7 @@ import { RFMSegmentationSection } from "./sections/RFMSegmentationSection";
 import { AWSPersonalizeSection } from "./sections/AWSPersonalizeSection";
 import { getProductCategories, ProductCategory } from "../../services/api";
 import { MultiSelectFilter } from "../../components/MultiSelectFilter";
+import { DashboardExportButton } from "../../components/DashboardExportButton";
 
 export const Wireframe = (): JSX.Element => {
   const [timeFilter, setTimeFilter] = useState<string>('7days'); // Changed default to 7 days
@@ -109,6 +110,13 @@ export const Wireframe = (): JSX.Element => {
                   <option value="all">All Time (Slower)</option>
                 </select>
               </div>
+
+              {/* CSV Export Button */}
+              <DashboardExportButton
+                timeFilter={timeFilter}
+                categories={selectedCategories}
+                sections={['all']}
+              />
             
             {/* Custom Date Range Picker */}
             {showCustomDatePicker && (
