@@ -25,7 +25,7 @@ export default async function handler(request: Request, context: Context) {
       body: request.method !== "GET" && request.method !== "HEAD" 
         ? await request.text() 
         : undefined,
-      signal: AbortSignal.timeout(25000), // 25 second timeout
+      signal: AbortSignal.timeout(60000), // 60 second timeout for large queries
     });
     
     // Clone response headers
