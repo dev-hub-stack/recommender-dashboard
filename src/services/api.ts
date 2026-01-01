@@ -563,7 +563,18 @@ export async function getCollaborativeProductPairs(
   }
   
   const data = await response.json();
-  return data.pairs || [];
+  const pairs = data.pairs || [];
+  
+  // Transform from nested format to flat format if needed
+  // API may return either: {product_a: {id, name}} or {product_a_id, product_a_name}
+  return pairs.map((pair: any) => ({
+    product_a_id: pair.product_a_id || pair.product_a?.id || '',
+    product_a_name: pair.product_a_name || pair.product_a?.name || 'Unknown Product',
+    product_b_id: pair.product_b_id || pair.product_b?.id || '',
+    product_b_name: pair.product_b_name || pair.product_b?.name || 'Unknown Product',
+    co_recommendation_count: pair.co_recommendation_count || 0,
+    combined_revenue: pair.combined_revenue || 0,
+  }));
 }
 
 // ==============================================
