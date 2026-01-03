@@ -10,6 +10,7 @@ interface CrossSellingMetrics {
   conversionRate: number;
   totalOpportunities: number;
   avgConfidence: number;
+  avgPairValue?: number;
   topPairs: Array<{
     product_id: string;
     product_name: string;
@@ -41,6 +42,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
     conversionRate: 0,
     totalOpportunities: 0,
     avgConfidence: 0,
+    avgPairValue: 0,
     topPairs: []
   });
   const [loading, setLoading] = useState(false);
@@ -83,15 +85,21 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       
       const data = await response.json();
       const pairs = data.pairs || [];
+      const summary = data.summary || {};
+      const actualTotalCount = data.actual_total_count || pairs.length;
       
-      // Calculate metrics from product pairs
-      const totalRevenue = pairs.reduce((sum: number, p: any) => 
+      // Use summary metrics from API if available, otherwise calculate from pairs
+      const totalRevenue = summary.total_revenue || pairs.reduce((sum: number, p: any) => 
         sum + (p.combined_revenue || 0), 0
       );
       
-      const avgConfidence = pairs.length > 0
+      const avgConfidence = summary.avg_confidence || (pairs.length > 0
         ? pairs.reduce((sum: number, p: any) => sum + (p.confidence_score || 0), 0) / pairs.length * 100
-        : 0;
+        : 0);
+      
+      const avgPairValue = summary.avg_pair_value || (pairs.length > 0
+        ? totalRevenue / pairs.length
+        : 0);
       
       const topPairs = pairs.slice(0, 6).map((pair: any) => ({
         product_id: pair.product_a_id || pair.product_a?.id || '',
@@ -106,8 +114,9 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       setMetrics({
         totalRevenue,
         conversionRate: avgConfidence,
-        totalOpportunities: pairs.length,
+        totalOpportunities: actualTotalCount,  // Use actual total from API
         avgConfidence,
+        avgPairValue,
         topPairs
       });
     } catch (err) {
@@ -156,7 +165,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       icon: "/vuesax-linear-dollar-circle.svg",
       label: "Avg Pair Value",
       tooltip: "Average revenue potential per product pair. Calculated from historical co-purchase data: (Combined revenue ÷ Number of pairs).",
-      value: `Rs ${formatLargeNumber(Math.round(metrics.totalRevenue / Math.max(metrics.topPairs.length, 1)))}`,
+      value: `Rs ${formatLargeNumber(Math.round(metrics.avgPairValue || metrics.totalRevenue / Math.max(metrics.topPairs.length, 1)))}`,
       percentage: null, // Remove hardcoded percentage
       bgColor: "bg-foundation-purplepurple-50",
       badgeBgColor: "bg-foundation-purplepurple-50",
