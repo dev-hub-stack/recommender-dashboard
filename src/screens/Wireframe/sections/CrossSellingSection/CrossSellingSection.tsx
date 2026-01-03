@@ -94,10 +94,10 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
         : 0;
       
       const topPairs = pairs.slice(0, 6).map((pair: any) => ({
-        product_id: pair.product_a_id,
-        product_name: pair.product_a_name,
-        pair_product_id: pair.product_b_id,
-        pair_product_name: pair.product_b_name,
+        product_id: pair.product_a_id || pair.product_a?.id || '',
+        product_name: pair.product_a_name || pair.product_a?.name || 'Unknown Product',
+        pair_product_id: pair.product_b_id || pair.product_b?.id || '',
+        pair_product_name: pair.product_b_name || pair.product_b?.name || 'Unknown Product',
         co_purchase_count: pair.co_recommendation_count || 0,
         confidence_score: (pair.confidence_score || 0) * 100,
         potential_revenue: pair.combined_revenue || 0

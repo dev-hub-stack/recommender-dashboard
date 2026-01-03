@@ -122,7 +122,16 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
       );
       if (response.ok) {
         const data = await response.json();
-        setProductPairs(data.pairs || []);
+        const pairs = (data.pairs || []).map((pair: any) => ({
+          product_a_id: pair.product_a_id || pair.product_a?.id || '',
+          product_a_name: pair.product_a_name || pair.product_a?.name || 'Unknown Product',
+          product_b_id: pair.product_b_id || pair.product_b?.id || '',
+          product_b_name: pair.product_b_name || pair.product_b?.name || 'Unknown Product',
+          co_purchase_count: pair.co_recommendation_count || pair.co_purchase_count || 0,
+          confidence_score: pair.confidence_score || 0,
+          combined_revenue: pair.combined_revenue || 0,
+        }));
+        setProductPairs(pairs);
       }
     } catch (err) {
       console.error('Failed to fetch product pairs:', err);
