@@ -24,6 +24,10 @@ export const Wireframe = (): JSX.Element => {
   const [showCustomDatePicker, setShowCustomDatePicker] = useState<boolean>(false);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  // Global OE/POS filter - 'all', 'oe', or 'pos'
+  const [orderSource, setOrderSource] = useState<string>('all');
+  // Delivered only filter - only include delivered/completed orders
+  const [deliveredOnly, setDeliveredOnly] = useState<boolean>(false);
   // Keep single category for backward compatibility
   const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : 
                           selectedCategories.length > 1 ? selectedCategories.join(',') : '';
@@ -89,6 +93,33 @@ export const Wireframe = (): JSX.Element => {
                 placeholder="All Categories"
               />
 
+              {/* OE/POS Order Source Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Source:</label>
+                <select 
+                  value={orderSource} 
+                  onChange={(e) => setOrderSource(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Orders</option>
+                  <option value="oe">OE (Online Express)</option>
+                  <option value="pos">POS (Point of Sale)</option>
+                </select>
+              </div>
+
+              {/* Delivered Only Toggle */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox"
+                    checked={deliveredOnly}
+                    onChange={(e) => setDeliveredOnly(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  Delivered Only
+                </label>
+              </div>
+
               {/* Time Period Filter */}
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-700">Time Period:</label>
@@ -152,29 +183,64 @@ export const Wireframe = (): JSX.Element => {
           )}
         </div>
 
-        {/* Selected Categories Badge */}
-        {selectedCategories.length > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-lg border border-purple-200">
-            <span className="text-sm text-purple-700">
-              Filtering by: <strong>{selectedCategories.length === 1 ? selectedCategories[0] : `${selectedCategories.length} categories`}</strong>
-            </span>
-            <div className="flex flex-wrap gap-1 ml-2">
-              {selectedCategories.slice(0, 3).map(cat => (
-                <span key={cat} className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">
-                  {cat}
+        {/* Active Filters Badges */}
+        {(selectedCategories.length > 0 || orderSource !== 'all' || deliveredOnly) && (
+          <div className="flex flex-wrap items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+            {/* Order Source Badge */}
+            {orderSource !== 'all' && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
+                <span className="text-sm text-blue-700">
+                  <strong>{orderSource === 'oe' ? '🌐 Online Express' : '🏪 Point of Sale'}</strong>
                 </span>
-              ))}
-              {selectedCategories.length > 3 && (
-                <span className="px-2 py-0.5 text-xs bg-purple-200 text-purple-800 rounded">
-                  +{selectedCategories.length - 3} more
+                <button 
+                  onClick={() => setOrderSource('all')}
+                  className="text-blue-500 hover:text-blue-700 text-sm ml-1"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            
+            {/* Delivered Only Badge */}
+            {deliveredOnly && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
+                <span className="text-sm text-green-700">
+                  <strong>✅ Delivered Only</strong>
                 </span>
-              )}
-            </div>
+                <button 
+                  onClick={() => setDeliveredOnly(false)}
+                  className="text-green-500 hover:text-green-700 text-sm ml-1"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {/* Categories Badge */}
+            {selectedCategories.length > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-purple-100 rounded-full">
+                <span className="text-sm text-purple-700">
+                  <strong>{selectedCategories.length === 1 ? selectedCategories[0] : `${selectedCategories.length} categories`}</strong>
+                </span>
+                <button 
+                  onClick={() => setSelectedCategories([])}
+                  className="text-purple-500 hover:text-purple-700 text-sm ml-1"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {/* Clear All Filters */}
             <button 
-              onClick={() => setSelectedCategories([])}
-              className="text-purple-500 hover:text-purple-700 text-lg ml-2"
+              onClick={() => {
+                setOrderSource('all');
+                setDeliveredOnly(false);
+                setSelectedCategories([]);
+              }}
+              className="ml-auto text-sm text-gray-500 hover:text-gray-700 underline"
             >
-              ×
+              Clear All Filters
             </button>
           </div>
         )}
@@ -182,8 +248,8 @@ export const Wireframe = (): JSX.Element => {
         {/* Render different views based on activeView */}
         {activeView === 'Dashboard' && (
           <>
-            <PerformanceMetricsSection timeFilter={timeFilter} category={selectedCategory} />
-            <TopProductsSection timeFilter={timeFilter} category={selectedCategory} />
+            <PerformanceMetricsSection timeFilter={timeFilter} category={selectedCategory} orderSource={orderSource} deliveredOnly={deliveredOnly} />
+            <TopProductsSection timeFilter={timeFilter} category={selectedCategory} orderSource={orderSource} deliveredOnly={deliveredOnly} />
             <POSvsOESection timeFilter={timeFilter} category={selectedCategory} />
             <RecentActivitySection timeFilter={timeFilter} />
           </>

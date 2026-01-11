@@ -435,10 +435,21 @@ export async function getProductAnalytics(
 }
 
 // Get Dashboard Metrics with Time Filter and Category (REAL METRICS)
-export async function getDashboardMetrics(timeFilter: TimeFilter = 'all', category?: string): Promise<DashboardMetrics> {
+export async function getDashboardMetrics(
+  timeFilter: TimeFilter = 'all', 
+  category?: string,
+  orderSource?: string,
+  deliveredOnly?: boolean
+): Promise<DashboardMetrics> {
   let url = `${API_BASE_URL}/analytics/dashboard?time_filter=${timeFilter}`;
   if (category && category !== '') {
     url += `&category=${encodeURIComponent(category)}`;
+  }
+  if (orderSource && orderSource !== 'all') {
+    url += `&order_source=${encodeURIComponent(orderSource)}`;
+  }
+  if (deliveredOnly) {
+    url += `&delivered_only=true`;
   }
   const response = await fetch(url, {
     headers: getAuthHeaders(),

@@ -19,17 +19,31 @@ const chartBars = [
   { day: "Sun", height: "h-[181px]" },
 ];
 
-export const TopProductsSection: React.FC = () => {
+interface TopProductsSectionProps {
+  timeFilter?: string;
+  category?: string;
+  orderSource?: string;
+  deliveredOnly?: boolean;
+}
+
+export const TopProductsSection: React.FC<TopProductsSectionProps> = ({ 
+  timeFilter: propTimeFilter, 
+  category: propCategory,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  orderSource: _orderSource,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  deliveredOnly: _deliveredOnly 
+}) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [revenueTrend, setRevenueTrend] = useState<any>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>('daily');
   
-  // Component-level filters (independent of global filters)
-  const [localTimeFilter, setLocalTimeFilter] = useState<string>('7days');
+  // Use prop if provided, otherwise use local state
+  const [localTimeFilter, setLocalTimeFilter] = useState<string>(propTimeFilter || '7days');
   const [categories, setCategories] = useState<ProductCategory[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(propCategory ? [propCategory] : []);
   const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : 
                           selectedCategories.length > 1 ? selectedCategories.join(',') : '';
 
