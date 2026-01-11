@@ -1,6 +1,6 @@
 /**
- * CSV Export Utility
- * Provides functions to export data as CSV files from dashboard components
+ * CSV Export Utility - ENHANCED VERSION
+ * Provides advanced functions to export data as CSV files from dashboard components
  */
 
 interface ExportOptions {
@@ -8,10 +8,39 @@ interface ExportOptions {
   headers?: string[];
   delimiter?: string;
   includeTimestamp?: boolean;
+  formatCurrency?: boolean;
+  formatNumbers?: boolean;
+  customFormatters?: Record<string, (value: any) => string>;
 }
 
 /**
- * Convert array of objects to CSV string
+ * Format currency value
+ */
+function formatCurrency(value: number): string {
+  if (typeof value !== 'number' || isNaN(value)) return '0';
+  return `Rs ${value.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/**
+ * Format large numbers with thousand separators
+ */
+function formatNumber(value: number): string {
+  if (typeof value !== 'number' || isNaN(value)) return '0';
+  return value.toLocaleString('en-PK');
+}
+
+/**
+ * Format date to readable string
+ */
+function formatDate(value: any): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString('en-PK');
+}
+
+/**
+ * Convert array of objects to CSV string with advanced formatting
  */
 export function objectsToCSV<T extends Record<string, any>>(
   data: T[],
@@ -21,7 +50,13 @@ export function objectsToCSV<T extends Record<string, any>>(
     return '';
   }
 
-  const { headers, delimiter = ',' } = options;
+  const {
+    headers,
+    delimiter = ',',
+    formatCurrency: shouldFormatCurrency = true,
+    formatNumbers: shouldFormatNumbers = true,
+    customFormatters = {}
+  } = options;
   
   // Get all unique keys from the data
   const allKeys = headers || Array.from(
@@ -31,18 +66,55 @@ export function objectsToCSV<T extends Record<string, any>>(
   // Create header row
   const headerRow = allKeys.join(delimiter);
 
+  // Format data with currency and number formatting
+  const formattedData = data.map(obj => {
+    const formattedObj: Record<string, any> = {};
+    
+    allKeys.forEach(key => {
+      let value = obj[key];
+      
+      // Apply custom formatter if exists
+      if (customFormatters[key]) {
+        value = customFormatters[key](value);
+      }
+      // Format currency fields
+      else if (shouldFormatCurrency && typeof value === 'number' && 
+               (key.toLowerCase().includes('revenue') || 
+                key.toLowerCase().includes('price') || 
+                key.toLowerCase().includes('value') ||
+                key.toLowerCase().includes('amount'))) {
+        value = formatCurrency(value);
+      }
+      // Format number fields
+      else if (shouldFormatNumbers && typeof value === 'number' && 
+               !key.toLowerCase().includes('id') &&
+               !key.toLowerCase().includes('score')) {
+        value = formatNumber(value);
+      }
+      // Format dates
+      else if (value instanceof Date || 
+               (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/))) {
+        value = formatDate(value);
+      }
+      // Handle objects and arrays
+      else if (typeof value === 'object' && value !== null) {
+        value = JSON.stringify(value);
+      }
+      
+      formattedObj[key] = value;
+    });
+    
+    return formattedObj;
+  });
+
   // Create data rows
-  const dataRows = data.map(obj => {
+  const dataRows = formattedData.map(obj => {
     return allKeys.map(key => {
       const value = obj[key];
       
       // Handle different value types
       if (value === null || value === undefined) {
         return '';
-      }
-      
-      if (typeof value === 'object') {
-        return JSON.stringify(value).replace(/"/g, '""');
       }
       
       // Escape quotes and wrap in quotes if contains delimiter or newline
