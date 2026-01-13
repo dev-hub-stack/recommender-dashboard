@@ -5,6 +5,8 @@ interface DashboardExportButtonProps {
   timeFilter: string;
   categories: string[];
   sections?: string[];
+  orderSource?: string;
+  deliveredOnly?: boolean;
   className?: string;
 }
 
@@ -12,6 +14,8 @@ export const DashboardExportButton = ({
   timeFilter, 
   categories, 
   sections = ['all'],
+  orderSource = 'all',
+  deliveredOnly = false,
   className = ''
 }: DashboardExportButtonProps) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -29,6 +33,16 @@ export const DashboardExportButton = ({
       // Add categories if selected
       if (categories.length > 0) {
         params.append('categories', categories.join(','));
+      }
+      
+      // Add order source filter
+      if (orderSource && orderSource !== 'all') {
+        params.append('order_source', orderSource);
+      }
+      
+      // Add delivered only filter
+      if (deliveredOnly) {
+        params.append('delivered_only', 'true');
       }
       
       // Get API base URL
@@ -55,9 +69,18 @@ export const DashboardExportButton = ({
       const a = document.createElement('a');
       a.href = url;
       
+      // Build dynamic filename with filter information
+      const sectionName = sections.includes('all') ? 'all_data' : sections[0];
+      const filterSummary = [
+        timeFilter,
+        orderSource !== 'all' ? orderSource : null,
+        deliveredOnly ? 'delivered' : null,
+        categories.length > 0 ? `${categories.length}cats` : null
+      ].filter(Boolean).join('_');
+      
       // Extract filename from Content-Disposition header if available
       const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = `mastergroup_analytics_${timeFilter}_${new Date().getTime()}.csv`;
+      let filename = `mastergroup_${sectionName}_${filterSummary}_${new Date().getTime()}.csv`;
       
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
@@ -82,11 +105,27 @@ export const DashboardExportButton = ({
     }
   };
 
+  // Dynamic button label based on what's being exported
+  const getExportLabel = () => {
+    if (sections.includes('all')) {
+      return 'Export All Data';
+    }
+    
+    // Convert section name to readable format
+    const sectionName = sections[0]
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
+    return `Export ${sectionName}`;
+  };
+
   return (
     <button
       onClick={handleExport}
       disabled={isExporting}
       className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      title={isExporting ? 'Exporting...' : `Export current view with applied filters`}
     >
       {isExporting ? (
         <>
@@ -96,7 +135,7 @@ export const DashboardExportButton = ({
       ) : (
         <>
           <Download className="w-4 h-4" />
-          Export to CSV
+          {getExportLabel()}
         </>
       )}
     </button>

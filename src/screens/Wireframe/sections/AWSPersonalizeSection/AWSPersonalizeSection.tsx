@@ -7,8 +7,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
-import { 
-  Cpu, MapPin, User, GitCompare, Search, 
+import {
+  Cpu, MapPin, User, GitCompare, Search,
   Info, Brain, BarChart3, Flame, Target, Award, Download
 } from 'lucide-react';
 import { MultiSelectFilter } from '../../../../components/MultiSelectFilter';
@@ -21,13 +21,13 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 // CSV Export helper
 const exportToCSV = (data: any[], filename: string) => {
   if (data.length === 0) return;
-  
+
   const headers = Object.keys(data[0]);
   const csvContent = [
     headers.join(','),
     ...data.map(row => headers.map(h => `"${row[h] || ''}"`).join(','))
   ].join('\n');
-  
+
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -126,22 +126,23 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
   const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>([]);
   const [compareProvinces, setCompareProvinces] = useState<string[]>([]);
   const [comparisonData, setComparisonData] = useState<Record<string, AggregatedRecommendation[]>>({});
-  
+
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [selectedSegment, setSelectedSegment] = useState<string>('');
+  const [selectedOrderSource, setSelectedOrderSource] = useState<string>('all');
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : 
-                          selectedCategories.length > 1 ? selectedCategories.join(',') : '';
-  
+  const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] :
+    selectedCategories.length > 1 ? selectedCategories.join(',') : '';
+
   const [userRecommendations, setUserRecommendations] = useState<Recommendation[]>([]);
   const [locationRecommendations, setLocationRecommendations] = useState<{
     users: UserRecommendation[];
     aggregated: AggregatedRecommendation[];
   }>({ users: [], aggregated: [] });
-  
+
   const [loading, setLoading] = useState(true);
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'location' | 'user' | 'trending' | 'compare'>('overview');
@@ -162,7 +163,13 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
   // Fetch Provinces
   const fetchProvinces = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/locations/provinces`);
+      let url = `${API_BASE_URL}/locations/provinces?1=1`;
+      if (selectedCategory) url += `&category=${encodeURIComponent(selectedCategory)}`;
+      if (selectedOrderSource && selectedOrderSource !== 'all') {
+        url += `&order_source=${encodeURIComponent(selectedOrderSource)}`;
+      }
+
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         setProvinces(data.provinces || []);
@@ -170,12 +177,12 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     } catch (err) {
       console.error('Failed to fetch provinces:', err);
     }
-  }, []);
+  }, [selectedCategory, selectedOrderSource]);
 
   // Fetch Cities
   const fetchCities = useCallback(async (province?: string) => {
     try {
-      const url = province 
+      const url = province
         ? `${API_BASE_URL}/locations/cities?province=${encodeURIComponent(province)}`
         : `${API_BASE_URL}/locations/cities`;
       const response = await fetch(url);
@@ -194,7 +201,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       let url = `${API_BASE_URL}/locations/users?limit=50`;
       if (province) url += `&province=${encodeURIComponent(province)}`;
       if (city) url += `&city=${encodeURIComponent(city)}`;
-      
+
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -226,14 +233,17 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
   // Fetch Location-based Recommendations
   const fetchLocationRecommendations = useCallback(async (province?: string, city?: string) => {
     if (!province && !city) return;
-    
+
     setLoadingRecs(true);
     try {
       let url = `${API_BASE_URL}/personalize/recommendations/by-location?limit_users=50&num_results=10`;
       if (province) url += `&province=${encodeURIComponent(province)}`;
       if (city) url += `&city=${encodeURIComponent(city)}`;
       if (selectedCategory) url += `&category=${encodeURIComponent(selectedCategory)}`;
-      
+      if (selectedOrderSource && selectedOrderSource !== 'all') {
+        url += `&order_source=${encodeURIComponent(selectedOrderSource)}`;
+      }
+
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -257,19 +267,19 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     } finally {
       setLoadingRecs(false);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedOrderSource]);
 
   // Fetch Segment-based Recommendations
   const fetchSegmentRecommendations = useCallback(async (segment: string, province?: string, city?: string) => {
     if (!segment) return;
-    
+
     setLoadingRecs(true);
     try {
       let url = `${API_BASE_URL}/personalize/recommendations/by-segment?segment=${encodeURIComponent(segment)}&limit=10`;
       if (province) url += `&province=${encodeURIComponent(province)}`;
       if (city) url += `&city=${encodeURIComponent(city)}`;
       if (selectedCategory) url += `&category=${encodeURIComponent(selectedCategory)}`;
-      
+
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -288,15 +298,18 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
   // Fetch Comparison Data for multiple provinces
   const fetchComparisonData = useCallback(async (provincesToCompare: string[]) => {
     if (provincesToCompare.length === 0) return;
-    
+
     setLoadingRecs(true);
     const newComparisonData: Record<string, AggregatedRecommendation[]> = {};
-    
+
     try {
       for (const province of provincesToCompare) {
         let url = `${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(province)}&limit_users=50&num_results=10`;
         if (selectedCategory) url += `&category=${encodeURIComponent(selectedCategory)}`;
-        
+        if (selectedOrderSource && selectedOrderSource !== 'all') {
+          url += `&order_source=${encodeURIComponent(selectedOrderSource)}`;
+        }
+
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
@@ -309,7 +322,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     } finally {
       setLoadingRecs(false);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedOrderSource]);
 
   // Initial load
   useEffect(() => {
@@ -336,7 +349,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     }
     setSelectedCity('');
     setSelectedUser('');
-  }, [selectedProvince, fetchCities, fetchUsers, fetchLocationRecommendations, activeTab]);
+  }, [selectedProvince, fetchCities, fetchUsers, fetchLocationRecommendations, activeTab, selectedOrderSource]);
 
   // When city changes
   useEffect(() => {
@@ -348,7 +361,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       }
     }
     setSelectedUser('');
-  }, [selectedCity, selectedProvince, fetchUsers, fetchLocationRecommendations, activeTab]);
+  }, [selectedCity, selectedProvince, fetchUsers, fetchLocationRecommendations, activeTab, selectedOrderSource]);
 
   // When user changes
   useEffect(() => {
@@ -371,14 +384,14 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
     if (compareProvinces.length > 0) {
       fetchComparisonData(compareProvinces);
     }
-  }, [compareProvinces, selectedCategory, fetchComparisonData]);
+  }, [compareProvinces, selectedCategory, selectedOrderSource, fetchComparisonData]);
 
   // When switching to trending tab with province already selected or category changes
   useEffect(() => {
     if (activeTab === 'trending' && selectedProvince) {
       fetchLocationRecommendations(selectedProvince, selectedCity || undefined);
     }
-  }, [activeTab, selectedProvince, selectedCity, selectedCategory, fetchLocationRecommendations]);
+  }, [activeTab, selectedProvince, selectedCity, selectedCategory, selectedOrderSource, fetchLocationRecommendations]);
 
   // Fetch trending data on initial load (use Punjab as default)
   useEffect(() => {
@@ -388,7 +401,10 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       if (largestProvince) {
         let url = `${API_BASE_URL}/personalize/recommendations/by-location?province=${encodeURIComponent(largestProvince)}&limit_users=50&num_results=10`;
         if (selectedCategory) url += `&category=${encodeURIComponent(selectedCategory)}`;
-        
+        if (selectedOrderSource && selectedOrderSource !== 'all') {
+          url += `&order_source=${encodeURIComponent(selectedOrderSource)}`;
+        }
+
         fetch(url)
           .then(res => res.json())
           .then(data => {
@@ -405,7 +421,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
           .catch(err => console.error('Failed to fetch trending:', err));
       }
     }
-  }, [provinces, trendingProducts.length]);
+  }, [provinces, trendingProducts.length, selectedCategories, selectedOrderSource]);
 
   if (loading) {
     return (
@@ -475,7 +491,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
             }}
             className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2"
           >
-            � Export CSV
+            ↓ Export CSV
           </button>
         </div>
       </div>
@@ -487,7 +503,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
           <div>
             <p className="font-medium text-purple-900">Powered by Machine Learning</p>
             <p className="text-sm text-purple-700 mt-1">
-              Recommendations are generated using <strong>ML algorithms</strong> trained on <strong>180,000+ users</strong> and <strong>4,000+ products</strong>. 
+              Recommendations are generated using <strong>ML algorithms</strong> trained on <strong>180,000+ users</strong> and <strong>4,000+ products</strong>.
               Select a location below to see trending products and personalized recommendations for that region.
             </p>
           </div>
@@ -501,6 +517,20 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Order Source Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Order Source</label>
+              <select
+                value={selectedOrderSource}
+                onChange={(e) => setSelectedOrderSource(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">All Channels</option>
+                <option value="oe">Online Express (OE)</option>
+                <option value="pos">Point of Sale (POS)</option>
+              </select>
+            </div>
+
             {/* Category Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Categories</label>
@@ -515,7 +545,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                 placeholder="All Categories"
               />
             </div>
-            
+
             {/* Province Select */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Province</label>
@@ -550,8 +580,10 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                 ))}
               </select>
             </div>
+          </div>
 
-            {/* Customer Segment Select */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+            {/* Customer Segment Select - Moved to second row */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer Segment</label>
               <select
@@ -584,41 +616,36 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
       <div className="flex border-b overflow-x-auto">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
-            activeTab === 'overview' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'overview' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
         >
           <BarChart3 className="w-4 h-4" /> Overview
         </button>
         <button
           onClick={() => setActiveTab('location')}
-          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
-            activeTab === 'location' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'location' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
         >
           <MapPin className="w-4 h-4" /> By Location
         </button>
         <button
           onClick={() => setActiveTab('user')}
-          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
-            activeTab === 'user' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'user' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
         >
           <Target className="w-4 h-4" /> By Segment
         </button>
         <button
           onClick={() => setActiveTab('trending')}
-          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
-            activeTab === 'trending' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'trending' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
         >
           <Flame className="w-4 h-4" /> Trending
         </button>
         <button
           onClick={() => setActiveTab('compare')}
-          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
-            activeTab === 'compare' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+          className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'compare' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
         >
           <GitCompare className="w-4 h-4" /> Compare Regions
         </button>
@@ -655,9 +682,8 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                       {locationRecommendations.aggregated.map((rec, index) => (
                         <div key={rec.product_id} className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg hover:from-purple-100 hover:to-pink-100 transition-colors">
                           <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
-                              index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-purple-500'
-                            }`}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-purple-500'
+                              }`}>
                               #{index + 1}
                             </div>
                             <div>
@@ -670,17 +696,16 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                               {Math.round((rec.recommended_to_users / 50) * 100)}% Match Rate
                               <InfoTooltip text="Match Rate = % of sampled users who could receive this as a top recommendation. Higher % = stronger regional potential. This shows opportunity, not actual recommendations delivered." />
                             </p>
-                            <p className={`text-xs font-medium ${
-                              rec.recommended_to_users >= 40 ? 'text-green-600' : 
+                            <p className={`text-xs font-medium ${rec.recommended_to_users >= 40 ? 'text-green-600' :
                               rec.recommended_to_users >= 20 ? 'text-blue-600' : 'text-gray-500'
-                            }`}>
-                              {rec.recommended_to_users >= 40 ? '🔥 High Regional Affinity' : 
-                               rec.recommended_to_users >= 20 ? '✓ Medium Regional Affinity' : 
-                               'Low Regional Affinity'}
+                              }`}>
+                              {rec.recommended_to_users >= 40 ? '🔥 High Regional Affinity' :
+                                rec.recommended_to_users >= 20 ? '✓ Medium Regional Affinity' :
+                                  'Low Regional Affinity'}
                               <InfoTooltip text={
                                 rec.recommended_to_users >= 40 ? 'High: Stock more of this product in this region' :
-                                rec.recommended_to_users >= 20 ? 'Medium: Good regional demand, consider promotions' :
-                                'Low: Niche interest, targeted marketing may help'
+                                  rec.recommended_to_users >= 20 ? 'Medium: Good regional demand, consider promotions' :
+                                    'Low: Niche interest, targeted marketing may help'
                               } />
                             </p>
                           </div>
@@ -746,11 +771,11 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                 <div className="text-center py-12 text-gray-500">
                   <p className="text-lg mb-2">🎯 Select a Customer Segment to see targeted recommendations</p>
                   <p className="text-sm mb-6">Target specific customer groups based on RFM analysis</p>
-                  
+
                   {/* Segment Cards Preview */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
                     {RFM_SEGMENTS.slice(0, 4).map(segment => (
-                      <div 
+                      <div
                         key={segment.id}
                         onClick={() => {
                           setSelectedSegment(segment.id);
@@ -889,7 +914,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -903,7 +928,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -917,7 +942,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -942,13 +967,13 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                     const maxCount = provinces[0]?.customer_count || 1;
                     const percentage = (p.customer_count / maxCount) * 100;
                     const isSmallBar = percentage < 15;
-                    
+
                     return (
                       <div key={p.province} className="flex items-center gap-4">
                         <div className="w-32 font-medium text-sm truncate">{p.province}</div>
                         <div className="flex-1 flex items-center gap-2">
                           <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden relative">
-                            <div 
+                            <div
                               className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-end pr-3"
                               style={{ width: `${percentage}%`, minWidth: isSmallBar ? '4px' : 'auto' }}
                             >
@@ -1023,7 +1048,7 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                 <p className="text-gray-500 mb-4">
                   These are the most popular products recommended by ML across customers{selectedProvince ? ` in ${selectedProvince}` : ''}{selectedCity ? `, ${selectedCity}` : ''}{selectedCategory ? ` (${selectedCategory})` : ''}.
                 </p>
-                
+
                 {/* How It Works Info Box */}
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <div className="flex items-start gap-3">
@@ -1049,15 +1074,14 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                     </div>
                   </div>
                 </div>
-                
+
                 {trendingProducts.length > 0 ? (
                   <div className="space-y-3">
                     {trendingProducts.map((product, index) => (
                       <div key={product.product_id} className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg">
                         <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
-                            index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-orange-500'
-                          }`}>
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-orange-500'
+                            }`}>
                             #{index + 1}
                           </div>
                           <div>
@@ -1070,17 +1094,16 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                             {Math.round(((product.purchase_count || 0) / 50) * 100)}% Match Rate
                             <InfoTooltip text="Match Rate = % of sampled users who could receive this as a top recommendation. Higher % = stronger regional potential. This shows opportunity, not actual recommendations delivered." />
                           </p>
-                          <p className={`text-xs font-medium ${
-                            (product.purchase_count || 0) >= 40 ? 'text-green-600' : 
+                          <p className={`text-xs font-medium ${(product.purchase_count || 0) >= 40 ? 'text-green-600' :
                             (product.purchase_count || 0) >= 20 ? 'text-blue-600' : 'text-gray-500'
-                          }`}>
-                            {(product.purchase_count || 0) >= 40 ? '🔥 High Regional Affinity' : 
-                             (product.purchase_count || 0) >= 20 ? '✓ Medium Regional Affinity' : 
-                             'Low Regional Affinity'}
+                            }`}>
+                            {(product.purchase_count || 0) >= 40 ? '🔥 High Regional Affinity' :
+                              (product.purchase_count || 0) >= 20 ? '✓ Medium Regional Affinity' :
+                                'Low Regional Affinity'}
                             <InfoTooltip text={
                               (product.purchase_count || 0) >= 40 ? 'High: Stock more of this product in this region' :
-                              (product.purchase_count || 0) >= 20 ? 'Medium: Good regional demand, consider promotions' :
-                              'Low: Niche interest, targeted marketing may help'
+                                (product.purchase_count || 0) >= 20 ? 'Medium: Good regional demand, consider promotions' :
+                                  'Low: Niche interest, targeted marketing may help'
                             } />
                           </p>
                         </div>
@@ -1124,11 +1147,10 @@ export const AWSPersonalizeSection: React.FC<AWSPersonalizeSectionProps> = () =>
                             setCompareProvinces([...compareProvinces, p.province]);
                           }
                         }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                          compareProvinces.includes(p.province)
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${compareProvinces.includes(p.province)
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
                       >
                         {p.province}
                       </button>

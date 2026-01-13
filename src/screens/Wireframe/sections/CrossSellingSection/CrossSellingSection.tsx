@@ -24,16 +24,20 @@ interface CrossSellingMetrics {
 
 interface CrossSellingSectionProps {
   timeFilter?: string;
+  orderSource?: string;
+  category?: string;
   enableABTest?: boolean; // Enable A/B testing between ML and SQL
 }
 
-export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({ 
+export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
   timeFilter = '30days',
+  orderSource = 'all',
+  category = '',
   enableABTest = true
 }) => {
   // Use ML Recommendations Hook with A/B Testing
-  const { 
-    variant, 
+  const {
+    variant,
     mlStatus
   } = useMLRecommendations('cross_selling');
 
@@ -51,19 +55,19 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
 
   useEffect(() => {
     fetchCrossSellingData();
-  }, [timeFilter, variant]);
+  }, [timeFilter, variant, orderSource]);
 
   const fetchCrossSellingData = async () => {
     setLoading(true);
     setError(null);
-    
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 
+
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') ||
       '';
-    
+
     try {
       // Always use ML product pairs endpoint
       setUsingML(true);
-      
+
       // Get auth token
       const token = localStorage.getItem('auth_token');
       const headers: HeadersInit = {
@@ -72,35 +76,38 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
+
+      // Build URL with filters
+      let url = `${API_BASE_URL}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=10`;
+      if (orderSource && orderSource !== 'all') {
+        url += `&order_source=${encodeURIComponent(orderSource)}`;
+      }
+
       // Fetch ML product pairs directly
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=10`,
-        { headers }
-      );
-      
+      const response = await fetch(url, { headers });
+
       if (!response.ok) {
         throw new Error('Failed to fetch product pairs');
       }
-      
+
       const data = await response.json();
       const pairs = data.pairs || [];
       const summary = data.summary || {};
       const actualTotalCount = data.actual_total_count || pairs.length;
-      
+
       // Use summary metrics from API if available, otherwise calculate from pairs
-      const totalRevenue = summary.total_revenue || pairs.reduce((sum: number, p: any) => 
+      const totalRevenue = summary.total_revenue || pairs.reduce((sum: number, p: any) =>
         sum + (p.combined_revenue || 0), 0
       );
-      
+
       const avgConfidence = summary.avg_confidence || (pairs.length > 0
         ? pairs.reduce((sum: number, p: any) => sum + (p.confidence_score || 0), 0) / pairs.length * 100
         : 0);
-      
+
       const avgPairValue = summary.avg_pair_value || (pairs.length > 0
         ? totalRevenue / pairs.length
         : 0);
-      
+
       const topPairs = pairs.slice(0, 6).map((pair: any) => ({
         product_id: pair.product_a_id || pair.product_a?.id || '',
         product_name: pair.product_a_name || pair.product_a?.name || 'Unknown Product',
@@ -110,7 +117,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
         confidence_score: (pair.confidence_score || 0) * 100,
         potential_revenue: pair.combined_revenue || 0
       }));
-      
+
       setMetrics({
         totalRevenue,
         conversionRate: avgConfidence,
@@ -209,7 +216,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
         <div className="bg-foundation-orangeorange-50 border border-foundation-orangeorange-500 rounded-lg p-4">
           <p className="text-foundation-orangeorange-700">{error}</p>
           {usingML && (
-            <button 
+            <button
               onClick={() => fetchCrossSellingData()}
               className="mt-2 text-foundation-blueblue-600 underline"
             >
@@ -235,7 +242,7 @@ export const CrossSellingSection: React.FC<CrossSellingSectionProps> = ({
             📊 SQL-Based Analytics
           </Badge>
         )}
-        
+
         {/* A/B Test Info */}
         {enableABTest && variant && (
           <span className="text-xs text-foundation-greygrey-600">

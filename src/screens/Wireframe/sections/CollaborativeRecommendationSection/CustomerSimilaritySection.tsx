@@ -12,20 +12,22 @@ const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', ''
 
 interface CustomerSimilaritySectionProps {
   timeFilter?: TimeFilter;
+  category?: string;
 }
 
 type SortField = 'similar_customers_count' | 'actual_recommendations';
 type SortDirection = 'asc' | 'desc';
 
-export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps> = ({ 
-  timeFilter = 'all' 
+export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps> = ({
+  timeFilter = 'all',
+  category = ''
 }) => {
   const [customers, setCustomers] = useState<CustomerSimilarityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>('similar_customers_count');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  
+
   // ML Only - no SQL fallback
   const { mlStatus } = useMLRecommendations('customer_similarity');
   const [usingML, setUsingML] = useState(true);
@@ -35,7 +37,7 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
       try {
         setLoading(true);
         setUsingML(true); // Always use ML
-        
+
         // Get auth token
         const token = localStorage.getItem('auth_token');
         const headers: HeadersInit = {
@@ -44,20 +46,25 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
-        
+
         // Use ML endpoint directly - no SQL fallback
+        let url = `${ML_API_BASE_URL}/api/v1/ml/customer-similarity?time_filter=${timeFilter}&limit=10`;
+        if (category && category !== '') {
+          url += `&category=${encodeURIComponent(category)}`;
+        }
+
         const response = await fetch(
-          `${ML_API_BASE_URL}/api/v1/ml/customer-similarity?time_filter=${timeFilter}&limit=10`,
+          url,
           { headers }
         );
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch customer similarity');
         }
-        
+
         const result = await response.json();
         const data = result.customers || [];
-        
+
         setCustomers(data);
         setError(null);
         console.log('✅ Using ML Customer Similarity (/api/v1/ml/customer-similarity)');
@@ -70,7 +77,7 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
     };
 
     fetchData();
-  }, [timeFilter]);
+  }, [timeFilter, category]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -83,7 +90,7 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
 
   const sortedCustomers = [...customers].sort((a, b) => {
     // Use actual_recommendations if available, fallback to recommendations_generated for backward compatibility
-    const aValue = sortField === 'actual_recommendations' 
+    const aValue = sortField === 'actual_recommendations'
       ? (a.actual_recommendations ?? a.recommendations_generated)
       : a[sortField];
     const bValue = sortField === 'actual_recommendations'
@@ -141,7 +148,7 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
         ]
       },
       {
-        customer_id: "CUST_002", 
+        customer_id: "CUST_002",
         customer_name: "Sarah Khan",
         similar_customers_count: 892,
         recommendations_generated: 12,
@@ -178,7 +185,7 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
               </span>
             </Badge>
           </div>
-          
+
           <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
               <strong>Sample Data:</strong> ML engine is offline. This shows sample customer similarity insights. Start the ML engine to see live data.
@@ -337,13 +344,12 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
               {sortedCustomers.map((customer, index) => {
                 const recommendationCount = customer.actual_recommendations ?? customer.recommendations_generated;
                 const isActual = customer.actual_recommendations !== undefined;
-                
+
                 return (
                   <div
                     key={customer.customer_id}
-                    className={`flex w-full min-h-[70px] bg-foundation-whitewhite-50 ${
-                      index < sortedCustomers.length - 1 ? "border-b-[0.5px] border-solid border-[#cacbce]" : ""
-                    }`}
+                    className={`flex w-full min-h-[70px] bg-foundation-whitewhite-50 ${index < sortedCustomers.length - 1 ? "border-b-[0.5px] border-solid border-[#cacbce]" : ""
+                      }`}
                   >
                     {/* Customer Column */}
                     <div className="flex-[2] min-w-0 flex items-center gap-2 px-2.5 py-4">
@@ -374,17 +380,19 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
                         {customer.top_shared_products && customer.top_shared_products.length > 0 ? (
                           customer.top_shared_products.slice(0, 2).map((product, idx) => (
-                            <div key={idx} className="flex items-center gap-1">
-                              <span className="text-xs text-foundation-greygrey-600 truncate">
-                                {(product.product_name || 'Unknown').substring(0, 20)}
+                            <div key={idx} className="flex items-center gap-1 bg-blue-50 rounded px-1.5 py-0.5">
+                              <span className="text-xs text-blue-800 font-medium truncate flex-1">
+                                {(product.product_name || 'Unknown').substring(0, 18)}
                               </span>
-                              <span className="text-xs text-foundation-blueblue-600 font-medium flex-shrink-0">
-                                ({product.shared_count || 0})
-                              </span>
+                              <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-blue-100 text-blue-700">
+                                {product.shared_count || 0}
+                              </Badge>
                             </div>
                           ))
                         ) : (
-                          <span className="text-xs text-gray-400">No shared products</span>
+                          <div className="flex items-center gap-1 bg-amber-50 rounded px-1.5 py-0.5">
+                            <span className="text-xs text-amber-700">⏳ Cache refresh needed</span>
+                          </div>
                         )}
                       </div>
                     </div>

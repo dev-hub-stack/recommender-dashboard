@@ -24,12 +24,13 @@ interface CustomerDetailedMetrics {
 
 interface CustomerDetailedProfilingProps {
   timeFilter?: string;
+  category?: string;
 }
 
-export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps> = ({ 
-  timeFilter = 'all' 
+export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps> = ({
+  timeFilter = 'all',
+  category = ''
 }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState(timeFilter);
   const [metrics, setMetrics] = useState<CustomerDetailedMetrics>({
     totalCustomers: 0,
     totalRevenue: 0,
@@ -44,55 +45,40 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
 
   useEffect(() => {
     fetchDetailedMetrics();
-  }, [selectedPeriod]);
+  }, [timeFilter, category]);
 
   const fetchDetailedMetrics = async () => {
     setLoading(true);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
-      
-      // Fetch general metrics
-      const response = await fetch(`${API_BASE_URL}/analytics/dashboard?time_filter=${selectedPeriod}`);
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+
+      const categoryParam = category ? `&category=${encodeURIComponent(category)}` : '';
+      // Use unified endpoint with category support
+      const response = await fetch(`${API_BASE_URL}/analytics/customer-profiling?time_filter=${timeFilter}${categoryParam}`);
       const data = await response.json();
 
-      // Try to fetch real geographic distribution data
-      let geoData = null;
-      try {
-        const geoResponse = await fetch(`${API_BASE_URL}/analytics/geographic-distribution?time_filter=${selectedPeriod}`);
-        if (geoResponse.ok) {
-          geoData = await geoResponse.json();
-        }
-      } catch (geoError) {
-        console.warn('Geographic API not available, using fallback data:', geoError);
-      }
-
       if (data.success) {
-        // Use real data if available, otherwise use fallback
         const newMetrics: CustomerDetailedMetrics = {
-          totalCustomers: data.total_customers,
-          totalRevenue: data.total_revenue,
-          avgLifetimeValue: data.total_revenue / data.total_customers || 25000,
-          avgOrderValue: data.avg_order_value || 3000,
-          newCustomers: Math.floor(data.total_customers * 0.35), // Mock data - could be calculated from first-time orders
-          returningCustomers: Math.floor(data.total_customers * 0.65), // Mock data - could be calculated from repeat orders
-          customersByCity: geoData && geoData.success ? 
-            geoData.distribution.map((city: any) => ({
-              city: city.city,
-              customer_count: city.customer_count,
-              revenue: city.revenue
-            })) :
-            // Fallback to realistic mock data based on actual patterns
-            [
-              { city: "Lahore", customer_count: Math.floor(data.total_customers * 0.45), revenue: data.total_revenue * 0.35 },
-              { city: "Karachi", customer_count: Math.floor(data.total_customers * 0.15), revenue: data.total_revenue * 0.08 },
-              { city: "Rawalpindi", customer_count: Math.floor(data.total_customers * 0.09), revenue: data.total_revenue * 0.11 },
-              { city: "Islamabad", customer_count: Math.floor(data.total_customers * 0.07), revenue: data.total_revenue * 0.03 },
-              { city: "Faisalabad", customer_count: Math.floor(data.total_customers * 0.06), revenue: data.total_revenue * 0.05 },
-              { city: "Sialkot", customer_count: Math.floor(data.total_customers * 0.05), revenue: data.total_revenue * 0.09 },
-              { city: "Others", customer_count: Math.floor(data.total_customers * 0.13), revenue: data.total_revenue * 0.29 }
-            ],
-          monthlyGrowth: { customers: 12.5, revenue: 15.3 } // Mock data - could be calculated from time series
+          totalCustomers: data.total_customers || 0,
+          // Fallback: Use new backend total_revenue if available, otherwise sum from geographic distribution (prevent 0 while waiting for deployment)
+          totalRevenue: data.total_revenue !== undefined
+            ? data.total_revenue
+            : (data.geographic_distribution?.reduce((acc: number, curr: any) => acc + (Number(curr.revenue) || 0), 0) || 0),
+          avgLifetimeValue: 0,
+          avgOrderValue: data.avg_order_value || 0,
+          newCustomers: data.new_customers,
+          returningCustomers: data.returning_customers,
+          customersByCity: data.geographic_distribution.map((geo: any) => ({
+            city: geo.region,
+            customer_count: geo.customer_count,
+            revenue: geo.revenue
+          })),
+          monthlyGrowth: { customers: 12.5, revenue: 15.3 } // Mock data
         };
+
+        // Calculate Average Lifetime Value (Revenue / Customers)
+        newMetrics.avgLifetimeValue = newMetrics.totalCustomers ? newMetrics.totalRevenue / newMetrics.totalCustomers : 0;
+
         setMetrics(newMetrics);
       }
     } catch (error) {
@@ -101,13 +87,6 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
       setLoading(false);
     }
   };
-
-  const timePeriods = [
-    { value: "today", label: "1D" },
-    { value: "7days", label: "7D" },
-    { value: "30days", label: "1M" },
-    { value: "all", label: "ALL TIME" },
-  ];
 
   if (loading) {
     return (
@@ -130,24 +109,14 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
 
   return (
     <div className="w-full space-y-6">
-      {/* Time Period Selector */}
-      <div className="flex justify-center">
-        <div className="inline-flex items-center gap-3 px-8 py-3 bg-[#f5f6fa] rounded-[30px]">
-          {timePeriods.map((period) => (
-            <button
-              key={period.value}
-              onClick={() => setSelectedPeriod(period.value)}
-              className={`inline-flex items-start gap-2.5 px-2.5 py-2 rounded-2xl transition-all duration-200 ${
-                selectedPeriod === period.value
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "bg-transparent text-gray-600 hover:bg-white/50"
-              } font-normal text-xs tracking-[0.84px] leading-4 whitespace-nowrap h-auto`}
-            >
-              {period.label}
-            </button>
-          ))}
+      {/* Active Filters Info */}
+      {category && (
+        <div className="flex justify-center -mb-2">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            Filtering by: {category}
+          </span>
         </div>
-      </div>
+      )}
 
       {/* Main Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -224,7 +193,7 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
               Discover how different customer segments respond to personalized product recommendations
             </p>
           </div>
-          <RFMMLCorrelationSection timeFilter={selectedPeriod} />
+          <RFMMLCorrelationSection timeFilter={timeFilter} />
         </CardContent>
       </Card>
 
@@ -234,7 +203,7 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
         <Card className="border-0 shadow-sm">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-6">Customer Composition</h3>
-            
+
             {/* Circular Progress Visualization */}
             <div className="flex items-center justify-center mb-6">
               <div className="relative w-48 h-48">
@@ -256,7 +225,7 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
                     stroke="#10b981"
                     strokeWidth="8"
                     fill="none"
-                    strokeDasharray={`${(metrics.newCustomers / metrics.totalCustomers) * 251} 251`}
+                    strokeDasharray={`${metrics.totalCustomers > 0 ? (metrics.newCustomers / metrics.totalCustomers) * 251 : 0} 251`}
                     strokeLinecap="round"
                   />
                   {/* Returning Customers Arc */}
@@ -267,12 +236,12 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
                     stroke="#3b82f6"
                     strokeWidth="8"
                     fill="none"
-                    strokeDasharray={`${(metrics.returningCustomers / metrics.totalCustomers) * 251} 251`}
-                    strokeDashoffset={`-${(metrics.newCustomers / metrics.totalCustomers) * 251}`}
+                    strokeDasharray={`${metrics.totalCustomers > 0 ? (metrics.returningCustomers / metrics.totalCustomers) * 251 : 0} 251`}
+                    strokeDashoffset={`-${metrics.totalCustomers > 0 ? (metrics.newCustomers / metrics.totalCustomers) * 251 : 0}`}
                     strokeLinecap="round"
                   />
                 </svg>
-                
+
                 {/* Center Text */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-2xl font-bold text-gray-800">
@@ -291,7 +260,7 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
                   <span className="text-sm text-gray-600">New Customers</span>
                 </div>
                 <span className="font-semibold text-gray-800">
-                  {formatLargeNumber(metrics.newCustomers)} ({formatPercentage((metrics.newCustomers / metrics.totalCustomers) * 100)})
+                  {formatLargeNumber(metrics.newCustomers)} ({metrics.totalCustomers > 0 ? formatPercentage((metrics.newCustomers / metrics.totalCustomers) * 100) : '0%'})
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -300,7 +269,7 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
                   <span className="text-sm text-gray-600">Returning Customers</span>
                 </div>
                 <span className="font-semibold text-gray-800">
-                  {formatLargeNumber(metrics.returningCustomers)} ({formatPercentage((metrics.returningCustomers / metrics.totalCustomers) * 100)})
+                  {formatLargeNumber(metrics.returningCustomers)} ({metrics.totalCustomers > 0 ? formatPercentage((metrics.returningCustomers / metrics.totalCustomers) * 100) : '0%'})
                 </span>
               </div>
             </div>
@@ -311,10 +280,10 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
         <Card className="border-0 shadow-sm">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-6">Geographic Distribution</h3>
-            
+
             <div className="space-y-4">
               {metrics.customersByCity.map((city, index) => {
-                const percentage = (city.customer_count / metrics.totalCustomers) * 100;
+                const percentage = metrics.totalCustomers > 0 ? (city.customer_count / metrics.totalCustomers) * 100 : 0;
                 return (
                   <div key={city.city}>
                     <div className="flex items-center justify-between mb-2">
@@ -325,12 +294,11 @@ export const CustomerDetailedProfiling: React.FC<CustomerDetailedProfilingProps>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
                       <div
-                        className={`h-2 rounded-full ${
-                          index === 0 ? 'bg-blue-500' :
+                        className={`h-2 rounded-full ${index === 0 ? 'bg-blue-500' :
                           index === 1 ? 'bg-green-500' :
-                          index === 2 ? 'bg-orange-500' :
-                          index === 3 ? 'bg-purple-500' : 'bg-gray-500'
-                        }`}
+                            index === 2 ? 'bg-orange-500' :
+                              index === 3 ? 'bg-purple-500' : 'bg-gray-500'
+                          }`}
                         style={{ width: `${percentage}%` }}
                       ></div>
                     </div>

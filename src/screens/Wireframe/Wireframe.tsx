@@ -7,6 +7,7 @@ import { RevenueTrendSection } from "./sections/RevenueTrendSection";
 import { TopProductsSection } from "./sections/TopProductsSection";
 import { CustomerDetailedProfiling } from "./sections/CustomerProfilingSection/CustomerDetailedProfiling";
 import { POSvsOESection } from "./sections/POSvsOESection/POSvsOESection";
+import { OrderStatusAnalyticsSection } from "./sections/OrderStatusAnalyticsSection/OrderStatusAnalyticsSection";
 import { CrossSellingSection } from "./sections/CrossSellingSection";
 import CollaborativeRecommendationDashboard from "./sections/CollaborativeRecommendationSection";
 import { GeographicIntelligenceSection } from "./sections/GeographicIntelligenceSection";
@@ -65,9 +66,8 @@ export const Wireframe = (): JSX.Element => {
   // and ML Recommendations (uses pre-computed models with all products)
   const shouldShowCategoryFilter = !['RFM Segmentation', 'ML Recommendations'].includes(activeView);
 
-  // Order Source filter (OE/POS): Show on Dashboard and Geographic Intelligence
-  // These screens have backend support for order_source filtering
-  const shouldShowOrderSourceFilter = ['Dashboard', 'Geographic Intelligence'].includes(activeView);
+  // Order Source filter (OE/POS): Show on Dashboard, Geographic Intelligence, and Revenue Optimization (Cross-Selling)
+  const shouldShowOrderSourceFilter = ['Dashboard', 'Geographic Intelligence', 'Cross-Selling'].includes(activeView);
 
   // Delivered Only filter: Only show on Dashboard
   // Only Dashboard components pass this to their API calls
@@ -278,20 +278,21 @@ export const Wireframe = (): JSX.Element => {
             <PerformanceMetricsSection timeFilter={timeFilter} category={selectedCategory} orderSource={orderSource} deliveredOnly={deliveredOnly} />
             <TopProductsSection timeFilter={timeFilter} category={selectedCategory} orderSource={orderSource} deliveredOnly={deliveredOnly} />
             <POSvsOESection timeFilter={timeFilter} category={selectedCategory} />
+            <OrderStatusAnalyticsSection timeFilter={timeFilter} category={selectedCategory} orderSource={orderSource} />
             <RecentActivitySection timeFilter={timeFilter} />
           </>
         )}
 
         {activeView === 'Customer Profiling' && (
-          <CustomerDetailedProfiling timeFilter={timeFilter} />
+          <CustomerDetailedProfiling timeFilter={timeFilter} category={selectedCategory} />
         )}
 
         {activeView === 'Cross-Selling' && (
-          <CrossSellingSection timeFilter={timeFilter} />
+          <CrossSellingSection timeFilter={timeFilter} orderSource={orderSource} category={selectedCategory} />
         )}
 
         {activeView === 'Collaborative Filtering' && (
-          <CollaborativeRecommendationDashboard timeFilter={timeFilter} />
+          <CollaborativeRecommendationDashboard timeFilter={timeFilter} category={selectedCategory} />
         )}
 
         {activeView === 'Geographic Intelligence' && (

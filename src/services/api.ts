@@ -538,10 +538,16 @@ export async function getTopCollaborativeProducts(
 // Get Customer Similarity Data
 export async function getCustomerSimilarityData(
   timeFilter: TimeFilter = 'all',
-  limit: number = 20
+  limit: number = 20,
+  category?: string
 ): Promise<CustomerSimilarityData[]> {
+  let url = `${API_BASE_URL}/analytics/customer-similarity?time_filter=${timeFilter}&limit=${limit}`;
+  if (category && category !== '') {
+    url += `&category=${encodeURIComponent(category)}`;
+  }
+
   const response = await fetch(
-    `${API_BASE_URL}/analytics/customer-similarity?time_filter=${timeFilter}&limit=${limit}`,
+    url,
     {
       headers: getAuthHeaders(),
     }
@@ -559,10 +565,20 @@ export async function getCustomerSimilarityData(
 // Get Collaborative Product Pairs
 export async function getCollaborativeProductPairs(
   timeFilter: TimeFilter = 'all',
-  limit: number = 10
+  limit: number = 10,
+  category?: string,
+  orderSource?: string
 ): Promise<CollaborativeProductPair[]> {
+  let url = `${API_BASE_URL}/analytics/collaborative-pairs?time_filter=${timeFilter}&limit=${limit}`;
+  if (category && category !== '') {
+    url += `&category=${encodeURIComponent(category)}`;
+  }
+  if (orderSource && orderSource !== 'all') {
+    url += `&order_source=${encodeURIComponent(orderSource)}`;
+  }
+
   const response = await fetch(
-    `${API_BASE_URL}/analytics/collaborative-pairs?time_filter=${timeFilter}&limit=${limit}`,
+    url,
     {
       headers: getAuthHeaders(),
     }

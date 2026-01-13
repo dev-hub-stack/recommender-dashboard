@@ -88,7 +88,7 @@ export function useMLRecommendations(dashboardName: string, userId?: string) {
   const fetchMLStatus = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/ml/status`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch ML status');
       }
@@ -129,14 +129,18 @@ export function useMLRecommendations(dashboardName: string, userId?: string) {
   // Get collaborative products (ML or SQL based on variant)
   const getCollaborativeProducts = useCallback(async (
     timeFilter: string = '30days',
-    limit: number = 20
+    limit: number = 20,
+    orderSource: string = 'all'
   ) => {
     try {
       const useML = variant?.algorithm === 'ml';
-      
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=${limit}&use_ml=${useML}`
-      );
+      let url = `${API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=${limit}&use_ml=${useML}`;
+
+      if (orderSource && orderSource !== 'all') {
+        url += `&order_source=${encodeURIComponent(orderSource)}`;
+      }
+
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error('Failed to fetch collaborative products');
@@ -167,10 +171,10 @@ export function useMLRecommendations(dashboardName: string, userId?: string) {
       }
 
       const data = await response.json();
-      
+
       // Refresh ML status after training
       await fetchMLStatus();
-      
+
       return data;
     } catch (err) {
       console.error('Error training ML models:', err);
@@ -182,12 +186,17 @@ export function useMLRecommendations(dashboardName: string, userId?: string) {
   // Get popular products (ML-based fallback)
   const getPopularProducts = useCallback(async (
     timeFilter: string = '30days',
-    limit: number = 10
+    limit: number = 10,
+    orderSource: string = 'all'
   ): Promise<MLRecommendation[]> => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/ml/top-products?time_filter=${timeFilter}&limit=${limit}`
-      );
+      let url = `${API_BASE_URL}/api/v1/ml/top-products?time_filter=${timeFilter}&limit=${limit}`;
+
+      if (orderSource && orderSource !== 'all') {
+        url += `&order_source=${encodeURIComponent(orderSource)}`;
+      }
+
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error('Failed to fetch popular products');
@@ -226,12 +235,17 @@ export function useMLRecommendations(dashboardName: string, userId?: string) {
   // Get product pairs (frequently bought together)
   const getProductPairs = useCallback(async (
     timeFilter: string = '30days',
-    limit: number = 10
+    limit: number = 10,
+    orderSource: string = 'all'
   ) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=${limit}`
-      );
+      let url = `${API_BASE_URL}/api/v1/ml/product-pairs?time_filter=${timeFilter}&limit=${limit}`;
+
+      if (orderSource && orderSource !== 'all') {
+        url += `&order_source=${encodeURIComponent(orderSource)}`;
+      }
+
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error('Failed to fetch product pairs');

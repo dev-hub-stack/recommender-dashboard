@@ -8,37 +8,39 @@ import { InfoTooltip } from '../../../../components/Tooltip';
 
 interface CollaborativeProductPairsSectionProps {
   timeFilter?: TimeFilter;
+  category?: string;
 }
 
-export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPairsSectionProps> = ({ 
-  timeFilter = 'all' 
+export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPairsSectionProps> = ({
+  timeFilter = 'all',
+  category = ''
 }) => {
   const [pairs, setPairs] = useState<CollaborativeProductPair[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // ML Integration
   const { mlStatus, useML } = useMLRecommendations('product_pairs');
   const [usingML, setUsingML] = useState(false);
 
   useEffect(() => {
     fetchProductPairs();
-  }, [timeFilter, useML, mlStatus]);
+  }, [timeFilter, category, useML, mlStatus]);
 
   const fetchProductPairs = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Decide whether to use ML
       const shouldUseML = useML && mlStatus?.is_trained;
       setUsingML(!!shouldUseML);
-      
-      const data = await getCollaborativeProductPairs(timeFilter, 10);
+
+      const data = await getCollaborativeProductPairs(timeFilter, 10, category);
       setPairs(data);
     } catch (err) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
+      const errorMessage = err instanceof Error
+        ? err.message
         : 'Failed to fetch collaborative product pairs';
       setError(errorMessage);
     } finally {
@@ -74,7 +76,7 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
           </h3>
           <div className="bg-red-50 rounded-lg p-4">
             <p className="text-red-600 text-sm [font-family:'Poppins',Helvetica]">{error}</p>
-            <button 
+            <button
               onClick={fetchProductPairs}
               className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 text-sm [font-family:'Poppins',Helvetica] touch-manipulation"
             >
@@ -109,7 +111,7 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
         <p className="text-foundation-greygrey-600 text-sm [font-family:'Poppins',Helvetica] mb-4">
           Products frequently recommended together
         </p>
-        
+
         <div className="flex-1 overflow-y-auto">
           <table className="w-full">
             <thead className="sticky top-0 bg-foundation-whitewhite-100 z-10">
@@ -130,7 +132,7 @@ export const CollaborativeProductPairsSection: React.FC<CollaborativeProductPair
             </thead>
             <tbody>
               {pairs.map((pair, index) => (
-                <tr 
+                <tr
                   key={index}
                   className="border-b border-foundation-greygrey-100 hover:bg-foundation-greygrey-50 transition-colors"
                 >

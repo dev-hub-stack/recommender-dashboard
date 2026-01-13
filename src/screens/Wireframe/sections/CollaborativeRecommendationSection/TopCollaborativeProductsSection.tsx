@@ -11,20 +11,22 @@ const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', ''
 
 interface TopCollaborativeProductsSectionProps {
   timeFilter?: TimeFilter;
+  category?: string;
 }
 
 type SortField = 'recommendation_count' | 'avg_similarity_score' | 'total_revenue';
 type SortDirection = 'asc' | 'desc';
 
-export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsSectionProps> = ({ 
-  timeFilter = 'all' 
+export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsSectionProps> = ({
+  timeFilter = 'all',
+  category = ''
 }) => {
   const [products, setProducts] = useState<CollaborativeProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>('recommendation_count');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  
+
   // ML Integration
   const { mlStatus } = useMLRecommendations('collaborative_products');
   const [usingML, setUsingML] = useState(false);
@@ -34,7 +36,7 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
       try {
         setLoading(true);
         setUsingML(true); // Always use ML
-        
+
         // Get auth token
         const token = localStorage.getItem('auth_token');
         const headers: HeadersInit = {
@@ -43,21 +45,22 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
-        
+
         // Use ML endpoint directly - no SQL fallback
+        const categoryParam = category ? `&category=${encodeURIComponent(category)}` : '';
         const mlResponse = await fetch(
-          `${ML_API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=10&use_ml=true`,
+          `${ML_API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=10&use_ml=true${categoryParam}`,
           { headers }
         );
-        
+
         if (!mlResponse.ok) {
           throw new Error('Failed to fetch ML collaborative products');
         }
-        
+
         const mlData = await mlResponse.json();
         const data = mlData.products || [];
         console.log('✅ Using ML Collaborative Products (/api/v1/ml/collaborative-products)');
-        
+
         setProducts(data);
         setError(null);
       } catch (err) {
@@ -69,7 +72,7 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
     };
 
     fetchData();
-  }, [timeFilter]);
+  }, [timeFilter, category]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -124,16 +127,16 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
     try {
       setLoading(true);
       setError(null);
-      
+
       // Use ML endpoint directly
       const mlResponse = await fetch(
         `${ML_API_BASE_URL}/api/v1/ml/collaborative-products?time_filter=${timeFilter}&limit=10&use_ml=true`
       );
-      
+
       if (!mlResponse.ok) {
         throw new Error('Failed to fetch ML collaborative products');
       }
-      
+
       const mlData = await mlResponse.json();
       setProducts(mlData.products || []);
     } catch (err) {
@@ -207,11 +210,10 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
               {sortedProducts.map((product, index) => (
                 <div
                   key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 w-full bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
+                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 w-full bg-foundation-whitewhite-50 ${index < sortedProducts.length - 1
                       ? "border-b-[0.5px] border-solid border-[#cacbce]"
                       : ""
-                  }`}
+                    }`}
                 >
                   <div className="w-[35px] h-[35px] bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
                     <span className="text-blue-600 font-bold text-xs">#{index + 1}</span>
@@ -238,11 +240,10 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
               {sortedProducts.map((product, index) => (
                 <div
                   key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
+                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${index < sortedProducts.length - 1
                       ? "border-b-[0.5px] border-solid border-[#cacbce]"
                       : ""
-                  }`}
+                    }`}
                 >
                   <span className="font-medium text-black text-sm truncate">
                     {product.category}
@@ -272,11 +273,10 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
               {sortedProducts.map((product, index) => (
                 <div
                   key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
+                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${index < sortedProducts.length - 1
                       ? "border-b-[0.5px] border-solid border-[#cacbce]"
                       : ""
-                  }`}
+                    }`}
                 >
                   <span className="font-normal text-foundation-greengreen-500 text-sm">
                     {formatLargeNumber(product.recommendation_count)}
@@ -306,11 +306,10 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
               {sortedProducts.map((product, index) => (
                 <div
                   key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
+                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${index < sortedProducts.length - 1
                       ? "border-b-[0.5px] border-solid border-[#cacbce]"
                       : ""
-                  }`}
+                    }`}
                 >
                   <span className="font-normal text-blue-600 text-sm">
                     {(product.avg_similarity_score || 0).toFixed(2)}
@@ -333,11 +332,10 @@ export const TopCollaborativeProductsSection: React.FC<TopCollaborativeProductsS
               {sortedProducts.map((product, index) => (
                 <div
                   key={product.product_id}
-                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${
-                    index < sortedProducts.length - 1
+                  className={`min-h-[70px] flex items-center gap-2 px-2.5 py-4 bg-foundation-whitewhite-50 ${index < sortedProducts.length - 1
                       ? "border-b-[0.5px] border-solid border-[#cacbce]"
                       : ""
-                  }`}
+                    }`}
                 >
                   <span className="font-medium text-black text-sm">
                     Rs {formatLargeNumber(product.total_revenue)}
