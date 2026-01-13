@@ -714,6 +714,57 @@ export async function getCityPerformance(
   }));
 }
 
+// Order Status Breakdown Interface
+export interface OrderStatusInfo {
+  status: string;
+  order_count: number;
+  total_revenue: number;
+  avg_order_value: number;
+  unique_customers: number;
+  percentage: number;
+  category: 'fulfilled' | 'lost' | 'pipeline' | 'other';
+}
+
+export interface OrderStatusBreakdown {
+  oe: {
+    statuses: OrderStatusInfo[];
+    total_orders: number;
+    total_revenue: number;
+    fulfillment_rate: number;
+    lost_revenue: number;
+  };
+  pos: {
+    statuses: OrderStatusInfo[];
+    total_orders: number;
+    total_revenue: number;
+    fulfillment_rate: number;
+  };
+  time_filter: string;
+  order_source_filter: string;
+}
+
+// Get Order Status Breakdown
+export async function getOrderStatusBreakdown(
+  timeFilter: TimeFilter = '30days',
+  orderSource: string = 'all'
+): Promise<OrderStatusBreakdown> {
+  let url = `${API_BASE_URL}/analytics/order-status-breakdown?time_filter=${timeFilter}`;
+  if (orderSource && orderSource !== 'all') {
+    url += `&order_source=${encodeURIComponent(orderSource)}`;
+  }
+
+  const response = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch order status breakdown');
+  }
+
+  return response.json();
+}
+
 // Get City Detailed Performance
 export async function getCityDetailedPerformance(
   city: string,
