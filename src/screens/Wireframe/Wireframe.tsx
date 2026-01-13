@@ -15,6 +15,7 @@ import { AWSPersonalizeSection } from "./sections/AWSPersonalizeSection";
 import { getProductCategories, ProductCategory } from "../../services/api";
 import { MultiSelectFilter } from "../../components/MultiSelectFilter";
 import { DashboardExportButton } from "../../components/DashboardExportButton";
+// Filter configuration available at: ../../config/screenFilters.ts
 
 export const Wireframe = (): JSX.Element => {
   const [timeFilter, setTimeFilter] = useState<string>('7days'); // Changed default to 7 days
@@ -54,6 +55,24 @@ export const Wireframe = (): JSX.Element => {
     }
   };
 
+  // Smart filter visibility based on active screen
+  // Only show filters that actually affect the screen's data/API calls
+  
+  // Time filter: Hidden for ML Recommendations (uses all historical data for training)
+  const shouldShowTimeFilter = activeView !== 'ML Recommendations';
+  
+  // Category filter: Hidden for RFM Segmentation (customer-centric, not product-centric)
+  // and ML Recommendations (uses pre-computed models with all products)
+  const shouldShowCategoryFilter = !['RFM Segmentation', 'ML Recommendations'].includes(activeView);
+  
+  // Order Source filter (OE/POS): Only show on Dashboard
+  // Other screens query tables that don't have order_source filtering in their backend endpoints
+  const shouldShowOrderSourceFilter = activeView === 'Dashboard';
+  
+  // Delivered Only filter: Only show on Dashboard
+  // Only Dashboard components pass this to their API calls
+  const shouldShowDeliveredFilter = activeView === 'Dashboard';
+
   return (
     <div className="bg-foundation-whitewhite-100 w-full min-w-[1440px] h-screen relative flex overflow-hidden">
       <aside className="w-auto relative">
@@ -78,47 +97,53 @@ export const Wireframe = (): JSX.Element => {
           </div>
           
           {/* Hide Time Period filter for ML Recommendations since ML uses all historical data */}
-          {activeView !== 'ML Recommendations' && (
+          {shouldShowTimeFilter && (
             <div className="flex items-center gap-4">
               {/* Multi-Select Category Filter */}
-              <MultiSelectFilter
-                options={categories.slice(0, 20).map(cat => ({
-                  value: cat.category,
-                  label: cat.category,
-                  count: (cat as any).product_count || (cat as any).count
-                }))}
-                selectedValues={selectedCategories}
-                onChange={setSelectedCategories}
-                label="Categories:"
-                placeholder="All Categories"
-              />
+              {shouldShowCategoryFilter && (
+                <MultiSelectFilter
+                  options={categories.slice(0, 20).map(cat => ({
+                    value: cat.category,
+                    label: cat.category,
+                    count: (cat as any).product_count || (cat as any).count
+                  }))}
+                  selectedValues={selectedCategories}
+                  onChange={setSelectedCategories}
+                  label="Categories:"
+                  placeholder="All Categories"
+                />
+              )}
 
               {/* OE/POS Order Source Filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Source:</label>
-                <select 
-                  value={orderSource} 
-                  onChange={(e) => setOrderSource(e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Orders</option>
-                  <option value="oe">OE (Online Express)</option>
-                  <option value="pos">POS (Point of Sale)</option>
-                </select>
-              </div>
+              {shouldShowOrderSourceFilter && (
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">Source:</label>
+                  <select 
+                    value={orderSource} 
+                    onChange={(e) => setOrderSource(e.target.value)}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="all">All Orders</option>
+                    <option value="oe">OE (Online Express)</option>
+                    <option value="pos">POS (Point of Sale)</option>
+                  </select>
+                </div>
+              )}
 
-              {/* Delivered Only Toggle */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-2 cursor-pointer">
-                  <input 
-                    type="checkbox"
-                    checked={deliveredOnly}
-                    onChange={(e) => setDeliveredOnly(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  Delivered Only
-                </label>
-              </div>
+              {/* Delivered Only Toggle - Only for revenue-focused screens */}
+              {shouldShowDeliveredFilter && (
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700 flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox"
+                      checked={deliveredOnly}
+                      onChange={(e) => setDeliveredOnly(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    Delivered Only
+                  </label>
+                </div>
+              )}
 
               {/* Time Period Filter */}
               <div className="flex items-center gap-2">
@@ -142,11 +167,13 @@ export const Wireframe = (): JSX.Element => {
                 </select>
               </div>
 
-              {/* CSV Export Button */}
+              {/* CSV Export Button - Context-Aware */}
               <DashboardExportButton
                 timeFilter={timeFilter}
                 categories={selectedCategories}
-                sections={['all']}
+                orderSource={orderSource}
+                deliveredOnly={deliveredOnly}
+                sections={[activeView.toLowerCase().replace(/\s+/g, '_')]}
               />
             
             {/* Custom Date Range Picker */}
