@@ -30,8 +30,8 @@ export const Wireframe = (): JSX.Element => {
   // Delivered only filter - only include delivered/completed orders
   const [deliveredOnly, setDeliveredOnly] = useState<boolean>(false);
   // Keep single category for backward compatibility
-  const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : 
-                          selectedCategories.length > 1 ? selectedCategories.join(',') : '';
+  const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] :
+    selectedCategories.length > 1 ? selectedCategories.join(',') : '';
 
   // Fetch categories on mount
   useEffect(() => {
@@ -57,18 +57,18 @@ export const Wireframe = (): JSX.Element => {
 
   // Smart filter visibility based on active screen
   // Only show filters that actually affect the screen's data/API calls
-  
+
   // Time filter: Hidden for ML Recommendations (uses all historical data for training)
   const shouldShowTimeFilter = activeView !== 'ML Recommendations';
-  
+
   // Category filter: Hidden for RFM Segmentation (customer-centric, not product-centric)
   // and ML Recommendations (uses pre-computed models with all products)
   const shouldShowCategoryFilter = !['RFM Segmentation', 'ML Recommendations'].includes(activeView);
-  
-  // Order Source filter (OE/POS): Only show on Dashboard
-  // Other screens query tables that don't have order_source filtering in their backend endpoints
-  const shouldShowOrderSourceFilter = activeView === 'Dashboard';
-  
+
+  // Order Source filter (OE/POS): Show on Dashboard and Geographic Intelligence
+  // These screens have backend support for order_source filtering
+  const shouldShowOrderSourceFilter = ['Dashboard', 'Geographic Intelligence'].includes(activeView);
+
   // Delivered Only filter: Only show on Dashboard
   // Only Dashboard components pass this to their API calls
   const shouldShowDeliveredFilter = activeView === 'Dashboard';
@@ -76,7 +76,7 @@ export const Wireframe = (): JSX.Element => {
   return (
     <div className="bg-foundation-whitewhite-100 w-full min-w-[1440px] h-screen relative flex overflow-hidden">
       <aside className="w-auto relative">
-        <RevenueTrendSection 
+        <RevenueTrendSection
           activeView={activeView}
           onNavigate={setActiveView}
         />
@@ -84,18 +84,18 @@ export const Wireframe = (): JSX.Element => {
 
       <main className="flex-1 flex flex-col relative space-y-6 p-4 overflow-y-auto h-full">
         <DashboardHeaderSection />
-        
+
         {/* Global Time Filter */}
         <div className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-4">
             <h3 className="text-lg font-semibold text-gray-800">
-              {activeView === 'Dashboard' ? 'Analytics Dashboard' : 
-               activeView === 'Collaborative Filtering' ? 'Product Insights' : 
-               activeView === 'Cross-Selling' ? 'Revenue Optimization' : 
-               activeView}
+              {activeView === 'Dashboard' ? 'Analytics Dashboard' :
+                activeView === 'Collaborative Filtering' ? 'Product Insights' :
+                  activeView === 'Cross-Selling' ? 'Revenue Optimization' :
+                    activeView}
             </h3>
           </div>
-          
+
           {/* Hide Time Period filter for ML Recommendations since ML uses all historical data */}
           {shouldShowTimeFilter && (
             <div className="flex items-center gap-4">
@@ -118,8 +118,8 @@ export const Wireframe = (): JSX.Element => {
               {shouldShowOrderSourceFilter && (
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-gray-700">Source:</label>
-                  <select 
-                    value={orderSource} 
+                  <select
+                    value={orderSource}
                     onChange={(e) => setOrderSource(e.target.value)}
                     className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
@@ -134,7 +134,7 @@ export const Wireframe = (): JSX.Element => {
               {shouldShowDeliveredFilter && (
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-gray-700 flex items-center gap-2 cursor-pointer">
-                    <input 
+                    <input
                       type="checkbox"
                       checked={deliveredOnly}
                       onChange={(e) => setDeliveredOnly(e.target.checked)}
@@ -148,8 +148,8 @@ export const Wireframe = (): JSX.Element => {
               {/* Time Period Filter */}
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-700">Time Period:</label>
-                <select 
-                  value={timeFilter} 
+                <select
+                  value={timeFilter}
                   onChange={(e) => handleTimeFilterChange(e.target.value)}
                   className="px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -175,38 +175,38 @@ export const Wireframe = (): JSX.Element => {
                 deliveredOnly={deliveredOnly}
                 sections={[activeView.toLowerCase().replace(/\s+/g, '_')]}
               />
-            
-            {/* Custom Date Range Picker */}
-            {showCustomDatePicker && (
-              <div className="flex items-center gap-2 ml-4 p-3 bg-gray-50 rounded-lg border">
-                <label className="text-sm font-medium text-gray-700">From:</label>
-                <input
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <label className="text-sm font-medium text-gray-700">To:</label>
-                <input
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <button
-                  onClick={() => {
-                    if (customStartDate && customEndDate) {
-                      setTimeFilter(`${customStartDate}:${customEndDate}`);
-                      setShowCustomDatePicker(false);
-                    }
-                  }}
-                  className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
-                >
-                  Apply
-                </button>
-              </div>
-            )}
-          </div>
+
+              {/* Custom Date Range Picker */}
+              {showCustomDatePicker && (
+                <div className="flex items-center gap-2 ml-4 p-3 bg-gray-50 rounded-lg border">
+                  <label className="text-sm font-medium text-gray-700">From:</label>
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <label className="text-sm font-medium text-gray-700">To:</label>
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() => {
+                      if (customStartDate && customEndDate) {
+                        setTimeFilter(`${customStartDate}:${customEndDate}`);
+                        setShowCustomDatePicker(false);
+                      }
+                    }}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -219,7 +219,7 @@ export const Wireframe = (): JSX.Element => {
                 <span className="text-sm text-blue-700">
                   <strong>{orderSource === 'oe' ? '🌐 Online Express' : '🏪 Point of Sale'}</strong>
                 </span>
-                <button 
+                <button
                   onClick={() => setOrderSource('all')}
                   className="text-blue-500 hover:text-blue-700 text-sm ml-1"
                 >
@@ -227,14 +227,14 @@ export const Wireframe = (): JSX.Element => {
                 </button>
               </div>
             )}
-            
+
             {/* Delivered Only Badge */}
             {deliveredOnly && (
               <div className="flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
                 <span className="text-sm text-green-700">
                   <strong>✅ Delivered Only</strong>
                 </span>
-                <button 
+                <button
                   onClick={() => setDeliveredOnly(false)}
                   className="text-green-500 hover:text-green-700 text-sm ml-1"
                 >
@@ -249,7 +249,7 @@ export const Wireframe = (): JSX.Element => {
                 <span className="text-sm text-purple-700">
                   <strong>{selectedCategories.length === 1 ? selectedCategories[0] : `${selectedCategories.length} categories`}</strong>
                 </span>
-                <button 
+                <button
                   onClick={() => setSelectedCategories([])}
                   className="text-purple-500 hover:text-purple-700 text-sm ml-1"
                 >
@@ -259,7 +259,7 @@ export const Wireframe = (): JSX.Element => {
             )}
 
             {/* Clear All Filters */}
-            <button 
+            <button
               onClick={() => {
                 setOrderSource('all');
                 setDeliveredOnly(false);
@@ -281,27 +281,31 @@ export const Wireframe = (): JSX.Element => {
             <RecentActivitySection timeFilter={timeFilter} />
           </>
         )}
-        
+
         {activeView === 'Customer Profiling' && (
           <CustomerDetailedProfiling timeFilter={timeFilter} />
         )}
-        
+
         {activeView === 'Cross-Selling' && (
           <CrossSellingSection timeFilter={timeFilter} />
         )}
-        
+
         {activeView === 'Collaborative Filtering' && (
           <CollaborativeRecommendationDashboard timeFilter={timeFilter} />
         )}
-        
+
         {activeView === 'Geographic Intelligence' && (
-          <GeographicIntelligenceSection timeFilter={timeFilter} />
+          <GeographicIntelligenceSection
+            timeFilter={timeFilter}
+            orderSource={orderSource}
+            category={selectedCategory}
+          />
         )}
-        
+
         {activeView === 'RFM Segmentation' && (
           <RFMSegmentationSection timeFilter={timeFilter} />
         )}
-        
+
         {activeView === 'ML Recommendations' && (
           <AWSPersonalizeSection />
         )}

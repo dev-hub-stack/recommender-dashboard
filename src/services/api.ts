@@ -12,11 +12,11 @@ function getAuthHeaders(): HeadersInit {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return headers;
 }
 
@@ -231,11 +231,11 @@ export async function getPopularProducts(limit: number = 10, timeFilter: string 
   const response = await fetch(url, {
     headers: getAuthHeaders(),
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch popular products');
   }
-  
+
   const data = await response.json();
   return data.recommendations.map((item: any) => ({
     product_id: item.product_id,
@@ -258,11 +258,11 @@ export async function getProductPairs(productId: string, limit: number = 5): Pro
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch product pairs');
   }
-  
+
   const data = await response.json();
   return data.recommendations.map((item: any) => ({
     product_id: item.product_id,
@@ -281,11 +281,11 @@ export async function getSimilarProducts(productId: string, limit: number = 10):
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch similar products');
   }
-  
+
   const data: RecommendationResponse = await response.json();
   return data.recommendations;
 }
@@ -301,11 +301,11 @@ export async function getPersonalizedRecommendations(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch personalized recommendations');
   }
-  
+
   const data: RecommendationResponse = await response.json();
   return data.recommendations;
 }
@@ -321,11 +321,11 @@ export async function getAdvancedRecommendations(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch advanced recommendations');
   }
-  
+
   const data: RecommendationResponse = await response.json();
   return data.recommendations;
 }
@@ -338,11 +338,11 @@ export async function getCollaborativeRecommendations(customerId: string, limit:
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch collaborative recommendations');
   }
-  
+
   const data = await response.json();
   return data.recommendations.map((item: any) => ({
     product_id: item.product_id,
@@ -358,11 +358,11 @@ export async function getCacheStats() {
   const response = await fetch(`${API_BASE_URL}/cache/stats`, {
     headers: getAuthHeaders(),
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch cache stats');
   }
-  
+
   return response.json();
 }
 
@@ -371,11 +371,11 @@ export async function getCustomerHistory(customerId: string) {
   const response = await fetch(`${API_BASE_URL}/customers/${customerId}/history`, {
     headers: getAuthHeaders(),
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch customer history');
   }
-  
+
   return response.json();
 }
 
@@ -385,11 +385,11 @@ export async function getSystemStats() {
     const response = await fetch(`${API_BASE_URL}/stats`, {
       headers: getAuthHeaders(),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch system stats');
     }
-    
+
     return response.json();
   } catch (error) {
     // Fallback to basic health check if stats endpoint doesn't exist
@@ -397,7 +397,7 @@ export async function getSystemStats() {
       headers: getAuthHeaders(),
     });
     const health = await healthResponse.json();
-    
+
     return {
       total_orders: 101245,
       total_customers: 72708,
@@ -425,18 +425,18 @@ export async function getProductAnalytics(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch product analytics');
   }
-  
+
   const data = await response.json();
   return data.products || [];
 }
 
 // Get Dashboard Metrics with Time Filter and Category (REAL METRICS)
 export async function getDashboardMetrics(
-  timeFilter: TimeFilter = 'all', 
+  timeFilter: TimeFilter = 'all',
   category?: string,
   orderSource?: string,
   deliveredOnly?: boolean
@@ -454,12 +454,12 @@ export async function getDashboardMetrics(
   const response = await fetch(url, {
     headers: getAuthHeaders(),
   });
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch dashboard metrics');
   }
-  
+
   return response.json();
 }
 
@@ -471,11 +471,11 @@ export async function getRevenueTrend(timeFilter: string = '7days', period: stri
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch revenue trend data');
   }
-  
+
   return response.json();
 }
 
@@ -494,12 +494,12 @@ export async function getCollaborativeMetrics(
         headers: getAuthHeaders(),
       }
     );
-    
+
     if (!response.ok) {
       handleAuthError(response);
       throw new Error('Failed to fetch collaborative metrics');
     }
-    
+
     return response.json();
   } catch (error) {
     // Temporary mock data fallback until backend endpoints are implemented
@@ -525,12 +525,12 @@ export async function getTopCollaborativeProducts(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch collaborative products');
   }
-  
+
   const data = await response.json();
   return data.products || [];
 }
@@ -546,12 +546,12 @@ export async function getCustomerSimilarityData(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch customer similarity data');
   }
-  
+
   const data = await response.json();
   return data.customers || [];
 }
@@ -567,15 +567,15 @@ export async function getCollaborativeProductPairs(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch collaborative product pairs');
   }
-  
+
   const data = await response.json();
   const pairs = data.pairs || [];
-  
+
   // Transform from nested format to flat format if needed
   // API may return either: {product_a: {id, name}} or {product_a_id, product_a_name}
   return pairs.map((pair: any) => ({
@@ -598,24 +598,31 @@ export async function getCollaborativeProductPairs(
 
 // Get Province Performance
 export async function getProvincePerformance(
-  timeFilter: TimeFilter = 'all'
+  timeFilter: TimeFilter = 'all',
+  orderSource: string = 'all',
+  category?: string
 ): Promise<GeographicMetrics[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/analytics/geographic/provinces?time_filter=${timeFilter}`,
-    {
-      headers: getAuthHeaders(),
-    }
-  );
-  
+  let url = `${API_BASE_URL}/analytics/geographic/provinces?time_filter=${timeFilter}`;
+  if (orderSource && orderSource !== 'all') {
+    url += `&order_source=${encodeURIComponent(orderSource)}`;
+  }
+  if (category && category !== '') {
+    url += `&category=${encodeURIComponent(category)}`;
+  }
+
+  const response = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch province performance');
   }
-  
+
   const data = await response.json();
   // API returns array directly, not wrapped in {provinces: [...]}
   const provinces = Array.isArray(data) ? data : (data.provinces || []);
-  
+
   // Transform and validate data
   return provinces.map((p: any) => ({
     province: p.province || 'Unknown',
@@ -628,27 +635,73 @@ export async function getProvincePerformance(
   }));
 }
 
+// Category Performance by Province Interface
+export interface CategoryByProvince {
+  province: string;
+  region: string;
+  categories: Array<{
+    category: string;
+    order_type: string;
+    total_orders: number;
+    total_items: number;
+    total_revenue: number;
+    unique_customers: number;
+  }>;
+  total_revenue: number;
+  total_orders: number;
+}
+
+// Get Category Performance by Province (NEW - shows which categories sell where)
+export async function getCategoryByProvince(
+  timeFilter: TimeFilter = 'all',
+  orderSource: string = 'all',
+  limit: number = 50
+): Promise<CategoryByProvince[]> {
+  let url = `${API_BASE_URL}/analytics/geographic/category-by-province?time_filter=${timeFilter}&limit=${limit}`;
+  if (orderSource && orderSource !== 'all') {
+    url += `&order_source=${encodeURIComponent(orderSource)}`;
+  }
+
+  const response = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch category by province');
+  }
+
+  return response.json();
+}
+
 // Get City Performance
 export async function getCityPerformance(
   timeFilter: TimeFilter = 'all',
-  limit: number = 20
+  limit: number = 20,
+  orderSource: string = 'all',
+  category?: string
 ): Promise<CityPerformance[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/analytics/geographic/cities?time_filter=${timeFilter}&limit=${limit}`,
-    {
-      headers: getAuthHeaders(),
-    }
-  );
-  
+  let url = `${API_BASE_URL}/analytics/geographic/cities?time_filter=${timeFilter}&limit=${limit}`;
+  if (orderSource && orderSource !== 'all') {
+    url += `&order_source=${encodeURIComponent(orderSource)}`;
+  }
+  if (category && category !== '') {
+    url += `&category=${encodeURIComponent(category)}`;
+  }
+
+  const response = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch city performance');
   }
-  
+
   const data = await response.json();
   // API returns array directly, not wrapped in {cities: [...]}
   const cities = Array.isArray(data) ? data : (data.cities || []);
-  
+
   // Transform and validate data
   return cities.map((c: any) => ({
     city: c.city || 'Unknown',
@@ -672,14 +725,14 @@ export async function getCityDetailedPerformance(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch city detailed performance');
   }
-  
+
   const data = await response.json();
-  
+
   // Transform and validate data
   return {
     city: data.city || 'Unknown',
@@ -706,15 +759,15 @@ export async function getRFMSegments(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch RFM segments');
   }
-  
+
   const data = await response.json();
   const segments = data.segments || [];
-  
+
   // Transform and validate data
   return segments.map((s: any) => ({
     segment_name: s.segment_name || 'Unknown',
@@ -738,16 +791,16 @@ export async function getCustomersBySegment(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch customers by segment');
   }
-  
+
   const data = await response.json();
   // Backend returns array directly, not {customers: [...]}
   const customers = Array.isArray(data) ? data : (data.customers || []);
-  
+
   // Transform and validate data
   return customers.map((c: any) => ({
     customer_id: c.customer_id || '',
@@ -776,15 +829,15 @@ export async function getAtRiskCustomers(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch at-risk customers');
   }
-  
+
   const data = await response.json();
   const customers = data.customers || [];
-  
+
   // Transform and validate data
   return customers.map((c: any) => ({
     customer_id: c.customer_id || '',
@@ -838,12 +891,12 @@ export async function getProductCategories(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch product categories');
   }
-  
+
   const data = await response.json();
   return data.categories || [];
 }
@@ -860,12 +913,12 @@ export async function getProductsByCategory(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch products by category');
   }
-  
+
   const data = await response.json();
   return data.products || [];
 }
@@ -885,12 +938,12 @@ export async function getBrandPerformance(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch brand performance');
   }
-  
+
   const data = await response.json();
   return data.brands || [];
 }
@@ -976,11 +1029,11 @@ export async function getMLStatus(): Promise<MLStatus> {
   const response = await fetch(`${API_BASE_URL.replace('/api/v1', '')}/api/v1/ml/status`, {
     headers: getAuthHeaders(),
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch ML status');
   }
-  
+
   return response.json();
 }
 
@@ -996,11 +1049,11 @@ export async function trainMLModels(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to train ML models');
   }
-  
+
   return response.json();
 }
 
@@ -1015,11 +1068,11 @@ export async function getMLRecommendations(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch ML recommendations');
   }
-  
+
   const data = await response.json();
   return data.recommendations || [];
 }
@@ -1035,11 +1088,11 @@ export async function getMLTopProducts(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch ML top products');
   }
-  
+
   const data = await response.json();
   return data.products || [];
 }
@@ -1055,11 +1108,11 @@ export async function getMLProductPairs(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch ML product pairs');
   }
-  
+
   const data = await response.json();
   return data.pairs || [];
 }
@@ -1075,11 +1128,11 @@ export async function getMLCustomerSimilarity(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch ML customer similarity');
   }
-  
+
   const data = await response.json();
   return data.customers || [];
 }
@@ -1096,11 +1149,11 @@ export async function getMLCollaborativeProducts(
       headers: getAuthHeaders(),
     }
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch ML collaborative products');
   }
-  
+
   const data = await response.json();
   return data.products || [];
 }

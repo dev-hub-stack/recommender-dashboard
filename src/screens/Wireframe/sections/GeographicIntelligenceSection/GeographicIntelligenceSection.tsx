@@ -9,9 +9,15 @@ import { GeographicScoreTooltip } from '../../../../components/Tooltip';
 
 interface GeographicIntelligenceSectionProps {
   timeFilter?: string;
+  orderSource?: string;
+  category?: string;
 }
 
-export const GeographicIntelligenceSection = ({ timeFilter: propTimeFilter }: GeographicIntelligenceSectionProps) => {
+export const GeographicIntelligenceSection = ({
+  timeFilter: propTimeFilter,
+  orderSource = 'all',
+  category = ''
+}: GeographicIntelligenceSectionProps) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(propTimeFilter as TimeFilter || '30days');
   const [provinces, setProvinces] = useState<GeographicMetrics[]>([]);
   const [cities, setCities] = useState<CityPerformance[]>([]);
@@ -29,8 +35,8 @@ export const GeographicIntelligenceSection = ({ timeFilter: propTimeFilter }: Ge
       try {
         setLoading(true);
         const [provinceData, cityData] = await Promise.all([
-          getProvincePerformance(timeFilter),
-          getCityPerformance(timeFilter, 10)
+          getProvincePerformance(timeFilter, orderSource, category),
+          getCityPerformance(timeFilter, 10, orderSource, category)
         ]);
         setProvinces(provinceData);
         setCities(cityData);
@@ -42,7 +48,7 @@ export const GeographicIntelligenceSection = ({ timeFilter: propTimeFilter }: Ge
     };
 
     fetchData();
-  }, [timeFilter]);
+  }, [timeFilter, orderSource, category]);
 
   const getRegionColor = (region: string) => {
     const colors: Record<string, string> = {
@@ -67,6 +73,10 @@ export const GeographicIntelligenceSection = ({ timeFilter: propTimeFilter }: Ge
     );
   }
 
+  // Calculate total revenue for market share
+  const totalRevenue = provinces.reduce((sum, p) => sum + (p.total_revenue || 0), 0);
+  const maxProvinceRevenue = Math.max(...provinces.map(p => p.total_revenue || 0));
+
   return (
     <div className="space-y-6">
       {/* Header with Date Range */}
@@ -78,8 +88,8 @@ export const GeographicIntelligenceSection = ({ timeFilter: propTimeFilter }: Ge
           </h2>
           <p className="text-gray-600 mt-1">Sales performance across Pakistan</p>
         </div>
-        <DateRangeDisplay 
-          timeFilter={timeFilter} 
+        <DateRangeDisplay
+          timeFilter={timeFilter}
           totalRecords={provinces.reduce((sum, p) => sum + (p.total_orders || 0), 0)}
         />
       </div>
@@ -111,27 +121,46 @@ export const GeographicIntelligenceSection = ({ timeFilter: propTimeFilter }: Ge
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {provinces.map((province) => (
-              <div key={province.province} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                <div className="flex items-center gap-3">
-                  <Badge className={getRegionColor(province.region)}>
-                    {province.region}
-                  </Badge>
-                  <div>
-                    <p className="font-semibold">{province.province}</p>
-                    <p className="text-sm text-gray-500">
-                      {(province.total_orders || 0).toLocaleString()} orders · {(province.unique_customers || 0).toLocaleString()} customers
-                    </p>
+            {provinces.map((province) => {
+              const marketShare = totalRevenue > 0 ? ((province.total_revenue || 0) / totalRevenue * 100) : 0;
+              const revenueBarWidth = maxProvinceRevenue > 0 ? ((province.total_revenue || 0) / maxProvinceRevenue * 100) : 0;
+
+              return (
+                <div key={province.province} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <Badge className={getRegionColor(province.region)}>
+                      {province.region}
+                    </Badge>
+                    <div className="min-w-0">
+                      <p className="font-semibold">{province.province}</p>
+                      <p className="text-sm text-gray-500">
+                        {(province.total_orders || 0).toLocaleString()} orders · {(province.unique_customers || 0).toLocaleString()} customers
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 ml-4">
+                    <div className="text-right">
+                      <p className="font-bold text-lg">{formatPKR(province.total_revenue || 0)}</p>
+                      <p className="text-sm text-gray-500">
+                        Avg: {formatPKR(province.avg_order_value || 0)}
+                      </p>
+                    </div>
+                    {/* Market Share Progress Bar */}
+                    <div className="w-36 flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${revenueBarWidth}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium text-blue-600 w-12 text-right">
+                        {marketShare.toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-lg">{formatPKR(province.total_revenue || 0)}</p>
-                  <p className="text-sm text-gray-500">
-                    Avg: {formatPKR(province.avg_order_value || 0)}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
