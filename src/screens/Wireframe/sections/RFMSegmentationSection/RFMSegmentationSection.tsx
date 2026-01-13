@@ -36,20 +36,20 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
       try {
         setLoading(true);
         setUsingML(true); // Always use ML
-        
+
         // Use ML endpoint directly - no SQL fallback
         const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '';
         const response = await fetch(
           `${ML_API_BASE_URL}/api/v1/ml/rfm-segments?time_filter=${timeFilter}`
         );
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch ML RFM segments');
         }
-        
+
         const result = await response.json();
         const data = result.segments || [];
-        
+
         setSegments(data);
         console.log('✅ Using ML RFM Segments (/api/v1/ml/rfm-segments)');
       } catch (error) {
@@ -156,8 +156,8 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
           </h2>
           <p className="text-gray-600 mt-1">Customer behavior analysis & targeting</p>
         </div>
-        <DateRangeDisplay 
-          timeFilter={timeFilter} 
+        <DateRangeDisplay
+          timeFilter={timeFilter}
           totalRecords={segments.reduce((sum, s) => sum + (s.customer_count || 0), 0)}
         />
       </div>
@@ -181,38 +181,70 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
         ]}
       />
 
-      {/* Header */}
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold">👥 RFM Customer Segmentation</h2>
-          <DateRangeDisplay 
-            timeFilter={timeFilter} 
-            totalRecords={segments.reduce((sum, s) => sum + (s.customer_count || 0), 0)}
-          />
-        </div>
-        <select
-          value={timeFilter}
-          onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
-          className="px-4 py-2 border rounded-lg"
-        >
-          <option value="today">Today</option>
-          <option value="7days">Last 7 Days</option>
-          <option value="30days">Last 30 Days</option>
-          <option value="90days">Last 3 Months</option>
-          <option value="1year">Last 1 Year</option>
-          <option value="2years">Last 2 Years</option>
-          <option value="all">All Time (Slower)</option>
-        </select>
-      </div>
+      {/* Segment Distribution Chart - Visual Overview */}
+      {segments.length > 0 && (
+        <Card className="mb-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              📊 Segment Distribution
+              <span className="text-sm font-normal text-gray-500">
+                (Click bars for details)
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-2 h-32">
+              {(() => {
+                const maxCount = Math.max(...segments.map(s => s.customer_count || 0));
+                return segments.map((segment) => {
+                  const heightPercent = maxCount > 0 ? ((segment.customer_count || 0) / maxCount * 100) : 0;
+                  const isSelected = selectedSegment === segment.segment_name;
+
+                  return (
+                    <div
+                      key={segment.segment_name}
+                      className={`flex-1 flex flex-col items-center cursor-pointer transition-all ${isSelected ? 'scale-105' : 'hover:scale-102'}`}
+                      onClick={() => handleSegmentClick(segment.segment_name)}
+                    >
+                      <div className="w-full flex flex-col items-center flex-1 justify-end">
+                        <div
+                          className={`w-full rounded-t transition-all duration-300 ${isSelected
+                              ? 'bg-gradient-to-t from-blue-600 to-blue-400 shadow-lg'
+                              : getSegmentColor(segment.segment_name).split(' ')[0]
+                            }`}
+                          style={{
+                            height: `${Math.max(heightPercent, 5)}%`,
+                            minHeight: '8px'
+                          }}
+                        />
+                      </div>
+                      <div className="mt-2 text-center w-full">
+                        <span className="text-xs text-gray-600 truncate block" title={segment.segment_name}>
+                          {segment.segment_name.split(' ')[0]}
+                        </span>
+                        <span className="text-xs font-bold text-gray-800">
+                          {(segment.percentage || 0).toFixed(0)}%
+                        </span>
+                        <span className="text-xs text-gray-500 block">
+                          {((segment.customer_count || 0) / 1000).toFixed(0)}K
+                        </span>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Segment Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {segments.map((segment) => (
           <Card
             key={segment.segment_name}
-            className={`cursor-pointer transition-all hover:shadow-lg ${
-              selectedSegment === segment.segment_name ? 'ring-2 ring-blue-500' : ''
-            }`}
+            className={`cursor-pointer transition-all hover:shadow-lg ${selectedSegment === segment.segment_name ? 'ring-2 ring-blue-500' : ''
+              }`}
             onClick={() => handleSegmentClick(segment.segment_name)}
           >
             <CardHeader className="pb-3">
