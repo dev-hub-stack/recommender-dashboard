@@ -1,0 +1,289 @@
+# Frontend Analytics — Deep Analysis
+> **Repo:** `mastergroup-analytics-dashboard` (React + TypeScript + Vite)  
+> **Deployed:** Netlify (`master-dashboard.netlify.app`) + PM2 on EC2 (port 3000)  
+> **API base:** `VITE_API_BASE_URL=/api/v1` (Netlify proxy) or `http://localhost:8001/api/v1` (local)
+
+---
+
+## 1. App Architecture
+
+```
+index.tsx
+  └── App.tsx (React Router)
+       ├── /login → LoginScreen.tsx (JWT auth, stores token in localStorage)
+       └── / → ProtectedRoute → Wireframe.tsx  (the entire dashboard)
+                ├── aside (left sidebar) → RevenueTrendSection (navigation!)
+                └── main
+                     ├── DashboardHeaderSection  (top bar)
+                     ├── Global Filter Bar       (time, category, source, delivered)
+                     └── Active View (8 views)
+```
+
+### View Router (inside Wireframe.tsx)
+| `activeView` State | Component Rendered |
+|--------------------|-------------------|
+| [Dashboard](file:///Users/clustox_1/Documents/MasterGroup-RecommendationSystem/mastergroup-analytics-dashboard/src/services/api.ts#59-68) (default) | PerformanceMetrics + TopProducts + POSvsOE + OrderStatus + RecentActivity |
+| `Customer Profiling` | CustomerDetailedProfiling |
+| `Cross-Selling` | CrossSellingSection |
+| `Collaborative Filtering` | CollaborativeRecommendationDashboard |
+| `Geographic Intelligence` | GeographicIntelligenceSection |
+| `RFM Segmentation` | RFMSegmentationSection |
+| `ML Recommendations` | AWSPersonalizeSection |
+
+> Navigation is done by the **left sidebar** (`RevenueTrendSection`) calling `onNavigate(setActiveView)` — it's both a sidebar nav and a revenue chart.
+
+---
+
+## 2. Global Filter System
+
+All filters live in [Wireframe.tsx](file:///Users/clustox_1/Documents/MasterGroup-RecommendationSystem/mastergroup-analytics-dashboard/src/screens/Wireframe/Wireframe.tsx) and are passed down as props to every section.
+
+| Filter | State | Options |
+|--------|-------|---------|
+| **Time Period** | `timeFilter` (default: `'7days'`) | Today, 7d, 30d, MTD, 3M, 6M, 1Y, 2Y, 3Y, Custom Range, All |
+| **Categories** | `selectedCategories[]` | MultiSelect (up to 20 from `/analytics/product-categories`) |
+| **Order Source** | `orderSource` (default: `'all'`) | All / OE (Online Express) / POS (Point of Sale) |
+| **Delivered Only** | `deliveredOnly` (default: `false`) | Checkbox — filters to Delivered+Completed only |
+| **Custom Date** | `customStartDate:customEndDate` | triggers `time_filter=2025-01-01:2025-12-31` format |
+
+### Smart Filter Visibility (per screen)
+
+| Screen | Time? | Category? | Source? | Delivered? |
+|--------|-------|-----------|---------|------------|
+| Dashboard | ✅ | ✅ | ✅ | ✅ |
+| Customer Profiling | ✅ | ✅ | ❌ | ❌ |
+| Cross-Selling | ✅ | ✅ | ✅ | ❌ |
+| Collaborative Filtering | ✅ | ✅ | ❌ | ❌ |
+| Geographic Intelligence | ✅ | ✅ | ✅ | ❌ |
+| RFM Segmentation | ✅ | ❌ | ❌ | ❌ |
+| ML Recommendations | ❌ | ❌ | ❌ | ❌ |
+
+> Active filters shown as colored **removable badge pills** (blue=source, green=delivered, purple=categories)
+
+---
+
+## 3. Screen-by-Screen Analysis
+
+### 🏠 Dashboard (default view)
+
+**Components rendered:**
+
+#### ➤ [PerformanceMetricsSection](file:///Users/clustox_1/Documents/MasterGroup-RecommendationSystem/mastergroup-analytics-dashboard/src/screens/Wireframe/sections/PerformanceMetricsSection/PerformanceMetricsSection.tsx#13-159)
+- **API:** `GET /api/v1/analytics/dashboard?time_filter=&category=&order_source=&delivered_only=`
+- **Hook:** `useDashboardMetrics({ timeFilter, category, orderSource, deliveredOnly })`
+- **Display:** 4 colorful KPI cards in a responsive 2×2 / 4-column grid
+  | Card | Color | Metric |
+  |------|-------|--------|
+  | Total Revenue | Green | `Rs X.XM` formatted |
+  | Total Orders | Blue | formatted number |
+  | Total Customers | Orange | formatted number |
+  | Avg Order Value | Purple | `Rs X,XXX` |
+- Status dot: 🟢 Engine Online / 🔴 Engine Offline (health check)
+
+#### ➤ `TopProductsSection`
+- **API:** `GET /api/v1/recommendations/popular?limit=10&time_filter=&category=`
+- **Display:** Ranked list / table of top products with purchase counts, revenue, unique customers
+- Supports category filter + order source filter
+
+#### ➤ `POSvsOESection`
+- **API:** Likely calls dashboard with OE/POS breakdown
+- **Display:** OE vs POS comparison charts, revenue split, order count comparison
+
+#### ➤ `OrderStatusAnalyticsSection`
+- **API:** `GET /api/v1/analytics/order-status-breakdown?time_filter=&order_source=`
+- **Display:** OE statuses (Delivered/Cancelled/Returned/Pending/...) + POS (completed)
+  - Fulfillment rate, lost revenue metric
+  - Separate OE and POS breakdowns
+
+#### ➤ `RecentActivitySection`
+- **API:** Likely `/analytics/recent-orders` or similar
+- **Display:** Recent order feed / activity log
+
+---
+
+### 👥 Customer Profiling
+**Component:** `CustomerDetailedProfiling`  
+**API calls:**
+- `GET /api/v1/analytics/customers/rfm-segments` — segment summary
+- `GET /api/v1/analytics/customer-similarity?time_filter=&category=` — similar customer pairs
+- `GET /api/v1/analytics/customers/at-risk` — customers going dormant
+
+**Display:**
+- Customer cards with purchase history
+- Segment badges (Champions, At Risk, etc.)
+- Similarity score display
+- Customer search / drilldown
+
+---
+
+### 💡 Cross-Selling / Revenue Optimization
+**Component:** `CrossSellingSection`  
+**API calls:**
+- `GET /api/v1/analytics/collaborative-pairs?time_filter=&order_source=&category=` — product pairs
+- `GET /api/v1/analytics/collaborative-products` — frequently bought items
+
+**Display:**
+- Product pair cards (Product A + Product B bought together)
+- Co-purchase count, combined revenue
+- Filterable by OE vs POS source
+
+---
+
+### 🤝 Collaborative Filtering (`CollaborativeRecommendationDashboard`)
+**API calls:**
+- `GET /api/v1/analytics/collaborative-metrics` — overall CF metrics (falls back to mock if endpoint missing)
+- `GET /api/v1/analytics/collaborative-products` — top products identified by CF
+- `GET /api/v1/analytics/customer-similarity` — customer-to-customer similarity data
+
+**Display:**
+- Metric cards: Total Recommendations, Avg Similarity Score, Active Customer Pairs, Algorithm Accuracy
+- Top collaborative products table: recommendation_count, avg_similarity_score, total_revenue
+- Customer similarity list: top similar customer pairs + shared products
+
+---
+
+### 🗺️ Geographic Intelligence
+**Component:** [GeographicIntelligenceSection](file:///Users/clustox_1/Documents/MasterGroup-RecommendationSystem/mastergroup-analytics-dashboard/src/screens/Wireframe/sections/GeographicIntelligenceSection/GeographicIntelligenceSection.tsx#16-214)  
+**API calls (parallel):**
+- `GET /api/v1/analytics/geographic/provinces?time_filter=&order_source=&category=`
+- `GET /api/v1/analytics/geographic/cities?time_filter=&limit=10&order_source=&category=`
+
+**Display:**
+1. **Province Performance List** — each province shows:
+   - Region badge (North/South/Central/East/West colored)
+   - Province name + `X orders · Y customers`
+   - Revenue in PKR  
+   - **Blue gradient progress bar** showing market share % vs max province
+2. **Top Cities Table** — ranked table with:
+   - `#1 #2 #3` highlighted badges
+   - City name, Province badge (region-colored), Orders, Revenue, Customers
+
+**ExplanationCard** embedded: methodology explanation (61-city mapping database, province aggregation logic)
+
+> Insight hardcoded in ExplanationCard: "Punjab leads with 86K+ orders and PKR 4.8B revenue (93% of total)" — this text may need updating as data grows.
+
+---
+
+### 📊 RFM Customer Segmentation
+**Component:** [RFMSegmentationSection](file:///Users/clustox_1/Documents/MasterGroup-RecommendationSystem/mastergroup-analytics-dashboard/src/screens/Wireframe/sections/RFMSegmentationSection/RFMSegmentationSection.tsx#15-408)  
+**API calls:**
+- `GET /api/v1/ml/rfm-segments?time_filter=` — ML-powered RFM (primary, no SQL fallback)
+- `GET /api/v1/analytics/customers/segment-details/{segment}?limit=20` — on segment click
+
+**9 Customer Segments with emoji + color + priority:**
+| Segment | Icon | Color | Action |
+|---------|------|-------|--------|
+| Champions | 🏆 | Yellow | VIP Treatment |
+| Loyal Customers | ⭐ | Green | Maintain |
+| Potential Loyalists | 🎯 | Blue | Convert |
+| New Customers | 🌱 | Cyan | Onboard |
+| At Risk | ⚠️ | Orange | Win Back |
+| Cannot Lose Them | 🚨 | Red | URGENT |
+| Need Attention | 💬 | Purple | Re-engage |
+| Hibernating | 💤 | Gray | Reactivate |
+| Lost | 📉 | Slate | Low Priority |
+
+**Display (4 parts):**
+1. **Bar Chart** — clickable bars showing customer count per segment proportionally (height = % of max)
+2. **3-column Card Grid** — each segment card shows: customer_count, %, total_revenue, avg_order_value, avg_orders, days since last order
+3. **Drill-down Table** (on segment click) — top 20 customers with Name/City/Orders/Spent/Last Order/R-F-M badges
+4. **Recommended Actions** — 3 strategy cards: VIP Program (Champions count), Win-Back (At Risk count), Reactivation (Hibernating count)
+
+---
+
+### 🤖 ML Recommendations (`AWSPersonalizeSection`)
+**API calls:**
+- `GET /api/v1/ml/status` — model training status, which of 4 algorithms are trained
+- `POST /api/v1/ml/train` — trigger manual training from UI
+- `GET /api/v1/ml/recommendations/{userId}` — per-user recommendations
+- `GET /api/v1/ml/top-products` — ML-identified top products
+- `GET /api/v1/ml/product-pairs` — ML-identified product pairs
+- `GET /api/v1/ml/customer-similarity` — ML customer similarity
+
+**Display (`MLStatusDashboard` component):**
+- Model status: is_trained, training_timestamp, which of 4 algorithms are active
+- `🤖 ML-Powered` or `📊 SQL-Based` badge on each section
+- Manual training trigger button (admin)
+- Recommendation display per user ID input
+
+---
+
+## 4. All API Endpoints Called by Frontend
+
+| # | Endpoint | Screen |
+|---|----------|--------|
+| 1 | `GET /health` | Dashboard (engine status) |
+| 2 | `GET /api/v1/analytics/dashboard` | Dashboard KPIs |
+| 3 | `GET /api/v1/analytics/revenue-trend` | Revenue sidebar |
+| 4 | `GET /api/v1/recommendations/popular` | Top Products |
+| 5 | `GET /api/v1/recommendations/product-pairs` | Cross-Selling |
+| 6 | `GET /api/v1/recommendations/content-based/{id}` | Similar products |
+| 7 | `GET /api/v1/recommendations/collaborative/{id}` | Per-customer CF recs |
+| 8 | `GET /api/v1/recommendations/matrix-factorization/{id}` | SVD recs |
+| 9 | `GET /api/v1/analytics/order-status-breakdown` | Order Status |
+| 10 | `GET /api/v1/analytics/collaborative-metrics` | Collaborative Filtering |
+| 11 | `GET /api/v1/analytics/collaborative-products` | Collaborative Filtering |
+| 12 | `GET /api/v1/analytics/collaborative-pairs` | Cross-Selling |
+| 13 | `GET /api/v1/analytics/customer-similarity` | Customer Profiling |
+| 14 | `GET /api/v1/analytics/geographic/provinces` | Geographic Intel |
+| 15 | `GET /api/v1/analytics/geographic/cities` | Geographic Intel |
+| 16 | `GET /api/v1/analytics/geographic/city-performance/{city}` | City drilldown |
+| 17 | `GET /api/v1/analytics/geographic/category-by-province` | Geographic Intel |
+| 18 | `GET /api/v1/analytics/customers/rfm-segments` | RFM (SQL fallback) |
+| 19 | `GET /api/v1/analytics/customers/segment-details/{seg}` | RFM drilldown |
+| 20 | `GET /api/v1/analytics/customers/at-risk` | Customer Profiling |
+| 21 | `GET /api/v1/analytics/product-categories` | Global filter dropdown |
+| 22 | `GET /api/v1/analytics/products-by-category` | Category drill |
+| 23 | `GET /api/v1/analytics/brands/performance` | Brand analytics |
+| 24 | `GET /api/v1/cache/stats` | Performance Metrics |
+| 25 | `GET /api/v1/stats` | System stats |
+| 26 | `GET /api/v1/ml/status` | ML Recommendations |
+| 27 | `POST /api/v1/ml/train` | ML Recommendations (admin) |
+| 28 | `GET /api/v1/ml/recommendations/{userId}` | ML Recommendations |
+| 29 | `GET /api/v1/ml/top-products` | ML Recommendations |
+| 30 | `GET /api/v1/ml/product-pairs` | ML Recommendations |
+| 31 | `GET /api/v1/ml/customer-similarity` | ML Recommendations |
+| 32 | `GET /api/v1/ml/collaborative-products` | Collaborative Filtering |
+| 33 | `GET /api/v1/ml/rfm-segments` | RFM Segmentation (primary) |
+| 34 | `GET /api/v1/customers/{id}/history` | Customer history |
+
+---
+
+## 5. Custom Hooks
+
+| Hook | Used By | What it does |
+|------|---------|-------------|
+| `useDashboardMetrics` | PerformanceMetrics | Fetches KPI metrics, handles auto-refresh, engine online check |
+| `useCollaborativeMetrics` | Collaborative | Fetches CF-specific metrics, loading/error state |
+| `useMLRecommendations` | RFM, AWSPersonalize | Gets ML status + triggers training + loads recommendations per user |
+| `useProducts` | TopProducts | Fetches popular products with pagination |
+
+---
+
+## 6. Shared UI Components
+
+| Component | Purpose |
+|-----------|---------|
+| `DateRangeDisplay` | Shows human-readable date range + record count badge |
+| `ExplanationCard` | Collapsible info card explaining each algorithm's methodology |
+| `MultiSelectFilter` | Checkbox dropdown for multi-category filter |
+| `DashboardExportButton` | Context-aware CSV export button (passes timeFilter + categories + sections) |
+| `ExportButton` / `ScreenExportButton` | Per-section download to CSV |
+| `MLStatusDashboard` | ML training status panel with 4 algorithm badges |
+| `Tooltip` / `GeographicScoreTooltip` / `RFMScoreTooltip` | Info popovers |
+
+---
+
+## 7. Notable Design Patterns
+
+> [!NOTE]
+> **No charting library used** — all visualizations are built with raw CSS (`height: X%`, gradient bars, flex layout). No Recharts, Chart.js, or D3. Bars and progress charts are plain `div` elements with inline `style={{width: X%}}`.
+
+> [!NOTE]
+> **Fallback strategy** — [getCollaborativeMetrics()](file:///Users/clustox_1/Documents/MasterGroup-RecommendationSystem/mastergroup-analytics-dashboard/src/services/api.ts#486-516) catches all errors and returns hardcoded mock data (`total_recommendations: 15847, avg_similarity_score: 0.78`). This means that screen always shows data even if the backend endpoint is unimplemented.
+
+> [!WARNING]
+> **Hardcoded insight text** in [GeographicIntelligenceSection](file:///Users/clustox_1/Documents/MasterGroup-RecommendationSystem/mastergroup-analytics-dashboard/src/screens/Wireframe/sections/GeographicIntelligenceSection/GeographicIntelligenceSection.tsx#16-214) ExplanationCard: `"Punjab leads with 86K+ orders and PKR 4.8B revenue (93% of total)"` — this is static text, not calculated from live data. Live DB shows 201,471 orders for Punjab.
+
+> [!IMPORTANT]
+> **Auth:** JWT token stored in `localStorage` as `auth_token`. Every API call goes through [getAuthHeaders()](file:///Users/clustox_1/Documents/MasterGroup-RecommendationSystem/mastergroup-analytics-dashboard/src/services/api.ts#9-22). 401 responses auto-redirect to `/login` and clear the token.
