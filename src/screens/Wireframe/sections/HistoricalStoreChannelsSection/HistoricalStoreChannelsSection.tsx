@@ -126,7 +126,7 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
     const maxCustomers = Math.max(...data.channels.map(c => c.customers), 1);
 
     return (
-        <section className="w-full p-6 bg-white rounded-xl shadow-sm group transition-all duration-300">
+        <section className="w-full p-6 bg-white rounded-xl shadow-sm transition-all duration-300">
             {/* ── Header ── */}
             <div className="flex items-start justify-between mb-2">
                 <div>
@@ -142,14 +142,12 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                         <div className="w-2 h-2 bg-purple-400 rounded-full" />
                         <span className="text-sm text-gray-500">Historical Data</span>
                     </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <DashboardExportButton
-                            timeFilter="all"
-                            categories={[]}
-                            sections={['historical_channels']}
-                            className="!py-1.5 !px-3 shadow-sm border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 !rounded-md text-xs font-semibold"
-                        />
-                    </div>
+                    <DashboardExportButton
+                        timeFilter="all"
+                        categories={[]}
+                        sections={['historical_channels']}
+                        className="!py-1.5 !px-3 shadow-sm !rounded-md text-xs font-semibold"
+                    />
                 </div>
             </div>
 
