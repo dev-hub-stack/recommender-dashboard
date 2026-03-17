@@ -241,6 +241,15 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                                                 </div>
                                             ))}
                                         </div>
+                                        <div className="mt-4 flex justify-end">
+                                            <DashboardExportButton
+                                                timeFilter="all"
+                                                categories={[]}
+                                                sections={['historical_channels']}
+                                                historicalChannel={ch.channel}
+                                                className="!py-1 !px-2 shadow-sm border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 !rounded text-[10px] font-semibold"
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </CardContent>

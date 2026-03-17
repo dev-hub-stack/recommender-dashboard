@@ -7,6 +7,7 @@ interface DashboardExportButtonProps {
   sections?: string[];
   orderSource?: string;
   deliveredOnly?: boolean;
+  historicalChannel?: string;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ export const DashboardExportButton = ({
   sections = ['all'],
   orderSource = 'all',
   deliveredOnly = false,
+  historicalChannel,
   className = ''
 }: DashboardExportButtonProps) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -43,6 +45,11 @@ export const DashboardExportButton = ({
       // Add delivered only filter
       if (deliveredOnly) {
         params.append('delivered_only', 'true');
+      }
+
+      // Add historical channel explicitly if requested
+      if (historicalChannel) {
+        params.append('historical_channel', historicalChannel);
       }
       
       // Get API base URL
