@@ -13,6 +13,7 @@ import CollaborativeRecommendationDashboard from "./sections/CollaborativeRecomm
 import { GeographicIntelligenceSection } from "./sections/GeographicIntelligenceSection";
 import { RFMSegmentationSection } from "./sections/RFMSegmentationSection";
 import { AWSPersonalizeSection } from "./sections/AWSPersonalizeSection";
+import { HistoricalStoreChannelsSection } from "./sections/HistoricalStoreChannelsSection";
 import { getProductCategories, ProductCategory } from "../../services/api";
 import { MultiSelectFilter } from "../../components/MultiSelectFilter";
 import { DashboardExportButton } from "../../components/DashboardExportButton";
@@ -114,7 +115,7 @@ export const Wireframe = (): JSX.Element => {
                 />
               )}
 
-              {/* OE/POS Order Source Filter */}
+              {/* OE/POS/Historical Order Source Filter */}
               {shouldShowOrderSourceFilter && (
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-gray-700">Source:</label>
@@ -124,8 +125,9 @@ export const Wireframe = (): JSX.Element => {
                     className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="all">All Orders</option>
-                    <option value="oe">OE (Online Express)</option>
-                    <option value="pos">POS (Point of Sale)</option>
+                    <option value="oe">🌐 OE (Online Express)</option>
+                    <option value="pos">🏪 POS (Point of Sale)</option>
+                    <option value="historical">📦 Historical (Imported)</option>
                   </select>
                 </div>
               )}
@@ -217,7 +219,11 @@ export const Wireframe = (): JSX.Element => {
             {orderSource !== 'all' && (
               <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
                 <span className="text-sm text-blue-700">
-                  <strong>{orderSource === 'oe' ? '🌐 Online Express' : '🏪 Point of Sale'}</strong>
+                  <strong>
+                    {orderSource === 'oe' ? '🌐 Online Express' :
+                      orderSource === 'pos' ? '🏪 Point of Sale' :
+                        '📦 Historical (Imported)'}
+                  </strong>
                 </span>
                 <button
                   onClick={() => setOrderSource('all')}
@@ -278,6 +284,7 @@ export const Wireframe = (): JSX.Element => {
             <PerformanceMetricsSection timeFilter={timeFilter} category={selectedCategory} orderSource={orderSource} deliveredOnly={deliveredOnly} />
             <TopProductsSection timeFilter={timeFilter} category={selectedCategory} orderSource={orderSource} deliveredOnly={deliveredOnly} />
             <POSvsOESection timeFilter={timeFilter} category={selectedCategory} />
+            <HistoricalStoreChannelsSection />
             <OrderStatusAnalyticsSection timeFilter={timeFilter} category={selectedCategory} orderSource={orderSource} />
             <RecentActivitySection timeFilter={timeFilter} />
           </>
