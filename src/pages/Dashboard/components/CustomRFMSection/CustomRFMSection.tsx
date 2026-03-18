@@ -155,18 +155,25 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
 
             {/* Threshold panel */}
             <Card>
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                        ⚙️ Threshold Settings
-                        <span className="text-xs font-normal text-gray-400">(drag sliders — results update automatically)</span>
-                    </CardTitle>
+                <CardHeader className="pb-2 border-b mb-4">
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-base flex items-center gap-2">
+                            ⚙️ Threshold Settings
+                            <span className="text-xs font-normal text-gray-400">(drag sliders — results update automatically)</span>
+                        </CardTitle>
+                        {source === 'historical' && (
+                            <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-blue-200">
+                                🕒 Relative Recency Active
+                            </span>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     {/* Champions */}
                     <div>
-                        <p className="text-sm font-semibold text-yellow-700 mb-2">🏆 Champions (R ≤ days AND F ≥ orders AND M ≥ PKR)</p>
+                        <p className="text-sm font-semibold text-yellow-700 mb-2">🏆 Champions ({source === 'historical' ? 'F ≥ orders AND M ≥ PKR' : 'R ≤ days AND F ≥ orders AND M ≥ PKR'})</p>
                         <div className="space-y-2 pl-2">
-                            <SliderRow label="Recency ≤ (days)" value={thresholds.champion_r} min={7} max={180} unit=" days" onChange={set('champion_r')} />
+                            {source !== 'historical' && <SliderRow label="Recency ≤ (days)" value={thresholds.champion_r} min={7} max={180} unit=" days" onChange={set('champion_r')} />}
                             <SliderRow label="Frequency ≥ (orders)" value={thresholds.champion_f} min={1} max={20} onChange={set('champion_f')} />
                             <SliderRow label="Monetary ≥ (PKR)" value={thresholds.champion_m} min={1000} max={500000} step={1000} unit="PKR" onChange={set('champion_m')} />
                         </div>
@@ -176,9 +183,9 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
 
                     {/* Loyal */}
                     <div>
-                        <p className="text-sm font-semibold text-green-700 mb-2">⭐ Loyal (not Champion, AND R ≤ AND F ≥ AND M ≥)</p>
+                        <p className="text-sm font-semibold text-green-700 mb-2">⭐ Loyal ({source === 'historical' ? 'not Champion AND F ≥ AND M ≥' : 'not Champion, AND R ≤ AND F ≥ AND M ≥'})</p>
                         <div className="space-y-2 pl-2">
-                            <SliderRow label="Recency ≤ (days)" value={thresholds.loyal_r} min={7} max={365} unit=" days" onChange={set('loyal_r')} />
+                            {source !== 'historical' && <SliderRow label="Recency ≤ (days)" value={thresholds.loyal_r} min={7} max={365} unit=" days" onChange={set('loyal_r')} />}
                             <SliderRow label="Frequency ≥ (orders)" value={thresholds.loyal_f} min={1} max={15} onChange={set('loyal_f')} />
                             <SliderRow label="Monetary ≥ (PKR)" value={thresholds.loyal_m} min={1000} max={300000} step={1000} unit="PKR" onChange={set('loyal_m')} />
                         </div>
@@ -188,10 +195,14 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
 
                     {/* At Risk */}
                     <div>
-                        <p className="text-sm font-semibold text-orange-700 mb-2">⚠️ At Risk (R between min and max AND F ≥)</p>
+                        <p className="text-sm font-semibold text-orange-700 mb-2">⚠️ At Risk ({source === 'historical' ? 'not Champion/Loyal AND F ≥' : 'R between min and max AND F ≥'})</p>
                         <div className="space-y-2 pl-2">
-                            <SliderRow label="Recency > (days)" value={thresholds.at_risk_r_min} min={30} max={180} unit=" days" onChange={set('at_risk_r_min')} />
-                            <SliderRow label="Recency ≤ (days)" value={thresholds.at_risk_r_max} min={60} max={365} unit=" days" onChange={set('at_risk_r_max')} />
+                            {source !== 'historical' && (
+                                <>
+                                    <SliderRow label="Recency > (days)" value={thresholds.at_risk_r_min} min={30} max={180} unit=" days" onChange={set('at_risk_r_min')} />
+                                    <SliderRow label="Recency ≤ (days)" value={thresholds.at_risk_r_max} min={60} max={365} unit=" days" onChange={set('at_risk_r_max')} />
+                                </>
+                            )}
                             <SliderRow label="Frequency ≥ (orders)" value={thresholds.at_risk_f} min={1} max={10} onChange={set('at_risk_f')} />
                         </div>
                     </div>
@@ -202,8 +213,16 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
                     <div>
                         <p className="text-sm font-semibold text-gray-600 mb-2">💤 Hibernating and 📉 Lost</p>
                         <div className="space-y-2 pl-2">
-                            <SliderRow label="Hibernating R >" value={thresholds.hibernating_r} min={90} max={730} unit=" days" onChange={set('hibernating_r')} />
-                            <SliderRow label="Lost R > (days)" value={thresholds.lost_r} min={180} max={1825} unit=" days" onChange={set('lost_r')} />
+                            {source === 'historical' ? (
+                                <p className="text-xs text-gray-500 italic mt-2.5 mb-1">
+                                    For historical data, Hibernating is empty, and Lost strictly captures exactly one order (F=1).
+                                </p>
+                            ) : (
+                                <>
+                                    <SliderRow label="Hibernating R >" value={thresholds.hibernating_r} min={90} max={730} unit=" days" onChange={set('hibernating_r')} />
+                                    <SliderRow label="Lost R > (days)" value={thresholds.lost_r} min={180} max={1825} unit=" days" onChange={set('lost_r')} />
+                                </>
+                            )}
                         </div>
                     </div>
                 </CardContent>
