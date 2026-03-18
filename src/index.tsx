@@ -3,8 +3,8 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { Wireframe } from "./screens/Wireframe";
-import { LoginScreen } from "./screens/LoginScreen";
+import { Wireframe } from "./pages/Dashboard";
+import { LoginScreen } from "./pages/LoginScreen";
 
 createRoot(document.getElementById("app") as HTMLElement).render(
   <StrictMode>
