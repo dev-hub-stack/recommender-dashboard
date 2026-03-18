@@ -370,7 +370,13 @@ export const CustomerSimilaritySection: React.FC<CustomerSimilaritySectionProps>
                           })()}
                         </span>
                         <span className="text-xs text-gray-500 truncate">
-                          ID: {customer.customer_id.substring(0, 10)}...
+                          ID: {(() => {
+                            let phone = customer.customer_id.split('_')[0];
+                            if (phone.startsWith('03') && phone.length >= 11) {
+                              phone = '+92' + phone.substring(1);
+                            }
+                            return phone.substring(0, 12) + '...';
+                          })()}
                         </span>
                       </div>
                     </div>
