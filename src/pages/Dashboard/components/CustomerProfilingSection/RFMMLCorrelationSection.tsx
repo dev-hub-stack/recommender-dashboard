@@ -278,7 +278,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
                         <span className="text-xs font-bold text-gray-500">#{idx + 1}</span>
                         <div>
                           <div className="text-sm font-medium">{customer.customer_name || 'Unknown'}</div>
-                          <div className="text-xs text-gray-500">{customer.customer_id?.slice(0, 8)}...</div>
+                          <div className="text-xs text-gray-500">{customer.customer_phone || customer.customer_id?.slice(0, 12) + '...'}</div>
                         </div>
                       </div>
                       <div className="text-right">
