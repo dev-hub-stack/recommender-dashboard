@@ -14,6 +14,7 @@ import { GeographicIntelligenceSection } from "./sections/GeographicIntelligence
 import { RFMSegmentationSection } from "./sections/RFMSegmentationSection";
 import { AWSPersonalizeSection } from "./sections/AWSPersonalizeSection";
 import { HistoricalStoreChannelsSection } from "./sections/HistoricalStoreChannelsSection";
+import { CustomRFMSection } from "./sections/CustomRFMSection";
 import { getProductCategories, ProductCategory } from "../../services/api";
 import { MultiSelectFilter } from "../../components/MultiSelectFilter";
 import { DashboardExportButton } from "../../components/DashboardExportButton";
@@ -311,7 +312,11 @@ export const Wireframe = (): JSX.Element => {
         )}
 
         {activeView === 'RFM Segmentation' && (
-          <RFMSegmentationSection timeFilter={timeFilter} />
+          <div className="space-y-10">
+            <RFMSegmentationSection timeFilter={timeFilter} />
+            <hr className="border-gray-200" />
+            <CustomRFMSection orderSource={orderSource} />
+          </div>
         )}
 
         {activeView === 'ML Recommendations' && (
