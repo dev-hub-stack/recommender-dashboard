@@ -873,6 +873,7 @@ export async function getCustomersBySegment(
   return customers.map((c: any) => ({
     customer_id: c.customer_id || '',
     customer_name: c.customer_name || 'Unknown',
+    customer_phone: c.customer_phone || '',
     customer_city: c.customer_city || 'Unknown',
     segment: c.segment || segment,
     total_orders: safeNumber(c.total_orders, 0),
@@ -910,6 +911,7 @@ export async function getAtRiskCustomers(
   return customers.map((c: any) => ({
     customer_id: c.customer_id || '',
     customer_name: c.customer_name || 'Unknown',
+    customer_phone: c.customer_phone || '',
     customer_city: c.customer_city || 'Unknown',
     segment: c.segment || 'At Risk',
     total_orders: safeNumber(c.total_orders, 0),
