@@ -58,7 +58,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
       try {
         const segmentsResponse = await Promise.race([
           fetch(`${ML_API_BASE_URL}/api/v1/ml/rfm-segments?time_filter=${timeFilter}`),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 20000))
         ]) as Response;
         
         if (!segmentsResponse.ok) {
@@ -89,7 +89,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
           try {
             customers = await Promise.race([
               getCustomersBySegment(segment.segment_name, 10),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 20000))
             ]) as any[];
           } catch (err) {
             console.error(`Failed to get customers for segment ${segment.segment_name}, using fallback:`, err);
@@ -107,7 +107,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
             try {
               const recResponse = await Promise.race([
                 fetch(`${ML_API_BASE_URL}/api/v1/personalize/recommendations/${customer.customer_id}?num_results=5`),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 20000))
               ]) as Response;
               
               if (recResponse.ok) {
