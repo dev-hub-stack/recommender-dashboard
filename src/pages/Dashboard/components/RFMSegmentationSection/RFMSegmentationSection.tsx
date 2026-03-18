@@ -338,7 +338,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
                         <td className="p-3">
                           <div>
                             <p className="font-medium">{customer.customer_name || 'Unknown'}</p>
-                            <p className="text-xs text-gray-500">{customer.customer_id}</p>
+                            <p className="text-xs text-gray-500">{customer.customer_phone || customer.customer_id}</p>
                           </div>
                         </td>
                         <td className="p-3">{customer.customer_city || 'N/A'}</td>

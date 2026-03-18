@@ -176,6 +176,7 @@ export interface RFMSegment {
 export interface CustomerSegmentDetail {
   customer_id: string;
   customer_name: string;
+  customer_phone: string;
   customer_city: string;
   segment: string;
   total_orders: number;
