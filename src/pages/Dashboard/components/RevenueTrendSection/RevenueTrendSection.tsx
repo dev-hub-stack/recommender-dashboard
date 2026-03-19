@@ -12,6 +12,10 @@ const insightsAnalysisItems = [
     label: "Dashboard",
   },
   {
+    icon: "/vuesax-linear-graph.svg",
+    label: "RFM Segmentation",
+  },
+  {
     icon: "/vuesax-linear-user-edit.svg",
     label: "Customer Profiling",
   },
@@ -32,10 +36,6 @@ const phase1AnalyticsItems = [
   {
     icon: "/vuesax-linear-maximize.svg",
     label: "Geographic Intelligence",
-  },
-  {
-    icon: "/vuesax-linear-graph.svg",
-    label: "RFM Segmentation",
   },
   {
     icon: "/vuesax-linear-element-equal.svg",
