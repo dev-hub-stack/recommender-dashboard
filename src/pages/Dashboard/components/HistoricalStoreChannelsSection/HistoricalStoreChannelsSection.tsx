@@ -1,43 +1,47 @@
 import React, { useState, useEffect } from 'react';
+import {
+    Building2, Briefcase, Car, Home, BedDouble, Monitor,
+    Store, Package, Leaf, Globe, ShoppingCart, BarChart2,
+    Archive, Lightbulb, ChevronDown, ChevronUp
+} from 'lucide-react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { DashboardExportButton } from '../../../../components/DashboardExportButton';
 
-// ─── Channel metadata (emoji + colour theme) ────────────────────────────────
-const CHANNEL_META: Record<string, { icon: string; gradient: string; badge: string }> = {
-
-    Exhibition: { icon: '🏛️', gradient: 'from-blue-50 to-indigo-50', badge: 'bg-blue-100 text-blue-700' },
-    JobBox: { icon: '💼', gradient: 'from-emerald-50 to-teal-50', badge: 'bg-emerald-100 text-emerald-700' },
-    Changan: { icon: '🚗', gradient: 'from-red-50 to-rose-50', badge: 'bg-red-100 text-red-700' },
-    CFH: { icon: '🏠', gradient: 'from-purple-50 to-violet-50', badge: 'bg-purple-100 text-purple-700' },
-    DuraFoam: { icon: '🛏️', gradient: 'from-orange-50 to-amber-50', badge: 'bg-orange-100 text-orange-700' },
-    MasterOffisysView: { icon: '🖥️', gradient: 'from-cyan-50 to-sky-50', badge: 'bg-cyan-100 text-cyan-700' },
-    Dealers: { icon: '🏪', gradient: 'from-yellow-50 to-lime-50', badge: 'bg-yellow-100 text-yellow-700' },
-    DDS: { icon: '📦', gradient: 'from-slate-50 to-gray-50', badge: 'bg-slate-100 text-slate-700' },
-    MoltyHome: { icon: '🌿', gradient: 'from-green-50 to-emerald-50', badge: 'bg-green-100 text-green-700' },
-    OE: { icon: '🌐', gradient: 'from-sky-50 to-blue-50', badge: 'bg-sky-100 text-sky-700' },
-    POS: { icon: '🏦', gradient: 'from-pink-50 to-rose-50', badge: 'bg-pink-100 text-pink-700' },
+// ─── Channel metadata (Lucide icon + colour theme) ────────────────────────────
+type ChannelMeta = {
+    icon: React.ReactNode;
+    gradient: string;
+    badge: string;
 };
 
-const DEFAULT_META = { icon: '📊', gradient: 'from-gray-50 to-slate-50', badge: 'bg-gray-100 text-gray-600' };
+const makeIcon = (Icon: React.ElementType, cls: string) => (
+    <Icon className={`w-6 h-6 ${cls}`} strokeWidth={1.75} />
+);
+
+const CHANNEL_META: Record<string, ChannelMeta> = {
+    Exhibition:        { icon: makeIcon(Building2,     'text-indigo-600'), gradient: 'from-blue-50 to-indigo-50',     badge: 'bg-blue-100 text-blue-700' },
+    JobBox:            { icon: makeIcon(Briefcase,      'text-emerald-600'), gradient: 'from-emerald-50 to-teal-50',  badge: 'bg-emerald-100 text-emerald-700' },
+    Changan:           { icon: makeIcon(Car,            'text-red-600'),     gradient: 'from-red-50 to-rose-50',      badge: 'bg-red-100 text-red-700' },
+    CFH:               { icon: makeIcon(Home,           'text-purple-600'),  gradient: 'from-purple-50 to-violet-50', badge: 'bg-purple-100 text-purple-700' },
+    DuraFoam:          { icon: makeIcon(BedDouble,      'text-amber-600'),   gradient: 'from-orange-50 to-amber-50',  badge: 'bg-orange-100 text-orange-700' },
+    MasterOffisysView: { icon: makeIcon(Monitor,        'text-sky-600'),     gradient: 'from-cyan-50 to-sky-50',      badge: 'bg-cyan-100 text-cyan-700' },
+    Dealers:           { icon: makeIcon(Store,          'text-yellow-700'),  gradient: 'from-yellow-50 to-lime-50',   badge: 'bg-yellow-100 text-yellow-700' },
+    DDS:               { icon: makeIcon(Package,        'text-slate-600'),   gradient: 'from-slate-50 to-gray-50',    badge: 'bg-slate-100 text-slate-700' },
+    MoltyHome:         { icon: makeIcon(Leaf,           'text-green-600'),   gradient: 'from-green-50 to-emerald-50', badge: 'bg-green-100 text-green-700' },
+    OE:                { icon: makeIcon(Globe,          'text-sky-600'),     gradient: 'from-sky-50 to-blue-50',      badge: 'bg-sky-100 text-sky-700' },
+    POS:               { icon: makeIcon(ShoppingCart,   'text-pink-600'),    gradient: 'from-pink-50 to-rose-50',     badge: 'bg-pink-100 text-pink-700' },
+};
+
+const DEFAULT_META: ChannelMeta = {
+    icon: makeIcon(BarChart2, 'text-gray-500'),
+    gradient: 'from-gray-50 to-slate-50',
+    badge: 'bg-gray-100 text-gray-600',
+};
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-interface ChannelProvince {
-    province: string;
-    count: number;
-}
-
-interface ChannelData {
-    channel: string;
-    customers: number;
-    share_pct: number;
-    provinces: ChannelProvince[];
-}
-
-interface StoreChannelResponse {
-    success: boolean;
-    total_historical: number;
-    channels: ChannelData[];
-}
+interface ChannelProvince { province: string; count: number; }
+interface ChannelData { channel: string; customers: number; share_pct: number; provinces: ChannelProvince[]; }
+interface StoreChannelResponse { success: boolean; total_historical: number; channels: ChannelData[]; }
 
 // ─── Bar component ───────────────────────────────────────────────────────────
 const Bar: React.FC<{ pct: number; colour?: string }> = ({ pct, colour = 'bg-blue-400' }) => (
@@ -49,7 +53,6 @@ const Bar: React.FC<{ pct: number; colour?: string }> = ({ pct, colour = 'bg-blu
     </div>
 );
 
-// ─── Province pill colours by index ─────────────────────────────────────────
 const PROVINCE_COLOURS = [
     'bg-blue-100 text-blue-700',
     'bg-green-100 text-green-700',
@@ -65,9 +68,7 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [expanded, setExpanded] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetch_data();
-    }, []);
+    useEffect(() => { fetch_data(); }, []);
 
     const fetch_data = async () => {
         setLoading(true);
@@ -78,25 +79,22 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
             const res = await fetch(`${API_BASE_URL}/analytics/historical/store-channels`);
             const json = await res.json();
-            if (json.success) {
-                setData(json);
-            } else {
-                setError('Failed to load channel data');
-            }
-        } catch (e) {
+            if (json.success) setData(json);
+            else setError('Failed to load channel data');
+        } catch {
             setError('Cannot connect to analytics service');
         } finally {
             setLoading(false);
         }
     };
 
-    // ── Loading skeleton ──
     if (loading) {
         return (
             <section className="w-full p-6 bg-white rounded-xl shadow-sm">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-800">
-                        📦 Historical Store / Channel Distribution
+                    <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        <Archive className="w-5 h-5 text-gray-500" />
+                        Historical Store / Channel Distribution
                     </h2>
                     <span className="text-sm text-gray-400 animate-pulse">Loading…</span>
                 </div>
@@ -109,12 +107,12 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
         );
     }
 
-    // ── Error ──
     if (error || !data) {
         return (
             <section className="w-full p-6 bg-white rounded-xl shadow-sm">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                    📦 Historical Store / Channel Distribution
+                <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <Archive className="w-5 h-5 text-gray-500" />
+                    Historical Store / Channel Distribution
                 </h2>
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-700 text-sm">
                     {error || 'No data available'}
@@ -130,8 +128,9 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
             {/* ── Header ── */}
             <div className="flex items-start justify-between mb-2">
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-800">
-                        📦 Historical Store / Channel Distribution
+                    <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        <Archive className="w-5 h-5 text-gray-600" />
+                        Historical Store / Channel Distribution
                     </h2>
                     <p className="text-sm text-gray-500 mt-0.5">
                         {data.total_historical.toLocaleString()} total historical customers across {data.channels.length} channels
@@ -146,12 +145,13 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                         timeFilter="all"
                         categories={[]}
                         sections={['historical_channels']}
+                        label="Export All Historical Data"
                         className="!py-1.5 !px-3 shadow-sm !rounded-md text-xs font-semibold"
                     />
                 </div>
             </div>
 
-            {/* ── Visual bar legend (top 5 channels) ── */}
+            {/* ── Visual bar legend (top 8 channels) ── */}
             <div className="mb-6 mt-4 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-gray-100">
                 <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">Channel Share Overview</p>
                 <div className="space-y-3">
@@ -159,7 +159,7 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                         const meta = CHANNEL_META[ch.channel] || DEFAULT_META;
                         return (
                             <div key={ch.channel} className="flex items-center gap-3">
-                                <span className="text-lg w-6 flex-shrink-0">{meta.icon}</span>
+                                <span className="w-6 flex-shrink-0 flex items-center justify-center">{meta.icon}</span>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between mb-0.5">
                                         <span className="text-sm font-medium text-gray-700">{ch.channel}</span>
@@ -197,7 +197,7 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                                 {/* Card header */}
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-2xl">{meta.icon}</span>
+                                        <span className="flex-shrink-0">{meta.icon}</span>
                                         <div>
                                             <h3 className="text-sm font-semibold text-gray-800 leading-tight">{ch.channel}</h3>
                                             <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 ${meta.badge}`}>
@@ -205,7 +205,10 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <span className="text-xs text-gray-400">{isExpanded ? '▲' : '▼'}</span>
+                                    {isExpanded
+                                        ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                        : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                    }
                                 </div>
 
                                 {/* Customer count */}
@@ -241,7 +244,7 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="mt-4 flex justify-end">
+                                        <div className="mt-4 flex justify-end" onClick={e => e.stopPropagation()}>
                                             <DashboardExportButton
                                                 timeFilter="all"
                                                 categories={[]}
@@ -261,7 +264,7 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
             {/* ── Footer insight ── */}
             {data.channels.length > 0 && (
                 <div className="mt-5 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-3">
-                    <span className="text-xl flex-shrink-0">💡</span>
+                    <Lightbulb className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-blue-700">
                         <strong>{data.channels[0].channel}</strong> is the largest historical channel with{' '}
                         <strong>{data.channels[0].customers.toLocaleString()}</strong> customers (

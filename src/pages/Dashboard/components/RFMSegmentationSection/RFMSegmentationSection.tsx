@@ -7,51 +7,72 @@ import { ExplanationCard } from '../../../../components/ExplanationCard';
 import { DateRangeDisplay } from '../../../../components/DateRangeDisplay';
 import { RFMScoreTooltip, RFMColumnTooltip } from '../../../../components/Tooltip';
 import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
+import {
+  Trophy, Star, Target, Sprout, AlertTriangle, Siren,
+  MessageCircle, Moon, TrendingDown, User, PieChart,
+  Lightbulb, Database, Globe, History
+} from 'lucide-react';
 
 interface RFMSegmentationSectionProps {
   timeFilter?: string;
 }
 
+type DataSource = 'all' | 'historical' | 'api';
+
+const DATA_SOURCE_OPTIONS: { value: DataSource; label: string; description: string; icon: React.ReactNode }[] = [
+  { value: 'all',        label: 'All Sources',        description: 'All customer orders combined',          icon: <Database className="w-4 h-4" /> },
+  { value: 'historical', label: 'Historical Only',    description: 'Exhibition, JobBox, Changan, CFH, etc.', icon: <History className="w-4 h-4" /> },
+  { value: 'api',        label: 'API (OE + POS)',      description: 'Live Online Express & Point of Sale',   icon: <Globe className="w-4 h-4" /> },
+];
+
+type SegmentIconKey =
+  | 'Champions' | 'Loyal Customers' | 'Potential Loyalists' | 'New Customers'
+  | 'At Risk' | 'Cannot Lose Them' | 'Need Attention' | 'Hibernating' | 'Lost';
+
+const SEGMENT_ICONS: Record<SegmentIconKey, React.ReactNode> = {
+  'Champions':          <Trophy className="w-6 h-6 text-yellow-500" />,
+  'Loyal Customers':    <Star className="w-6 h-6 text-green-500" />,
+  'Potential Loyalists':<Target className="w-6 h-6 text-blue-500" />,
+  'New Customers':      <Sprout className="w-6 h-6 text-cyan-500" />,
+  'At Risk':            <AlertTriangle className="w-6 h-6 text-orange-500" />,
+  'Cannot Lose Them':   <Siren className="w-6 h-6 text-red-500" />,
+  'Need Attention':     <MessageCircle className="w-6 h-6 text-purple-500" />,
+  'Hibernating':        <Moon className="w-6 h-6 text-gray-400" />,
+  'Lost':               <TrendingDown className="w-6 h-6 text-slate-500" />,
+};
+
 export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmentationSectionProps) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(propTimeFilter as TimeFilter || 'all');
+  const [dataSource, setDataSource] = useState<DataSource>('all');
   const [segments, setSegments] = useState<RFMSegment[]>([]);
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
   const [segmentCustomers, setSegmentCustomers] = useState<CustomerSegmentDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
 
-  // ML Only - no SQL fallback
   const { mlStatus } = useMLRecommendations('rfm');
-  const [usingML, setUsingML] = useState(true);
+  const [usingML] = useState(true);
 
-  // Update internal timeFilter when prop changes
   useEffect(() => {
-    if (propTimeFilter) {
-      setTimeFilter(propTimeFilter as TimeFilter);
-    }
+    if (propTimeFilter) setTimeFilter(propTimeFilter as TimeFilter);
   }, [propTimeFilter]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setUsingML(true); // Always use ML
-
-        // Use ML endpoint directly - no SQL fallback
         const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '';
-        const response = await fetch(
-          `${ML_API_BASE_URL}/api/v1/ml/rfm-segments?time_filter=${timeFilter}`
-        );
+        const params = new URLSearchParams({
+          time_filter: timeFilter,
+          data_source: dataSource,
+        });
+        const response = await fetch(`${ML_API_BASE_URL}/api/v1/ml/rfm-segments?${params}`);
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch ML RFM segments');
-        }
+        if (!response.ok) throw new Error('Failed to fetch ML RFM segments');
 
         const result = await response.json();
-        const data = result.segments || [];
-
-        setSegments(data);
-        console.log('✅ Using ML RFM Segments (/api/v1/ml/rfm-segments)');
+        setSegments(result.segments || []);
+        console.log('✅ Using ML RFM Segments — data_source:', dataSource);
       } catch (error) {
         console.error('Error fetching RFM segments:', error);
       } finally {
@@ -60,7 +81,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
     };
 
     fetchData();
-  }, [timeFilter]);
+  }, [timeFilter, dataSource]);
 
   const handleSegmentClick = async (segmentName: string) => {
     if (selectedSegment === segmentName) {
@@ -83,48 +104,38 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
 
   const getSegmentColor = (segment: string) => {
     const colors: Record<string, string> = {
-      'Champions': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      'Loyal Customers': 'bg-green-100 text-green-800 border-green-300',
-      'Potential Loyalists': 'bg-blue-100 text-blue-800 border-blue-300',
-      'New Customers': 'bg-cyan-100 text-cyan-800 border-cyan-300',
-      'At Risk': 'bg-orange-100 text-orange-800 border-orange-300',
-      'Cannot Lose Them': 'bg-red-100 text-red-800 border-red-300',
-      'Need Attention': 'bg-purple-100 text-purple-800 border-purple-300',
-      'Hibernating': 'bg-gray-100 text-gray-800 border-gray-300',
-      'Lost': 'bg-slate-100 text-slate-800 border-slate-300',
+      'Champions':          'bg-yellow-100 text-yellow-800 border-yellow-300',
+      'Loyal Customers':    'bg-green-100 text-green-800 border-green-300',
+      'Potential Loyalists':'bg-blue-100 text-blue-800 border-blue-300',
+      'New Customers':      'bg-cyan-100 text-cyan-800 border-cyan-300',
+      'At Risk':            'bg-orange-100 text-orange-800 border-orange-300',
+      'Cannot Lose Them':   'bg-red-100 text-red-800 border-red-300',
+      'Need Attention':     'bg-purple-100 text-purple-800 border-purple-300',
+      'Hibernating':        'bg-gray-100 text-gray-800 border-gray-300',
+      'Lost':               'bg-slate-100 text-slate-800 border-slate-300',
     };
     return colors[segment] || 'bg-gray-100 text-gray-800 border-gray-300';
   };
 
-  const getSegmentIcon = (segment: string) => {
-    const icons: Record<string, string> = {
-      'Champions': '🏆',
-      'Loyal Customers': '⭐',
-      'Potential Loyalists': '🎯',
-      'New Customers': '🌱',
-      'At Risk': '⚠️',
-      'Cannot Lose Them': '🚨',
-      'Need Attention': '💬',
-      'Hibernating': '💤',
-      'Lost': '📉',
-    };
-    return icons[segment] || '👤';
-  };
+  const getSegmentIcon = (segment: string): React.ReactNode =>
+    SEGMENT_ICONS[segment as SegmentIconKey] || <User className="w-6 h-6 text-gray-400" />;
 
   const getSegmentPriority = (segment: string) => {
     const priorities: Record<string, string> = {
-      'Champions': 'VIP Treatment',
-      'Loyal Customers': 'Maintain',
-      'Potential Loyalists': 'Convert',
-      'New Customers': 'Onboard',
-      'At Risk': 'Win Back',
-      'Cannot Lose Them': 'URGENT',
-      'Need Attention': 'Re-engage',
-      'Hibernating': 'Reactivate',
-      'Lost': 'Low Priority',
+      'Champions':          'VIP Treatment',
+      'Loyal Customers':    'Maintain',
+      'Potential Loyalists':'Convert',
+      'New Customers':      'Onboard',
+      'At Risk':            'Win Back',
+      'Cannot Lose Them':   'URGENT',
+      'Need Attention':     'Re-engage',
+      'Hibernating':        'Reactivate',
+      'Lost':               'Low Priority',
     };
     return priorities[segment] || 'Standard';
   };
+
+  const activeSourceOption = DATA_SOURCE_OPTIONS.find(o => o.value === dataSource)!;
 
   if (loading) {
     return (
@@ -138,7 +149,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
 
   return (
     <div className="space-y-6">
-      {/* Header with Date Range */}
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -150,16 +161,43 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
               </Badge>
             ) : (
               <Badge className="bg-foundation-greygrey-500 text-white border-0">
-                📊 SQL-Based Analytics
+                <PieChart className="w-3 h-3 mr-1 inline" />
+                SQL-Based Analytics
               </Badge>
             )}
           </h2>
-          <p className="text-gray-600 mt-1">Customer behavior analysis & targeting</p>
+          <p className="text-gray-600 mt-1">Customer behavior analysis &amp; targeting</p>
         </div>
         <DateRangeDisplay
           timeFilter={timeFilter}
           totalRecords={segments.reduce((sum, s) => sum + (s.customer_count || 0), 0)}
         />
+      </div>
+
+      {/* ── Data Source Filter ── */}
+      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+        <span className="text-sm font-semibold text-gray-700 whitespace-nowrap flex items-center gap-1.5">
+          <Database className="w-4 h-4 text-gray-500" />
+          Data Source:
+        </span>
+        <div className="flex gap-2 flex-wrap">
+          {DATA_SOURCE_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setDataSource(opt.value)}
+              title={opt.description}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                dataSource === opt.value
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600'
+              }`}
+            >
+              {opt.icon}
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-gray-400 ml-auto hidden md:block">{activeSourceOption.description}</span>
       </div>
 
       {/* Explanation Card */}
@@ -181,15 +219,14 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
         ]}
       />
 
-      {/* Segment Distribution Chart - Visual Overview */}
+      {/* Segment Distribution Chart */}
       {segments.length > 0 && (
         <Card className="mb-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              📊 Segment Distribution
-              <span className="text-sm font-normal text-gray-500">
-                (Click bars for details)
-              </span>
+              <PieChart className="w-4 h-4 text-blue-500" />
+              Segment Distribution
+              <span className="text-sm font-normal text-gray-500">(Click bars for details)</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -208,14 +245,12 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
                     >
                       <div className="w-full flex flex-col items-center flex-1 justify-end">
                         <div
-                          className={`w-full rounded-t transition-all duration-300 ${isSelected
+                          className={`w-full rounded-t transition-all duration-300 ${
+                            isSelected
                               ? 'bg-gradient-to-t from-blue-600 to-blue-400 shadow-lg'
                               : getSegmentColor(segment.segment_name).split(' ')[0]
-                            }`}
-                          style={{
-                            height: `${Math.max(heightPercent, 5)}%`,
-                            minHeight: '8px'
-                          }}
+                          }`}
+                          style={{ height: `${Math.max(heightPercent, 5)}%`, minHeight: '8px' }}
                         />
                       </div>
                       <div className="mt-2 text-center w-full">
@@ -243,14 +278,15 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
         {segments.map((segment) => (
           <Card
             key={segment.segment_name}
-            className={`cursor-pointer transition-all hover:shadow-lg ${selectedSegment === segment.segment_name ? 'ring-2 ring-blue-500' : ''
-              }`}
+            className={`cursor-pointer transition-all hover:shadow-lg ${
+              selectedSegment === segment.segment_name ? 'ring-2 ring-blue-500' : ''
+            }`}
             onClick={() => handleSegmentClick(segment.segment_name)}
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{getSegmentIcon(segment.segment_name)}</span>
+                  <span className="flex-shrink-0">{getSegmentIcon(segment.segment_name)}</span>
                   <div>
                     <CardTitle className="text-lg">{segment.segment_name}</CardTitle>
                     <Badge className={getSegmentColor(segment.segment_name)} variant="outline">
@@ -303,7 +339,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <span>{getSegmentIcon(selectedSegment)}</span>
-              {selectedSegment} - Customer Details
+              {selectedSegment} — Customer Details
             </CardTitle>
             <CardDescription>
               Top {segmentCustomers.length} customers in this segment
@@ -349,15 +385,9 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex gap-1 justify-center">
-                            <Badge variant="outline" className="text-xs">
-                              R:{customer.rfm_score?.recency || 0}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              F:{customer.rfm_score?.frequency || 0}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              M:{customer.rfm_score?.monetary || 0}
-                            </Badge>
+                            <Badge variant="outline" className="text-xs">R:{customer.rfm_score?.recency || 0}</Badge>
+                            <Badge variant="outline" className="text-xs">F:{customer.rfm_score?.frequency || 0}</Badge>
+                            <Badge variant="outline" className="text-xs">M:{customer.rfm_score?.monetary || 0}</Badge>
                           </div>
                         </td>
                       </tr>
@@ -373,27 +403,39 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>🎯 Recommended Actions</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5 text-blue-500" />
+            Recommended Actions
+          </CardTitle>
           <CardDescription>Strategic priorities based on RFM analysis</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="p-4 border rounded-lg bg-yellow-50">
-              <p className="font-semibold mb-2">🏆 VIP Program</p>
+              <p className="font-semibold mb-2 flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-yellow-500" />
+                VIP Program
+              </p>
               <p className="text-sm text-gray-600">
                 Focus on {segments.find(s => s.segment_name === 'Champions')?.customer_count || 0} Champions
                 with exclusive offers and personalized service
               </p>
             </div>
             <div className="p-4 border rounded-lg bg-orange-50">
-              <p className="font-semibold mb-2">⚠️ Win-Back Campaign</p>
+              <p className="font-semibold mb-2 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-orange-500" />
+                Win-Back Campaign
+              </p>
               <p className="text-sm text-gray-600">
                 Re-engage {segments.find(s => s.segment_name === 'At Risk')?.customer_count || 0} at-risk customers
                 before they become lost
               </p>
             </div>
             <div className="p-4 border rounded-lg bg-gray-50">
-              <p className="font-semibold mb-2">💤 Reactivation Drive</p>
+              <p className="font-semibold mb-2 flex items-center gap-2">
+                <Moon className="w-4 h-4 text-gray-400" />
+                Reactivation Drive
+              </p>
               <p className="text-sm text-gray-600">
                 Wake up {segments.find(s => s.segment_name === 'Hibernating')?.customer_count || 0} hibernating customers
                 with special incentives

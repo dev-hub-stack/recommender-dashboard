@@ -8,6 +8,7 @@ interface DashboardExportButtonProps {
   orderSource?: string;
   deliveredOnly?: boolean;
   historicalChannel?: string;
+  label?: string;
   className?: string;
 }
 
@@ -18,6 +19,7 @@ export const DashboardExportButton = ({
   orderSource = 'all',
   deliveredOnly = false,
   historicalChannel,
+  label,
   className = ''
 }: DashboardExportButtonProps) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -114,9 +116,9 @@ export const DashboardExportButton = ({
 
   // Dynamic button label based on what's being exported
   const getExportLabel = () => {
-    if (sections.includes('all')) {
-      return 'Export All Data';
-    }
+    if (label) return label;
+    if (historicalChannel) return `Export ${historicalChannel} Data`;
+    if (sections.includes('all')) return 'Export All Data';
     
     // Convert section name to readable format
     const sectionName = sections[0]
