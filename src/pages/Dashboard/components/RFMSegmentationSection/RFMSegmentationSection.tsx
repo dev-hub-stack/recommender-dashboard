@@ -10,8 +10,34 @@ import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 import {
   Trophy, Star, Target, Sprout, AlertTriangle, Siren,
   MessageCircle, Moon, TrendingDown, User, PieChart,
-  Lightbulb, Database, Globe, History
+  Database, Globe, History
 } from 'lucide-react';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Returns a human-readable "X days ago" label, or "Not Available" for 1900 placeholder dates */
+const formatLastOrder = (days: number | null | undefined): string => {
+  const d = Math.round(days || 0);
+  if (d > 3650) return 'Not Available'; // 1900-01-01 placeholder dates yield ~46k days
+  if (d === 0) return 'Today';
+  if (d === 1) return '1 day ago';
+  return `${d} days ago`;
+};
+
+/** Normalizes a phone number to +92 Pakistani format for display */
+const normalizePhone = (raw: string | null | undefined): string => {
+  if (!raw) return '';
+  const digits = raw.replace(/\D/g, '');
+  // Looks like a zero-padded internal ID (e.g. 00000000015) — hide it
+  if (/^0{5,}/.test(digits)) return '';
+  if (digits.length < 7) return raw;
+  // Already has country code
+  if (digits.startsWith('92') && digits.length >= 12) return `+${digits}`;
+  // Remove leading zeroes and add +92
+  const local = digits.replace(/^0+/, '');
+  return `+92${local}`;
+};
+
 
 interface RFMSegmentationSectionProps {
   timeFilter?: string;
@@ -320,12 +346,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Last Order:</span>
                 <span className="font-semibold">
-                  {(() => {
-                    const days = Math.round(segment.avg_days_since_last_order || 0);
-                    if (days === 0) return 'Today';
-                    if (days === 1) return '1 day ago';
-                    return `${days} days ago`;
-                  })()}
+                  {formatLastOrder(segment.avg_days_since_last_order)}
                 </span>
               </div>
             </CardContent>
@@ -374,14 +395,19 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
                         <td className="p-3">
                           <div>
                             <p className="font-medium">{customer.customer_name || 'Unknown'}</p>
-                            <p className="text-xs text-gray-500">{customer.customer_phone || customer.customer_id}</p>
+                            {(() => {
+                              const phone = normalizePhone(customer.customer_phone);
+                              return phone
+                                ? <p className="text-xs text-gray-500">{phone}</p>
+                                : null;
+                            })()}
                           </div>
                         </td>
                         <td className="p-3">{customer.customer_city || 'N/A'}</td>
                         <td className="p-3 text-right">{(customer.total_orders || 0).toLocaleString()}</td>
                         <td className="p-3 text-right font-semibold">{formatPKR(customer.total_spent || 0)}</td>
                         <td className="p-3 text-right">
-                          <span className="text-sm">{customer.days_since_last_order || 0} days ago</span>
+                          <span className="text-sm">{formatLastOrder(customer.days_since_last_order)}</span>
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex gap-1 justify-center">
