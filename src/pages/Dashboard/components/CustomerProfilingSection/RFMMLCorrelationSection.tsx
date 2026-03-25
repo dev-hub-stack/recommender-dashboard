@@ -5,6 +5,24 @@ import { getCustomersBySegment, RFMSegment } from '../../../../services/api';
 import { InfoTooltip } from '../../../../components/Tooltip';
 import { formatCurrency } from '../../../../utils/formatters';
 
+// ─── Helpers ─────────────────────────────────────────────────────────
+const normalizePhone = (raw: string | null | undefined): string => {
+  if (!raw) return '';
+  const digits = raw.replace(/\D/g, '');
+  if (/^0{5,}/.test(digits)) return ''; // zero-padded internal ID
+  if (digits.length < 7) return '';
+  if (digits.startsWith('92') && digits.length >= 12) return `+${digits}`;
+  return `+92${digits.replace(/^0+/, '')}`;
+};
+
+const formatLastOrderDays = (days: number | null | undefined): string => {
+  const d = Math.round(days || 0);
+  if (d > 3650) return 'N/A'; // 1900-01-01 placeholder
+  if (d === 0) return 'Today';
+  return `${d} days ago`;
+};
+
+
 interface RFMMLCorrelationSectionProps {
   timeFilter?: string;
 }
@@ -254,7 +272,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
                   </Badge>
                 </div>
                 <div className="text-sm text-gray-600">
-                  Avg Days Since Last Order: {segmentData.segmentInfo.avg_days_since_last_order?.toFixed(1) || 'N/A'}
+                  Avg Days Since Last Order: {formatLastOrderDays(segmentData.segmentInfo.avg_days_since_last_order)}
                 </div>
               </div>
               <div className="text-right text-sm text-gray-600">
@@ -278,7 +296,10 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
                         <span className="text-xs font-bold text-gray-500">#{idx + 1}</span>
                         <div>
                           <div className="text-sm font-medium">{customer.customer_name || 'Unknown'}</div>
-                          <div className="text-xs text-gray-500">{customer.customer_phone || customer.customer_id?.slice(0, 12) + '...'}</div>
+                          {(() => {
+                            const phone = normalizePhone(customer.customer_phone);
+                            return phone ? <div className="text-xs text-gray-500">{phone}</div> : null;
+                          })()}
                         </div>
                       </div>
                       <div className="text-right">
