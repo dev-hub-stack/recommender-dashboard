@@ -4,6 +4,7 @@ import { Badge } from '../../../../components/ui/badge';
 import { formatLargeNumber, formatGrowthWithColor } from '../../../../utils/formatters';
 import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 import { InfoTooltip } from '../../../../components/Tooltip';
+import { Users, DollarSign, BarChart2, ShoppingCart, Bot, PieChart } from 'lucide-react';
 
 // API Configuration
 const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '';
@@ -128,7 +129,7 @@ export const CustomerProfilingSection: React.FC<CustomerProfilingProps> = ({
 
   const statisticsData = [
     {
-      icon: "👥",
+      icon: <Users className="w-6 h-6 text-green-600" />,
       label: "Total Customers",
       tooltip: "Unique customers who placed at least one order in the selected period",
       value: formatLargeNumber(metrics.totalCustomers),
@@ -139,7 +140,7 @@ export const CustomerProfilingSection: React.FC<CustomerProfilingProps> = ({
       textColor: "text-green-800"
     },
     {
-      icon: "💰",
+      icon: <DollarSign className="w-6 h-6 text-blue-600" />,
       label: "Total Revenue",
       tooltip: "Combined value of all orders placed by customers in PKR",
       value: `Rs ${formatLargeNumber(metrics.totalRevenue)}`,
@@ -150,7 +151,7 @@ export const CustomerProfilingSection: React.FC<CustomerProfilingProps> = ({
       textColor: "text-blue-800"
     },
     {
-      icon: "📊",
+      icon: <BarChart2 className="w-6 h-6 text-orange-600" />,
       label: "Avg. Customer Worth",
       tooltip: "Average total spend per customer (Total Revenue ÷ Total Customers)",
       value: `Rs ${formatLargeNumber(metrics.avgLifetimeValue)}`,
@@ -161,7 +162,7 @@ export const CustomerProfilingSection: React.FC<CustomerProfilingProps> = ({
       textColor: "text-orange-800"
     },
     {
-      icon: "🛒",
+      icon: <ShoppingCart className="w-6 h-6 text-purple-600" />,
       label: "Avg. Order Size",
       tooltip: "Average amount spent per order transaction",
       value: `Rs ${formatLargeNumber(metrics.avgOrderValue)}`,
@@ -199,11 +200,11 @@ export const CustomerProfilingSection: React.FC<CustomerProfilingProps> = ({
         <div className="flex items-center gap-3">
           {usingML ? (
             <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0">
-              🤖 ML-Powered
+              <Bot className="w-3 h-3 mr-1 inline" /> ML-Powered
             </Badge>
           ) : (
             <Badge className="bg-green-100 text-green-700">
-              📊 SQL Analytics
+              <PieChart className="w-3 h-3 mr-1 inline" /> SQL Analytics
             </Badge>
           )}
           <div className="flex items-center gap-2">
@@ -322,7 +323,7 @@ export const CustomerProfilingSection: React.FC<CustomerProfilingProps> = ({
           <Card className="border-0 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">🤖 ML Customer Similarity</h3>
+                <h3 className="text-lg font-semibold text-gray-800"><Bot className="w-5 h-5 text-purple-500 inline mr-1" /> ML Customer Similarity</h3>
                 <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 text-xs">
                   ML-Powered
                 </Badge>

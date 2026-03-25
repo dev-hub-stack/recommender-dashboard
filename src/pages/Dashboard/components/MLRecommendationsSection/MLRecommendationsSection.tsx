@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
 import { formatLargeNumber } from '../../../../utils/formatters';
-import { Download } from 'lucide-react';
+import { Download, Bot, Trophy, Link, Users, Target, Package, Flame, Hash, CheckCircle, AlertTriangle } from 'lucide-react';
 import { MultiSelectFilter } from '../../../../components/MultiSelectFilter';
 import { getProductCategories, ProductCategory } from '../../../../services/api';
 
@@ -248,14 +248,14 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-gray-900">🤖 ML Recommendations Engine</h2>
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Bot className="w-6 h-6 text-blue-600" /> ML Recommendations Engine</h2>
           {mlStatus?.is_trained ? (
             <Badge className="bg-green-100 text-green-700 border-green-300">
-              ✓ Models Trained
+              <CheckCircle className="w-3 h-3 mr-1 inline" /> Models Trained
             </Badge>
           ) : (
             <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">
-              ⚠ Training Required
+              <AlertTriangle className="w-3 h-3 mr-1 inline" /> Training Required
             </Badge>
           )}
         </div>
@@ -291,10 +291,10 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
       {/* Algorithm Status Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { name: 'Collaborative Filtering', key: 'collaborative_filtering', icon: '👥', color: 'blue' },
-          { name: 'Content-Based', key: 'content_based', icon: '📦', color: 'purple' },
-          { name: 'Matrix Factorization', key: 'matrix_factorization', icon: '🔢', color: 'green' },
-          { name: 'Popularity-Based', key: 'popularity_based', icon: '🔥', color: 'orange' }
+          { name: 'Collaborative Filtering', key: 'collaborative_filtering', icon: <Users className="w-5 h-5" />, color: 'blue' },
+          { name: 'Content-Based', key: 'content_based', icon: <Package className="w-5 h-5" />, color: 'purple' },
+          { name: 'Matrix Factorization', key: 'matrix_factorization', icon: <Hash className="w-5 h-5" />, color: 'green' },
+          { name: 'Popularity-Based', key: 'popularity_based', icon: <Flame className="w-5 h-5" />, color: 'orange' }
         ].map(algo => {
           const isActive = mlStatus?.algorithms?.[algo.key as keyof typeof mlStatus.algorithms];
           return (
@@ -318,21 +318,21 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
       {/* Tab Navigation */}
       <div className="flex border-b">
         {[
-          { id: 'products', label: '🏆 Top Products', count: topProducts.length },
-          { id: 'pairs', label: '🔗 Product Pairs', count: productPairs.length },
-          { id: 'customers', label: '👥 Similar Customers', count: customerSimilarity.length },
-          { id: 'personal', label: '🎯 Personalized', count: userRecommendations.length }
+          { id: 'products',   label: 'Top Products',      icon: <Trophy className="w-4 h-4" />, count: topProducts.length },
+          { id: 'pairs',      label: 'Product Pairs',      icon: <Link className="w-4 h-4" />,   count: productPairs.length },
+          { id: 'customers',  label: 'Similar Customers',  icon: <Users className="w-4 h-4" />,  count: customerSimilarity.length },
+          { id: 'personal',   label: 'Personalized',       icon: <Target className="w-4 h-4" />, count: userRecommendations.length }
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-1.5 ${
               activeTab === tab.id
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            {tab.label} ({tab.count})
+            {tab.icon} {tab.label} ({tab.count})
           </button>
         ))}
       </div>
@@ -345,7 +345,7 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
-                  <span>🏆</span> ML-Powered Top Products
+                  <Trophy className="w-5 h-5 text-yellow-500" /> ML-Powered Top Products
                   <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 text-xs">
                     ML
                   </Badge>
@@ -434,7 +434,7 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span>🔗</span> Frequently Bought Together
+                <Link className="w-5 h-5 text-teal-500" /> Frequently Bought Together
                 <Badge className="bg-gradient-to-r from-green-500 to-teal-500 text-white border-0 text-xs">
                   ML
                 </Badge>
@@ -447,7 +447,7 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1">
                         <div className="p-2 bg-blue-100 rounded-lg">
-                          <span className="text-xl">📦</span>
+                          <Package className="w-5 h-5 text-blue-500" />
                         </div>
                         <div className="flex-1">
                           <p className="font-medium">{pair.product_a_name}</p>
@@ -459,7 +459,7 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
                       
                       <div className="flex items-center gap-3 flex-1">
                         <div className="p-2 bg-green-100 rounded-lg">
-                          <span className="text-xl">📦</span>
+                          <Package className="w-5 h-5 text-green-500" />
                         </div>
                         <div className="flex-1">
                           <p className="font-medium">{pair.product_b_name}</p>
@@ -493,7 +493,7 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span>👥</span> Customer Similarity Analysis
+                <Users className="w-5 h-5 text-orange-500" /> Customer Similarity Analysis
                 <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 text-xs">
                   ML
                 </Badge>
@@ -539,7 +539,7 @@ export const MLRecommendationsSection: React.FC<MLRecommendationsSectionProps> =
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span>🎯</span> Personalized Recommendations
+                <Target className="w-5 h-5 text-pink-500" /> Personalized Recommendations
                 <Badge className="bg-gradient-to-r from-pink-500 to-rose-500 text-white border-0 text-xs">
                   Hybrid ML
                 </Badge>

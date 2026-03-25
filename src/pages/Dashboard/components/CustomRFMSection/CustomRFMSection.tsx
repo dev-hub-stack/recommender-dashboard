@@ -1,6 +1,6 @@
 // Custom RFM Campaign Builder
 import { useEffect, useState, useCallback } from 'react';
-import { Download, Loader2, Users, RefreshCw } from 'lucide-react';
+import { Download, Loader2, Users, RefreshCw, Trophy, Star, Sprout, AlertTriangle, Moon, TrendingDown, User, Target, Settings, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api/v1';
@@ -31,14 +31,15 @@ interface Props {
 }
 
 // ─── Segment meta ─────────────────────────────────────────────────────────────
-const SEGMENT_META: Record<string, { icon: string; colour: string; bg: string }> = {
-    'Champions': { icon: '🏆', colour: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-200' },
-    'Loyal': { icon: '⭐', colour: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-    'New Customers': { icon: '🌱', colour: 'text-cyan-700', bg: 'bg-cyan-50 border-cyan-200' },
-    'At Risk': { icon: '⚠️', colour: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
-    'Hibernating': { icon: '💤', colour: 'text-gray-600', bg: 'bg-gray-50 border-gray-200' },
-    'Lost': { icon: '📉', colour: 'text-red-700', bg: 'bg-red-50 border-red-200' },
+const SEGMENT_META: Record<string, { icon: React.ReactNode; colour: string; bg: string }> = {
+    'Champions':    { icon: <Trophy className="w-5 h-5 text-yellow-500" />,      colour: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-200' },
+    'Loyal':        { icon: <Star className="w-5 h-5 text-green-500" />,          colour: 'text-green-700',  bg: 'bg-green-50 border-green-200' },
+    'New Customers':{ icon: <Sprout className="w-5 h-5 text-cyan-500" />,         colour: 'text-cyan-700',   bg: 'bg-cyan-50 border-cyan-200' },
+    'At Risk':      { icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,colour: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
+    'Hibernating':  { icon: <Moon className="w-5 h-5 text-gray-400" />,           colour: 'text-gray-600',   bg: 'bg-gray-50 border-gray-200' },
+    'Lost':         { icon: <TrendingDown className="w-5 h-5 text-red-500" />,    colour: 'text-red-700',    bg: 'bg-red-50 border-red-200' },
 };
+const DEFAULT_SEGMENT_META = { icon: <User className="w-5 h-5 text-gray-400" />, colour: 'text-gray-700', bg: 'bg-gray-50 border-gray-200' };
 
 // ─── Slider row ───────────────────────────────────────────────────────────────
 const SliderRow = ({
@@ -134,7 +135,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        🎯 Custom RFM Campaign Builder
+                        <Target className="w-5 h-5 text-blue-500" /> Custom RFM Campaign Builder
                     </h2>
                     <p className="text-sm text-gray-500 mt-0.5">
                         Set your own thresholds → preview live counts → export contacts for each segment
@@ -158,12 +159,12 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
                 <CardHeader className="pb-2 border-b mb-4">
                     <div className="flex justify-between items-center">
                         <CardTitle className="text-base flex items-center gap-2">
-                            ⚙️ Threshold Settings
+                            <Settings className="w-4 h-4 text-gray-500" /> Threshold Settings
                             <span className="text-xs font-normal text-gray-400">(drag sliders — results update automatically)</span>
                         </CardTitle>
                         {source === 'historical' && (
-                            <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-blue-200">
-                                🕒 Relative Recency Active
+                            <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-blue-200 flex items-center gap-1">
+                                <Clock className="w-3 h-3" /> Relative Recency Active
                             </span>
                         )}
                     </div>
@@ -171,7 +172,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
                 <CardContent className="space-y-5">
                     {/* Champions */}
                     <div>
-                        <p className="text-sm font-semibold text-yellow-700 mb-2">🏆 Champions ({source === 'historical' ? 'F ≥ orders AND M ≥ PKR' : 'R ≤ days AND F ≥ orders AND M ≥ PKR'})</p>
+                        <p className="text-sm font-semibold text-yellow-700 mb-2 flex items-center gap-1.5"><Trophy className="w-4 h-4 text-yellow-500" /> Champions ({source === 'historical' ? 'F ≥ orders AND M ≥ PKR' : 'R ≤ days AND F ≥ orders AND M ≥ PKR'})</p>
                         <div className="space-y-2 pl-2">
                             {source !== 'historical' && <SliderRow label="Recency ≤ (days)" value={thresholds.champion_r} min={7} max={180} unit=" days" onChange={set('champion_r')} />}
                             <SliderRow label="Frequency ≥ (orders)" value={thresholds.champion_f} min={1} max={20} onChange={set('champion_f')} />
@@ -183,7 +184,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
 
                     {/* Loyal */}
                     <div>
-                        <p className="text-sm font-semibold text-green-700 mb-2">⭐ Loyal ({source === 'historical' ? 'not Champion AND F ≥ AND M ≥' : 'not Champion, AND R ≤ AND F ≥ AND M ≥'})</p>
+                        <p className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-1.5"><Star className="w-4 h-4 text-green-500" /> Loyal ({source === 'historical' ? 'not Champion AND F ≥ AND M ≥' : 'not Champion, AND R ≤ AND F ≥ AND M ≥'})</p>
                         <div className="space-y-2 pl-2">
                             {source !== 'historical' && <SliderRow label="Recency ≤ (days)" value={thresholds.loyal_r} min={7} max={365} unit=" days" onChange={set('loyal_r')} />}
                             <SliderRow label="Frequency ≥ (orders)" value={thresholds.loyal_f} min={1} max={15} onChange={set('loyal_f')} />
@@ -195,7 +196,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
 
                     {/* At Risk */}
                     <div>
-                        <p className="text-sm font-semibold text-orange-700 mb-2">⚠️ At Risk ({source === 'historical' ? 'not Champion/Loyal AND F ≥' : 'R between min and max AND F ≥'})</p>
+                        <p className="text-sm font-semibold text-orange-700 mb-2 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-orange-500" /> At Risk ({source === 'historical' ? 'not Champion/Loyal AND F ≥' : 'R between min and max AND F ≥'})</p>
                         <div className="space-y-2 pl-2">
                             {source !== 'historical' && (
                                 <>
@@ -211,7 +212,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
 
                     {/* Hibernating / Lost */}
                     <div>
-                        <p className="text-sm font-semibold text-gray-600 mb-2">💤 Hibernating and 📉 Lost</p>
+                        <p className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-1.5"><Moon className="w-4 h-4 text-gray-400" /> Hibernating and <TrendingDown className="w-4 h-4 text-red-500" /> Lost</p>
                         <div className="space-y-2 pl-2">
                             {source === 'historical' ? (
                                 <p className="text-xs text-gray-500 italic mt-2.5 mb-1">
@@ -248,7 +249,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {segments.map(seg => {
-                        const meta = SEGMENT_META[seg.segment_name] || { icon: '👤', colour: 'text-gray-700', bg: 'bg-gray-50 border-gray-200' };
+                        const meta = SEGMENT_META[seg.segment_name] || DEFAULT_SEGMENT_META;
                         const isExportingThis = exporting === seg.segment_name;
 
                         return (

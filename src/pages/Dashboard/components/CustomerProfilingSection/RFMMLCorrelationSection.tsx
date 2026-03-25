@@ -4,6 +4,7 @@ import { Badge } from '../../../../components/ui/badge';
 import { getCustomersBySegment, RFMSegment } from '../../../../services/api';
 import { InfoTooltip } from '../../../../components/Tooltip';
 import { formatCurrency } from '../../../../utils/formatters';
+import { Trophy, Bot } from 'lucide-react';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 const normalizePhone = (raw: string | null | undefined): string => {
@@ -286,7 +287,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
               {/* Top Customers */}
               <div>
                 <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  🏆 Top Customers in Segment
+                  <Trophy className="w-4 h-4 text-yellow-500" /> Top Customers in Segment
                   <InfoTooltip text="Highest-value customers within this RFM segment. These customers have the highest spending/order volume in their segment and are prime candidates for targeted recommendations based on their segment behavior patterns." />
                 </h5>
                 <div className="space-y-2">
@@ -314,7 +315,7 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
               {/* ML Recommendations */}
               <div className="lg:col-span-2">
                 <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  🤖 Segment-Specific Recommendations
+                  <Bot className="w-4 h-4 text-purple-500" /> Segment-Specific Recommendations
                   <InfoTooltip text="Products with highest recommendation potential for this segment. These are ML-predicted recommendations based on segment behavior patterns, not actual recommendations already made to customers. Use these for targeted marketing campaigns." />
                 </h5>
                 <div className="space-y-2">
