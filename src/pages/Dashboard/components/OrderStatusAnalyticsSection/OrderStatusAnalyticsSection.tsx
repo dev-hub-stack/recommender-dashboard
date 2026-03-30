@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { formatCurrency, formatLargeNumber, formatPercentage } from '../../../../utils/formatters';
 import { Badge } from '../../../../components/ui/badge';
+import { Download, FileSpreadsheet, Loader2 } from 'lucide-react';
 
 interface OrderStatusMetrics {
     status: string;
@@ -41,6 +42,7 @@ export const OrderStatusAnalyticsSection: React.FC<OrderStatusAnalyticsSectionPr
     const [data, setData] = useState<OrderStatusData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [exportingDetails, setExportingDetails] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -136,6 +138,76 @@ export const OrderStatusAnalyticsSection: React.FC<OrderStatusAnalyticsSectionPr
         return 'bg-gray-100 text-gray-800';
     };
 
+    // ── Export 1: Status Summary CSV (client-side, instant) ──────────────────
+    const exportStatusSummary = () => {
+        if (!data) return;
+        const headers = ['Status', 'Orders', '% of Orders', 'Revenue (PKR)', '% of Revenue', 'Avg Order Value (PKR)', 'Revenue Impact (PKR)'];
+        const rows = data.status_breakdown.map(s => [
+            s.status,
+            s.total_orders,
+            s.orders_percentage.toFixed(2) + '%',
+            s.total_revenue.toFixed(2),
+            s.revenue_percentage.toFixed(2) + '%',
+            s.avg_order_value.toFixed(2),
+            s.revenue_loss > 0 ? `-${s.revenue_loss.toFixed(2)}` : '0.00',
+        ]);
+        const meta = [
+            ['Order Status Analytics — Status Summary'],
+            [`Time Filter: ${timeFilter}`, `Order Source: ${orderSource}`, category ? `Category: ${category}` : ''],
+            [`Generated: ${new Date().toLocaleString()}`],
+            [],
+            ['SUMMARY'],
+            ['Total Orders', data.summary.total_orders],
+            ['Total Revenue', `PKR ${data.summary.total_revenue.toFixed(2)}`],
+            ['Completion Rate', `${data.summary.completion_rate.toFixed(1)}%`],
+            ['Cancellation Rate', `${data.summary.cancellation_rate.toFixed(1)}%`],
+            ['Return Rate', `${data.summary.return_rate.toFixed(1)}%`],
+            [],
+            ['STATUS BREAKDOWN'],
+            headers,
+            ...rows,
+        ];
+        const csv = meta.map(r => (r as (string | number)[]).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `order_status_summary_${timeFilter}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    // ── Export 2: Full Order Details (backend DB, up to 500 rows) ────────────
+    const exportOrderDetails = async () => {
+        setExportingDetails(true);
+        try {
+            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://master-group-recommender-9e2a306b76af.herokuapp.com/api/v1';
+            const BASE = API_BASE_URL.replace('/api/v1', '');
+            const params = new URLSearchParams({
+                sections: 'orders',
+                time_filter: timeFilter,
+                order_source: orderSource,
+            });
+            if (category) params.append('category', category);
+            const res = await fetch(`${BASE}/api/v1/export/dashboard-csv?${params}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            if (!res.ok) throw new Error('Export failed');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `order_details_${timeFilter}_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch {
+            alert('Order details export failed — please try again.');
+        } finally {
+            setExportingDetails(false);
+        }
+    };
+
+
     if (loading) {
         return (
             <section className="w-full p-6 bg-white rounded-xl shadow-sm">
@@ -167,7 +239,7 @@ export const OrderStatusAnalyticsSection: React.FC<OrderStatusAnalyticsSectionPr
         <section className="w-full p-6 bg-white rounded-xl shadow-sm">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Order Status Analytics</h2>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     {orderSource !== 'all' && (
                         <Badge className="bg-blue-100 text-blue-800 border-0">
                             {orderSource === 'oe' ? 'Online Express' : 'POS'}
@@ -178,6 +250,28 @@ export const OrderStatusAnalyticsSection: React.FC<OrderStatusAnalyticsSectionPr
                             {category}
                         </Badge>
                     )}
+                    {/* Export: Status Summary */}
+                    {data && (
+                        <button
+                            onClick={exportStatusSummary}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                            title="Export status breakdown summary as CSV"
+                        >
+                            <FileSpreadsheet className="w-3.5 h-3.5" />
+                            Export Status Summary
+                        </button>
+                    )}
+                    {/* Export: Full Order Details */}
+                    <button
+                        onClick={exportOrderDetails}
+                        disabled={exportingDetails}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Export full order details (up to 500 orders) as CSV from database"
+                    >
+                        {exportingDetails
+                            ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Exporting…</>
+                            : <><Download className="w-3.5 h-3.5" /> Export Order Details</>}
+                    </button>
                 </div>
             </div>
 
