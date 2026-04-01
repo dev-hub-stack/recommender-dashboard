@@ -22,7 +22,7 @@ const CHANNEL_META: Record<string, ChannelMeta> = {
     Exhibition:        { icon: makeIcon(Building2,     'text-indigo-600'), gradient: 'from-blue-50 to-indigo-50',     badge: 'bg-blue-100 text-blue-700' },
     JobBox:            { icon: makeIcon(Briefcase,      'text-emerald-600'), gradient: 'from-emerald-50 to-teal-50',  badge: 'bg-emerald-100 text-emerald-700' },
     Changan:           { icon: makeIcon(Car,            'text-red-600'),     gradient: 'from-red-50 to-rose-50',      badge: 'bg-red-100 text-red-700' },
-    CFH:               { icon: makeIcon(Home,           'text-purple-600'),  gradient: 'from-purple-50 to-violet-50', badge: 'bg-purple-100 text-purple-700' },
+    CHF:               { icon: makeIcon(Home,           'text-purple-600'),  gradient: 'from-purple-50 to-violet-50', badge: 'bg-purple-100 text-purple-700' },
     DuraFoam:          { icon: makeIcon(BedDouble,      'text-amber-600'),   gradient: 'from-orange-50 to-amber-50',  badge: 'bg-orange-100 text-orange-700' },
     MasterOffisysView: { icon: makeIcon(Monitor,        'text-sky-600'),     gradient: 'from-cyan-50 to-sky-50',      badge: 'bg-cyan-100 text-cyan-700' },
     Dealers:           { icon: makeIcon(Store,          'text-yellow-700'),  gradient: 'from-yellow-50 to-lime-50',   badge: 'bg-yellow-100 text-yellow-700' },
@@ -86,6 +86,12 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Normalise channel names coming from the DB (e.g. CFH → CHF)
+    const normalizeChannelName = (name: string) => {
+        const map: Record<string, string> = { CFH: 'CHF' };
+        return map[name] ?? name;
     };
 
     if (loading) {
@@ -156,13 +162,13 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                 <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">Channel Share Overview</p>
                 <div className="space-y-3">
                     {data.channels.slice(0, 8).map((ch) => {
-                        const meta = CHANNEL_META[ch.channel] || DEFAULT_META;
+                        const meta = CHANNEL_META[normalizeChannelName(ch.channel)] || DEFAULT_META;
                         return (
                             <div key={ch.channel} className="flex items-center gap-3">
                                 <span className="w-6 flex-shrink-0 flex items-center justify-center">{meta.icon}</span>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between mb-0.5">
-                                        <span className="text-sm font-medium text-gray-700">{ch.channel}</span>
+                                        <span className="text-sm font-medium text-gray-700">{normalizeChannelName(ch.channel)}</span>
                                         <span className="text-sm font-semibold text-gray-800">
                                             {ch.customers.toLocaleString()}
                                             <span className="text-xs text-gray-400 font-normal ml-1">({ch.share_pct}%)</span>
@@ -184,7 +190,7 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
             {/* ── Channel Cards Grid ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {data.channels.map((ch) => {
-                    const meta = CHANNEL_META[ch.channel] || DEFAULT_META;
+                    const meta = CHANNEL_META[normalizeChannelName(ch.channel)] || DEFAULT_META;
                     const isExpanded = expanded === ch.channel;
 
                     return (
@@ -199,7 +205,7 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                                     <div className="flex items-center gap-2">
                                         <span className="flex-shrink-0">{meta.icon}</span>
                                         <div>
-                                            <h3 className="text-sm font-semibold text-gray-800 leading-tight">{ch.channel}</h3>
+                                            <h3 className="text-sm font-semibold text-gray-800 leading-tight">{normalizeChannelName(ch.channel)}</h3>
                                             <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 ${meta.badge}`}>
                                                 {ch.share_pct}% share
                                             </span>
@@ -266,12 +272,12 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                 <div className="mt-5 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-3">
                     <Lightbulb className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-blue-700">
-                        <strong>{data.channels[0].channel}</strong> is the largest historical channel with{' '}
+                        <strong>{normalizeChannelName(data.channels[0].channel)}</strong> is the largest historical channel with{' '}
                         <strong>{data.channels[0].customers.toLocaleString()}</strong> customers (
                         <strong>{data.channels[0].share_pct}%</strong> of all historical data).{' '}
                         {data.channels.length >= 2 && (
                             <>
-                                Combined with <strong>{data.channels[1].channel}</strong>, they cover{' '}
+                                Combined with <strong>{normalizeChannelName(data.channels[1].channel)}</strong>, they cover{' '}
                                 <strong>
                                     {(data.channels[0].share_pct + data.channels[1].share_pct).toFixed(1)}%
                                 </strong>{' '}

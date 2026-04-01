@@ -47,7 +47,7 @@ type DataSource = 'all' | 'historical' | 'api';
 
 const DATA_SOURCE_OPTIONS: { value: DataSource; label: string; description: string; icon: React.ReactNode }[] = [
   { value: 'all',        label: 'All Sources',        description: 'All customer orders combined',          icon: <Database className="w-4 h-4" /> },
-  { value: 'historical', label: 'Historical Only',    description: 'Exhibition, JobBox, Changan, CFH, etc.', icon: <History className="w-4 h-4" /> },
+  { value: 'historical', label: 'Historical Only',    description: 'Exhibition, JobBox, Changan, CHF, etc.', icon: <History className="w-4 h-4" /> },
   { value: 'api',        label: 'API (OE + POS)',      description: 'Live Online Express & Point of Sale',   icon: <Globe className="w-4 h-4" /> },
 ];
 

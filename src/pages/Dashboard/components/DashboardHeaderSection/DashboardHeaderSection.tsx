@@ -21,7 +21,7 @@ export const DashboardHeaderSection = (): JSX.Element => {
         />
         <div className="inline-flex flex-col items-start justify-center">
           <h1 className="font-semibold text-black text-xl">
-            MasterGroup Recommendation Analytics Dashboard
+            Master Group of Industries Recommendation Analytics Dashboard
           </h1>
 
           <p className="font-normal text-foundation-greygrey-400 text-sm">

@@ -50,9 +50,9 @@ export const RevenueTrendSection: React.FC<RevenueTrendSectionProps> = ({
   return (
     <aside className="flex flex-col items-start gap-6 p-6 w-full bg-foundation-whitewhite-50">
       <img
-        className="w-9 h-9"
-        alt="Vuesax bold colors"
-        src="/vuesax-bold-colors-square.svg"
+        className="w-12 h-auto object-contain"
+        alt="Master Group of Industries"
+        src="/master-group-logo.webp"
       />
 
       <nav className="flex flex-col items-start gap-2 w-full">
