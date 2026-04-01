@@ -256,6 +256,7 @@ export const HistoricalStoreChannelsSection: React.FC = () => {
                                                 categories={[]}
                                                 sections={['historical_channels']}
                                                 historicalChannel={ch.channel}
+                                                label={`Export ${normalizeChannelName(ch.channel)} Data`}
                                                 className="!py-1 !px-2 shadow-sm !rounded text-[10px] font-semibold"
                                             />
                                         </div>
