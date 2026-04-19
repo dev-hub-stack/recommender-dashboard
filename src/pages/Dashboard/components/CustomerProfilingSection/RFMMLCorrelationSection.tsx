@@ -121,11 +121,24 @@ export const RFMMLCorrelationSection: React.FC<RFMMLCorrelationSectionProps> = (
           }
           
           // Get ML recommendations for sample customers - PARALLEL requests
-          const sampleCustomers = customers.slice(0, 3); // Sample 3 customers
+          const sampleCustomers = customers
+            .filter((customer) => customer?.customer_id && String(customer.customer_id).trim())
+            .slice(0, 3); // Sample 3 customers with valid IDs
+
+          if (sampleCustomers.length === 0) {
+            return {
+              segment: segment.segment_name,
+              segmentInfo: segment,
+              customers: customers,
+              recommendations: [],
+              topCustomers: customers.slice(0, 3)
+            };
+          }
+
           const recommendationPromises = sampleCustomers.map(async (customer) => {
             try {
               const recResponse = await Promise.race([
-                fetch(`${ML_API_BASE_URL}/api/v1/personalize/recommendations/${customer.customer_id}?num_results=5`),
+                fetch(`${ML_API_BASE_URL}/api/v1/personalize/recommendations/${encodeURIComponent(String(customer.customer_id).trim())}?num_results=5`),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 20000))
               ]) as Response;
               

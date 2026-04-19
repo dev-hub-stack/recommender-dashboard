@@ -870,22 +870,24 @@ export async function getCustomersBySegment(
   const customers = Array.isArray(data) ? data : (data.customers || []);
 
   // Transform and validate data
-  return customers.map((c: any) => ({
-    customer_id: c.customer_id || '',
-    customer_name: c.customer_name || 'Unknown',
-    customer_phone: c.customer_phone || '',
-    customer_city: c.customer_city || 'Unknown',
-    segment: c.segment || segment,
-    total_orders: safeNumber(c.total_orders, 0),
-    total_spent: safeNumber(c.total_spent, 0),
-    last_order_date: c.last_order_date || '',
-    days_since_last_order: safeNumber(c.days_since_last_order, 0),
-    rfm_score: {
-      recency: safeNumber(c.rfm_score?.recency, 0),
-      frequency: safeNumber(c.rfm_score?.frequency, 0),
-      monetary: safeNumber(c.rfm_score?.monetary, 0),
-    },
-  }));
+  return customers
+    .map((c: any) => ({
+      customer_id: typeof c.customer_id === 'string' ? c.customer_id.trim() : '',
+      customer_name: c.customer_name || 'Unknown',
+      customer_phone: c.customer_phone || '',
+      customer_city: c.customer_city || 'Unknown',
+      segment: c.segment || segment,
+      total_orders: safeNumber(c.total_orders, 0),
+      total_spent: safeNumber(c.total_spent, 0),
+      last_order_date: c.last_order_date || '',
+      days_since_last_order: safeNumber(c.days_since_last_order, 0),
+      rfm_score: {
+        recency: safeNumber(c.rfm_score?.recency, 0),
+        frequency: safeNumber(c.rfm_score?.frequency, 0),
+        monetary: safeNumber(c.rfm_score?.monetary, 0),
+      },
+    }))
+    .filter((customer: CustomerSegmentDetail) => customer.customer_id.length > 0);
 }
 
 // Get At-Risk Customers
