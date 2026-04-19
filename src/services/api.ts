@@ -277,7 +277,7 @@ export async function getProductPairs(productId: string, limit: number = 5): Pro
 // Get Content-Based Recommendations
 export async function getSimilarProducts(productId: string, limit: number = 10): Promise<Product[]> {
   const response = await fetch(
-    `${API_BASE_URL}/recommendations/content-based/${productId}?limit=${limit}`,
+    `${API_BASE_URL.replace('/api/v1', '')}/api/v1/personalize/recommendations/similar/${encodeURIComponent(productId)}?num_results=${limit}`,
     {
       headers: getAuthHeaders(),
     }
@@ -297,7 +297,7 @@ export async function getPersonalizedRecommendations(
   limit: number = 10
 ): Promise<Product[]> {
   const response = await fetch(
-    `${API_BASE_URL}/recommendations/collaborative/${customerId}?limit=${limit}`,
+    `${API_BASE_URL}/recommendations/collaborative?customer_id=${encodeURIComponent(customerId)}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     }
@@ -317,7 +317,7 @@ export async function getAdvancedRecommendations(
   limit: number = 10
 ): Promise<Product[]> {
   const response = await fetch(
-    `${API_BASE_URL}/recommendations/matrix-factorization/${customerId}?limit=${limit}`,
+    `${API_BASE_URL}/recommendations/matrix-factorization?customer_id=${encodeURIComponent(customerId)}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     }

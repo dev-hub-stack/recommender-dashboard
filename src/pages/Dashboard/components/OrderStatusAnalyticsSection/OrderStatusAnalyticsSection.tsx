@@ -190,7 +190,7 @@ export const OrderStatusAnalyticsSection: React.FC<OrderStatusAnalyticsSectionPr
             });
             if (category) params.append('category', category);
             const res = await fetch(`${BASE}/api/v1/export/dashboard-csv?${params}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
             });
             if (!res.ok) throw new Error('Export failed');
             const blob = await res.blob();

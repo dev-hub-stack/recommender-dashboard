@@ -109,7 +109,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
                 order_source: source,
             });
             const res = await fetch(`${API_BASE}/export/rfm-campaign-csv?${p}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
             });
             if (!res.ok) throw new Error();
             const blob = await res.blob();
