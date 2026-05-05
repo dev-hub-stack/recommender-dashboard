@@ -4,7 +4,7 @@ import {
     Download, Loader2, Users, RefreshCw, Trophy, Star, Sprout,
     AlertTriangle, Moon, TrendingDown, User, Target, Settings,
     Clock, CheckCircle2, Database, Filter, MailCheck, Megaphone,
-    PackageSearch
+    PackageSearch, Globe, Store, History
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../../components/ui/card';
 
@@ -56,6 +56,33 @@ const SOURCE_LABELS: Record<string, string> = {
     historical: 'Historical imports',
 };
 
+const SOURCE_OPTIONS = [
+    {
+        value: 'all',
+        label: 'All Sources',
+        helper: 'Use every available order source',
+        icon: <Database className="h-4 w-4" />,
+    },
+    {
+        value: 'oe',
+        label: 'OE Online',
+        helper: 'Online Express customers only',
+        icon: <Globe className="h-4 w-4" />,
+    },
+    {
+        value: 'pos',
+        label: 'POS Stores',
+        helper: 'Point of Sale customers only',
+        icon: <Store className="h-4 w-4" />,
+    },
+    {
+        value: 'historical',
+        label: 'Historical',
+        helper: 'Imported legacy/customer history',
+        icon: <History className="h-4 w-4" />,
+    },
+];
+
 // ─── Segment meta ─────────────────────────────────────────────────────────────
 const SEGMENT_META: Record<string, { icon: React.ReactNode; colour: string; bg: string }> = {
     'Champions':    { icon: <Trophy className="w-5 h-5 text-yellow-500" />,      colour: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-200' },
@@ -71,16 +98,16 @@ const DEFAULT_SEGMENT_META = { icon: <User className="w-5 h-5 text-gray-400" />,
 const SliderRow = ({
     label, value, min, max, step = 1, unit = '', onChange,
 }: { label: string; value: number; min: number; max: number; step?: number; unit?: string; onChange: (v: number) => void }) => (
-    <div className="flex items-center gap-3">
-        <span className="text-xs text-gray-500 w-28 flex-shrink-0">{label}</span>
+    <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[170px_1fr_110px] md:items-center">
+        <span className="text-sm font-medium text-slate-700">{label}</span>
         <input
             type="range"
             min={min} max={max} step={step}
             value={value}
             onChange={e => onChange(Number(e.target.value))}
-            className="flex-1 accent-blue-600 h-1.5 cursor-pointer"
+            className="h-2 w-full cursor-pointer accent-emerald-600"
         />
-        <span className="text-xs font-semibold text-gray-800 w-20 text-right">
+        <span className="rounded-lg bg-white px-2 py-1 text-right text-sm font-bold text-slate-900 shadow-sm">
             {unit === 'PKR' ? `PKR ${value.toLocaleString()}` : `${value}${unit}`}
         </span>
     </div>
@@ -168,22 +195,22 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
     const activeSourceLabel = SOURCE_LABELS[source] || source;
 
     return (
-        <section className="space-y-5 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4 shadow-xl md:p-5">
+        <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
             <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                <div className="rounded-2xl border border-white/10 bg-white/10 p-5 text-white backdrop-blur">
+                <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-sky-50 p-5 text-slate-950">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <h2 className="flex items-center gap-2 text-2xl font-bold">
-                                <Megaphone className="h-6 w-6 text-emerald-300" />
+                                <Megaphone className="h-6 w-6 text-emerald-600" />
                                 RFM Campaign Builder
                             </h2>
-                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
+                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                                 Build a marketing audience, preview the exact segment size, then export a campaign CSV with contact details, order IDs, products, and SKUs from the selected date window.
                             </p>
                         </div>
                         <button
                             onClick={fetchPreview}
-                            className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+                            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-800 shadow-sm transition hover:bg-emerald-50"
                         >
                             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                             Refresh preview
@@ -191,28 +218,28 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                     </div>
 
                     <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-xl border border-white/10 bg-white/10 p-3">
-                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
                                 <Clock className="h-4 w-4" /> Campaign window
                             </div>
-                            <p className="mt-2 text-lg font-bold">{activeTimeLabel}</p>
+                            <p className="mt-2 text-lg font-bold text-slate-950">{activeTimeLabel}</p>
                         </div>
-                        <div className="rounded-xl border border-white/10 bg-white/10 p-3">
-                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
                                 <Database className="h-4 w-4" /> Source
                             </div>
-                            <p className="mt-2 text-lg font-bold">{activeSourceLabel}</p>
+                            <p className="mt-2 text-lg font-bold text-slate-950">{activeSourceLabel}</p>
                         </div>
-                        <div className="rounded-xl border border-white/10 bg-white/10 p-3">
-                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
                                 <Users className="h-4 w-4" /> Preview audience
                             </div>
-                            <p className="mt-2 text-lg font-bold">{loading ? 'Updating...' : `${totalExportable.toLocaleString()} customers`}</p>
+                            <p className="mt-2 text-lg font-bold text-slate-950">{loading ? 'Updating...' : `${totalExportable.toLocaleString()} customers`}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white p-5 shadow-lg">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
                         <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                         Export includes
@@ -242,34 +269,47 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                 </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <div className="flex flex-col gap-4">
                     <div>
                         <h3 className="text-base font-bold text-slate-900">1. Choose the audience source</h3>
-                        <p className="mt-1 text-sm text-slate-500">Use OE for online campaigns, POS for store follow-ups, or all sources for wider targeting.</p>
+                        <p className="mt-1 text-sm text-slate-600">Use OE for online campaigns, POS for store follow-ups, or all sources for wider targeting.</p>
                     </div>
-                    <select
-                        value={source}
-                        onChange={e => setSource(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 md:w-56"
-                    >
-                        <option value="all">All Sources</option>
-                        <option value="oe">OE (Online)</option>
-                        <option value="pos">POS (In-Store)</option>
-                        <option value="historical">Historical</option>
-                    </select>
+                    <div className="grid gap-3 md:grid-cols-4">
+                        {SOURCE_OPTIONS.map(option => {
+                            const selected = source === option.value;
+                            return (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => setSource(option.value)}
+                                    className={`rounded-2xl border p-4 text-left transition ${
+                                        selected
+                                            ? 'border-emerald-500 bg-white shadow-md ring-2 ring-emerald-100'
+                                            : 'border-slate-200 bg-white hover:border-emerald-200 hover:shadow-sm'
+                                    }`}
+                                >
+                                    <div className={`mb-3 inline-flex rounded-xl p-2 ${selected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                        {option.icon}
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-950">{option.label}</p>
+                                    <p className="mt-1 text-xs leading-5 text-slate-500">{option.helper}</p>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
             {/* Threshold panel */}
-            <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="border-b pb-3">
+            <Card className="border-slate-200 bg-white shadow-sm">
+                <CardHeader className="border-b bg-slate-50 pb-4">
                     <div className="flex justify-between items-center">
                         <div>
-                            <CardTitle className="text-base flex items-center gap-2">
+                            <CardTitle className="text-lg flex items-center gap-2 text-slate-950">
                                 <Settings className="w-4 h-4 text-slate-500" /> 2. Set campaign thresholds
                             </CardTitle>
-                            <CardDescription className="mt-1">
+                            <CardDescription className="mt-1 text-slate-600">
                                 Drag sliders to define who belongs in each audience. The preview updates automatically.
                             </CardDescription>
                         </div>
@@ -280,35 +320,31 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                         )}
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-5 pt-5">
+                <CardContent className="space-y-6 pt-5">
                     {/* Champions */}
-                    <div>
-                        <p className="text-sm font-semibold text-yellow-700 mb-2 flex items-center gap-1.5"><Trophy className="w-4 h-4 text-yellow-500" /> Champions ({source === 'historical' ? 'F ≥ orders AND M ≥ PKR' : 'R ≤ days AND F ≥ orders AND M ≥ PKR'})</p>
-                        <div className="space-y-2 pl-2">
+                    <div className="rounded-2xl border border-yellow-200 bg-yellow-50/70 p-4">
+                        <p className="text-sm font-bold text-yellow-800 mb-3 flex items-center gap-1.5"><Trophy className="w-4 h-4 text-yellow-500" /> Champions <span className="font-medium text-yellow-700">({source === 'historical' ? 'F ≥ orders AND M ≥ PKR' : 'R ≤ days AND F ≥ orders AND M ≥ PKR'})</span></p>
+                        <div className="space-y-3">
                             {source !== 'historical' && <SliderRow label="Recency ≤ (days)" value={thresholds.champion_r} min={7} max={180} unit=" days" onChange={set('champion_r')} />}
                             <SliderRow label="Frequency ≥ (orders)" value={thresholds.champion_f} min={1} max={20} onChange={set('champion_f')} />
                             <SliderRow label="Monetary ≥ (PKR)" value={thresholds.champion_m} min={1000} max={500000} step={1000} unit="PKR" onChange={set('champion_m')} />
                         </div>
                     </div>
 
-                    <hr className="border-gray-100" />
-
                     {/* Loyal */}
-                    <div>
-                        <p className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-1.5"><Star className="w-4 h-4 text-green-500" /> Loyal ({source === 'historical' ? 'not Champion AND F ≥ AND M ≥' : 'not Champion, AND R ≤ AND F ≥ AND M ≥'})</p>
-                        <div className="space-y-2 pl-2">
+                    <div className="rounded-2xl border border-green-200 bg-green-50/70 p-4">
+                        <p className="text-sm font-bold text-green-800 mb-3 flex items-center gap-1.5"><Star className="w-4 h-4 text-green-500" /> Loyal <span className="font-medium text-green-700">({source === 'historical' ? 'not Champion AND F ≥ AND M ≥' : 'not Champion, AND R ≤ AND F ≥ AND M ≥'})</span></p>
+                        <div className="space-y-3">
                             {source !== 'historical' && <SliderRow label="Recency ≤ (days)" value={thresholds.loyal_r} min={7} max={365} unit=" days" onChange={set('loyal_r')} />}
                             <SliderRow label="Frequency ≥ (orders)" value={thresholds.loyal_f} min={1} max={15} onChange={set('loyal_f')} />
                             <SliderRow label="Monetary ≥ (PKR)" value={thresholds.loyal_m} min={1000} max={300000} step={1000} unit="PKR" onChange={set('loyal_m')} />
                         </div>
                     </div>
 
-                    <hr className="border-gray-100" />
-
                     {/* At Risk */}
-                    <div>
-                        <p className="text-sm font-semibold text-orange-700 mb-2 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-orange-500" /> At Risk ({source === 'historical' ? 'not Champion/Loyal AND F ≥' : 'R between min and max AND F ≥'})</p>
-                        <div className="space-y-2 pl-2">
+                    <div className="rounded-2xl border border-orange-200 bg-orange-50/70 p-4">
+                        <p className="text-sm font-bold text-orange-800 mb-3 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-orange-500" /> At Risk <span className="font-medium text-orange-700">({source === 'historical' ? 'not Champion/Loyal AND F ≥' : 'R between min and max AND F ≥'})</span></p>
+                        <div className="space-y-3">
                             {source !== 'historical' && (
                                 <>
                                     <SliderRow label="Recency > (days)" value={thresholds.at_risk_r_min} min={30} max={180} unit=" days" onChange={set('at_risk_r_min')} />
@@ -319,12 +355,10 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                         </div>
                     </div>
 
-                    <hr className="border-gray-100" />
-
                     {/* Hibernating / Lost */}
-                    <div>
-                        <p className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-1.5"><Moon className="w-4 h-4 text-gray-400" /> Hibernating and <TrendingDown className="w-4 h-4 text-red-500" /> Lost</p>
-                        <div className="space-y-2 pl-2">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-1.5"><Moon className="w-4 h-4 text-slate-400" /> Hibernating and <TrendingDown className="w-4 h-4 text-red-500" /> Lost</p>
+                        <div className="space-y-3">
                             {source === 'historical' ? (
                                 <p className="text-xs text-gray-500 italic mt-2.5 mb-1">
                                     For historical data, Hibernating is empty, and Lost strictly captures exactly one order (F=1).

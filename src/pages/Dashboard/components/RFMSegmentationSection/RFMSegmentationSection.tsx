@@ -10,7 +10,7 @@ import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 import {
   Trophy, Star, Target, Sprout, AlertTriangle, Siren,
   MessageCircle, Moon, TrendingDown, User, PieChart,
-  Database, Globe, History
+  Database, Globe, History, Store
 } from 'lucide-react';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -43,12 +43,14 @@ interface RFMSegmentationSectionProps {
   timeFilter?: string;
 }
 
-type DataSource = 'all' | 'historical' | 'api';
+type DataSource = 'all' | 'historical' | 'api' | 'oe' | 'pos';
 
 const DATA_SOURCE_OPTIONS: { value: DataSource; label: string; description: string; icon: React.ReactNode }[] = [
   { value: 'all',        label: 'All Sources',        description: 'All customer orders combined',          icon: <Database className="w-4 h-4" /> },
   { value: 'historical', label: 'Historical Only',    description: 'Exhibition, JobBox, Changan, CHF, etc.', icon: <History className="w-4 h-4" /> },
   { value: 'api',        label: 'API (OE + POS)',      description: 'Live Online Express & Point of Sale',   icon: <Globe className="w-4 h-4" /> },
+  { value: 'oe',         label: 'OE Online',           description: 'Online Express orders only',            icon: <Globe className="w-4 h-4" /> },
+  { value: 'pos',        label: 'POS Stores',          description: 'Point of Sale orders only',             icon: <Store className="w-4 h-4" /> },
 ];
 
 type SegmentIconKey =
