@@ -10,7 +10,6 @@ import { useMLRecommendations } from '../../../../hooks/useMLRecommendations';
 import {
   Trophy, Star, Target, Sprout, AlertTriangle, Siren,
   MessageCircle, Moon, TrendingDown, User, PieChart,
-  Database, Globe, History, Store
 } from 'lucide-react';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -43,16 +42,6 @@ interface RFMSegmentationSectionProps {
   timeFilter?: string;
 }
 
-type DataSource = 'all' | 'historical' | 'api' | 'oe' | 'pos';
-
-const DATA_SOURCE_OPTIONS: { value: DataSource; label: string; description: string; icon: React.ReactNode }[] = [
-  { value: 'all',        label: 'All Sources',        description: 'All customer orders combined',          icon: <Database className="w-4 h-4" /> },
-  { value: 'historical', label: 'Historical Only',    description: 'Exhibition, JobBox, Changan, CHF, etc.', icon: <History className="w-4 h-4" /> },
-  { value: 'api',        label: 'API (OE + POS)',      description: 'Live Online Express & Point of Sale',   icon: <Globe className="w-4 h-4" /> },
-  { value: 'oe',         label: 'OE Online',           description: 'Online Express orders only',            icon: <Globe className="w-4 h-4" /> },
-  { value: 'pos',        label: 'POS Stores',          description: 'Point of Sale orders only',             icon: <Store className="w-4 h-4" /> },
-];
-
 type SegmentIconKey =
   | 'Champions' | 'Loyal Customers' | 'Potential Loyalists' | 'New Customers'
   | 'At Risk' | 'Cannot Lose Them' | 'Need Attention' | 'Hibernating' | 'Lost';
@@ -71,7 +60,6 @@ const SEGMENT_ICONS: Record<SegmentIconKey, React.ReactNode> = {
 
 export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmentationSectionProps) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(propTimeFilter as TimeFilter || 'all');
-  const [dataSource, setDataSource] = useState<DataSource>('all');
   const [segments, setSegments] = useState<RFMSegment[]>([]);
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
   const [segmentCustomers, setSegmentCustomers] = useState<CustomerSegmentDetail[]>([]);
@@ -92,7 +80,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
         const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '';
         const params = new URLSearchParams({
           time_filter: timeFilter,
-          data_source: dataSource,
+          data_source: 'all',
         });
         const response = await fetch(`${ML_API_BASE_URL}/api/v1/ml/rfm-segments?${params}`);
 
@@ -100,7 +88,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
 
         const result = await response.json();
         setSegments(result.segments || []);
-        console.log('✅ Using ML RFM Segments — data_source:', dataSource);
+        console.log('✅ Using ML RFM Segments — data_source: all');
       } catch (error) {
         console.error('Error fetching RFM segments:', error);
       } finally {
@@ -109,7 +97,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
     };
 
     fetchData();
-  }, [timeFilter, dataSource]);
+  }, [timeFilter]);
 
   const handleSegmentClick = async (segmentName: string) => {
     if (selectedSegment === segmentName) {
@@ -163,8 +151,6 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
     return priorities[segment] || 'Standard';
   };
 
-  const activeSourceOption = DATA_SOURCE_OPTIONS.find(o => o.value === dataSource)!;
-
   if (loading) {
     return (
       <Card>
@@ -200,32 +186,6 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
           timeFilter={timeFilter}
           totalRecords={segments.reduce((sum, s) => sum + (s.customer_count || 0), 0)}
         />
-      </div>
-
-      {/* ── Data Source Filter ── */}
-      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-        <span className="text-sm font-semibold text-gray-700 whitespace-nowrap flex items-center gap-1.5">
-          <Database className="w-4 h-4 text-gray-500" />
-          Data Source:
-        </span>
-        <div className="flex gap-2 flex-wrap">
-          {DATA_SOURCE_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => setDataSource(opt.value)}
-              title={opt.description}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
-                dataSource === opt.value
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600'
-              }`}
-            >
-              {opt.icon}
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <span className="text-xs text-gray-400 ml-auto hidden md:block">{activeSourceOption.description}</span>
       </div>
 
       <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
