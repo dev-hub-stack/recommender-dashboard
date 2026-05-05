@@ -13,8 +13,8 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface RFMSegment {
     segment_name: string;
-    customer_count: number;
-    percentage: number;
+    customer_count: number | null;
+    percentage: number | null;
 }
 
 interface Thresholds {
@@ -93,6 +93,9 @@ const SEGMENT_META: Record<string, { icon: React.ReactNode; colour: string; bg: 
     'Lost':         { icon: <TrendingDown className="w-5 h-5 text-red-500" />,    colour: 'text-red-700',    bg: 'bg-red-50 border-red-200' },
 };
 const DEFAULT_SEGMENT_META = { icon: <User className="w-5 h-5 text-gray-400" />, colour: 'text-gray-700', bg: 'bg-gray-50 border-gray-200' };
+
+const safeCount = (value: number | null | undefined) => Number(value || 0);
+const safePercentage = (value: number | null | undefined) => Number(value || 0);
 
 // ─── Slider row ───────────────────────────────────────────────────────────────
 const SliderRow = ({
@@ -189,8 +192,8 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
     const set = (key: keyof Thresholds) => (v: number) =>
         setThresholds(prev => ({ ...prev, [key]: v }));
 
-    const totalExportable = segments.reduce((sum, seg) => sum + (seg.customer_count || 0), 0);
-    const topSegment = [...segments].sort((a, b) => (b.customer_count || 0) - (a.customer_count || 0))[0];
+    const totalExportable = segments.reduce((sum, seg) => sum + safeCount(seg.customer_count), 0);
+    const topSegment = [...segments].sort((a, b) => safeCount(b.customer_count) - safeCount(a.customer_count))[0];
     const activeTimeLabel = TIME_FILTER_LABELS[timeFilter] || timeFilter;
     const activeSourceLabel = SOURCE_LABELS[source] || source;
 
@@ -262,7 +265,7 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                         <div className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm">
                             <p className="font-semibold text-emerald-900">Largest audience right now</p>
                             <p className="mt-1 text-emerald-700">
-                                {topSegment.segment_name}: {(topSegment.customer_count || 0).toLocaleString()} customers
+                                {topSegment.segment_name}: {safeCount(topSegment.customer_count).toLocaleString()} customers
                             </p>
                         </div>
                     )}
@@ -399,6 +402,8 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                     {segments.map(seg => {
                         const meta = SEGMENT_META[seg.segment_name] || DEFAULT_SEGMENT_META;
                         const isExportingThis = exporting === seg.segment_name;
+                        const customerCount = safeCount(seg.customer_count);
+                        const percentage = safePercentage(seg.percentage);
 
                         return (
                             <div
@@ -410,7 +415,7 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                                     <span className="text-xl">{meta.icon}</span>
                                     <div className="flex-1 min-w-0">
                                         <p className={`font-semibold text-sm ${meta.colour} truncate`}>{seg.segment_name}</p>
-                                        <p className="text-xs text-gray-500">{seg.percentage}% of selected audience</p>
+                                        <p className="text-xs text-gray-500">{percentage}% of selected audience</p>
                                     </div>
                                 </div>
 
@@ -418,7 +423,7 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                                 <div className="flex items-end gap-1">
                                     <Users className="w-4 h-4 text-gray-400 mb-0.5" />
                                     <span className="text-2xl font-bold text-gray-900">
-                                        {loading ? '…' : seg.customer_count.toLocaleString()}
+                                        {loading ? '…' : customerCount.toLocaleString()}
                                     </span>
                                     <span className="text-xs text-gray-400 mb-1">customers</span>
                                 </div>
@@ -427,13 +432,13 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                                 <div className="w-full h-1.5 bg-white/60 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-blue-400 rounded-full transition-all duration-500"
-                                        style={{ width: `${Math.max(seg.percentage, 0.5)}%` }}
+                                        style={{ width: `${Math.max(percentage, 0.5)}%` }}
                                     />
                                 </div>
 
                                 {/* Export button */}
                                 <button
-                                    disabled={isExportingThis || seg.customer_count === 0}
+                                    disabled={isExportingThis || customerCount === 0}
                                     onClick={() => handleExport(seg.segment_name)}
                                     className="mt-1 flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg text-xs font-semibold
                     bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm
