@@ -226,28 +226,42 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
         <span className="text-xs text-gray-400 ml-auto hidden md:block">{activeSourceOption.description}</span>
       </div>
 
-      {/* Explanation Card */}
-      <ExplanationCard
-        icon="📊"
-        title="What is RFM Segmentation?"
-        description="RFM (Recency, Frequency, Monetary) segmentation is a proven marketing analysis technique that groups customers based on their purchase behavior to enable targeted engagement strategies."
-        methodology={[
-          "Recency (R): Days since last purchase - scored 1-5 (lower days = higher score)",
-          "Frequency (F): Total number of orders - scored 1-5 (more orders = higher score)",
-          "Monetary (M): Total spend in PKR - scored 1-5 (higher spend = higher score)",
-          "Combines R+F+M scores into 9 customer segments using business rules"
-        ]}
-        insights={[
-          "Champions (R≥4, F≥4, M≥4): Your best customers - reward and retain them",
-          "At Risk (R≤2, F≥3, M≥3): High-value customers going dormant - re-engage urgently",
-          "Lost (R≤2, F≤2, M≤2): 99K customers to win back with special offers",
-          "Hibernating (65K customers): Occasional buyers needing reactivation campaigns"
-        ]}
-      />
+      <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4">
+          <div>
+            <p className="text-base font-bold text-slate-900">RFM analytics snapshot</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Optional context for analysts. Campaign exports are handled in the builder below.
+            </p>
+          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 group-open:bg-blue-100 group-open:text-blue-700">
+            Click to {segments.length ? 'review' : 'open'}
+          </span>
+        </summary>
 
-      {/* Segment Distribution Chart */}
-      {segments.length > 0 && (
-        <Card className="mb-2">
+        <div className="space-y-5 border-t border-slate-100 p-4">
+          {/* Explanation Card */}
+          <ExplanationCard
+            icon="📊"
+            title="What is RFM Segmentation?"
+            description="RFM groups customers by recent purchase activity, order frequency, and total spend so marketing can target each group differently."
+            methodology={[
+              "Recency (R): Days since last purchase",
+              "Frequency (F): Number of orders",
+              "Monetary (M): Customer spend in PKR",
+              "Use the campaign builder below when you need an exportable audience"
+            ]}
+            insights={[
+              "Champions: reward and retain with VIP treatment",
+              "At Risk: win back before they go dormant",
+              "New Customers: onboard and encourage second purchase",
+              "Hibernating/Lost: reactivate with stronger offers"
+            ]}
+          />
+
+          {/* Segment Distribution Chart */}
+          {segments.length > 0 && (
+            <Card className="mb-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <PieChart className="w-4 h-4 text-blue-500" />
@@ -296,11 +310,11 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
               })()}
             </div>
           </CardContent>
-        </Card>
-      )}
+            </Card>
+          )}
 
-      {/* Segment Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Segment Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {segments.map((segment) => (
           <Card
             key={segment.segment_name}
@@ -352,11 +366,11 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
             </CardContent>
           </Card>
         ))}
-      </div>
+          </div>
 
-      {/* Selected Segment Details */}
-      {selectedSegment && (
-        <Card>
+          {/* Selected Segment Details */}
+          {selectedSegment && (
+            <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <span>{getSegmentIcon(selectedSegment)}</span>
@@ -423,11 +437,11 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
               </div>
             )}
           </CardContent>
-        </Card>
-      )}
+            </Card>
+          )}
 
-      {/* Quick Actions */}
-      <Card>
+          {/* Quick Actions */}
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5 text-blue-500" />
@@ -469,7 +483,9 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
             </div>
           </div>
         </CardContent>
-      </Card>
+          </Card>
+        </div>
+      </details>
     </div>
   );
 };

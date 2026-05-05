@@ -312,10 +312,9 @@ export const Wireframe = (): JSX.Element => {
         )}
 
         {activeView === 'RFM Segmentation' && (
-          <div className="space-y-10">
+          <div className="space-y-6">
             <RFMSegmentationSection timeFilter={timeFilter} />
-            <hr className="border-gray-200" />
-            <CustomRFMSection orderSource={orderSource} />
+            <CustomRFMSection orderSource={orderSource} timeFilter={timeFilter} />
           </div>
         )}
 

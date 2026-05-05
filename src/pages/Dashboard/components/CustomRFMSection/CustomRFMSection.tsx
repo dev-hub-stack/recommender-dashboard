@@ -1,7 +1,12 @@
 // Custom RFM Campaign Builder
 import { useEffect, useState, useCallback } from 'react';
-import { Download, Loader2, Users, RefreshCw, Trophy, Star, Sprout, AlertTriangle, Moon, TrendingDown, User, Target, Settings, Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
+import {
+    Download, Loader2, Users, RefreshCw, Trophy, Star, Sprout,
+    AlertTriangle, Moon, TrendingDown, User, Target, Settings,
+    Clock, CheckCircle2, Database, Filter, MailCheck, Megaphone,
+    PackageSearch
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../../components/ui/card';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api/v1';
 
@@ -28,7 +33,28 @@ interface Thresholds {
 
 interface Props {
     orderSource?: string;
+    timeFilter?: string;
 }
+
+const TIME_FILTER_LABELS: Record<string, string> = {
+    today: 'Today',
+    '7days': 'Last 7 days',
+    '30days': 'Last 30 days',
+    mtd: 'Month to date',
+    '90days': 'Last 90 days',
+    '6months': 'Last 6 months',
+    '1year': 'Last 1 year',
+    '2years': 'Last 2 years',
+    '3years': 'Last 3 years',
+    all: 'All time',
+};
+
+const SOURCE_LABELS: Record<string, string> = {
+    all: 'All sources',
+    oe: 'OE online orders',
+    pos: 'POS store orders',
+    historical: 'Historical imports',
+};
 
 // ─── Segment meta ─────────────────────────────────────────────────────────────
 const SEGMENT_META: Record<string, { icon: React.ReactNode; colour: string; bg: string }> = {
@@ -61,7 +87,7 @@ const SliderRow = ({
 );
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
+export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Props) => {
     const [thresholds, setThresholds] = useState<Thresholds>({
         champion_r: 30, champion_f: 5, champion_m: 50000,
         loyal_r: 60, loyal_f: 3, loyal_m: 20000,
@@ -75,12 +101,17 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
     const [exporting, setExporting] = useState<string | null>(null);
     const [source, setSource] = useState(orderSource);
 
+    useEffect(() => {
+        setSource(orderSource);
+    }, [orderSource]);
+
     const fetchPreview = useCallback(async () => {
         setLoading(true);
         try {
             const p = new URLSearchParams({
                 ...Object.fromEntries(Object.entries(thresholds).map(([k, v]) => [k, String(v)])),
                 order_source: source,
+                time_filter: timeFilter,
             });
             const res = await fetch(`${API_BASE}/analytics/customers/rfm-custom?${p}`);
             if (!res.ok) throw new Error();
@@ -92,7 +123,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
         } finally {
             setLoading(false);
         }
-    }, [thresholds, source]);
+    }, [thresholds, source, timeFilter]);
 
     // Debounce threshold changes (500ms)
     useEffect(() => {
@@ -107,6 +138,8 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
                 segment: segmentName,
                 ...Object.fromEntries(Object.entries(thresholds).map(([k, v]) => [k, String(v)])),
                 order_source: source,
+                time_filter: timeFilter,
+                exclude_invalid_emails: 'true',
             });
             const res = await fetch(`${API_BASE}/export/rfm-campaign-csv?${p}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
@@ -129,39 +162,117 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
     const set = (key: keyof Thresholds) => (v: number) =>
         setThresholds(prev => ({ ...prev, [key]: v }));
 
+    const totalExportable = segments.reduce((sum, seg) => sum + (seg.customer_count || 0), 0);
+    const topSegment = [...segments].sort((a, b) => (b.customer_count || 0) - (a.customer_count || 0))[0];
+    const activeTimeLabel = TIME_FILTER_LABELS[timeFilter] || timeFilter;
+    const activeSourceLabel = SOURCE_LABELS[source] || source;
+
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <Target className="w-5 h-5 text-blue-500" /> Custom RFM Campaign Builder
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                        Set your own thresholds → preview live counts → export contacts for each segment
-                    </p>
+        <section className="space-y-5 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4 shadow-xl md:p-5">
+            <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-5 text-white backdrop-blur">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <h2 className="flex items-center gap-2 text-2xl font-bold">
+                                <Megaphone className="h-6 w-6 text-emerald-300" />
+                                RFM Campaign Builder
+                            </h2>
+                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
+                                Build a marketing audience, preview the exact segment size, then export a campaign CSV with contact details, order IDs, products, and SKUs from the selected date window.
+                            </p>
+                        </div>
+                        <button
+                            onClick={fetchPreview}
+                            className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+                        >
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                            Refresh preview
+                        </button>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-xl border border-white/10 bg-white/10 p-3">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                                <Clock className="h-4 w-4" /> Campaign window
+                            </div>
+                            <p className="mt-2 text-lg font-bold">{activeTimeLabel}</p>
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-white/10 p-3">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                                <Database className="h-4 w-4" /> Source
+                            </div>
+                            <p className="mt-2 text-lg font-bold">{activeSourceLabel}</p>
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-white/10 p-3">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                                <Users className="h-4 w-4" /> Preview audience
+                            </div>
+                            <p className="mt-2 text-lg font-bold">{loading ? 'Updating...' : `${totalExportable.toLocaleString()} customers`}</p>
+                        </div>
+                    </div>
                 </div>
-                {/* Source selector */}
-                <select
-                    value={source}
-                    onChange={e => setSource(e.target.value)}
-                    className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="all">All Sources</option>
-                    <option value="oe">OE (Online)</option>
-                    <option value="pos">POS (In-Store)</option>
-                    <option value="historical">Historical</option>
-                </select>
+
+                <div className="rounded-2xl border border-white/10 bg-white p-5 shadow-lg">
+                    <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                        Export includes
+                    </h3>
+                    <div className="mt-4 space-y-3 text-sm text-slate-600">
+                        <p className="flex items-start gap-2">
+                            <MailCheck className="mt-0.5 h-4 w-4 text-emerald-600" />
+                            Campaign-safe contacts with obvious test/junk emails suppressed.
+                        </p>
+                        <p className="flex items-start gap-2">
+                            <PackageSearch className="mt-0.5 h-4 w-4 text-emerald-600" />
+                            Product names, SKUs/product IDs, and order IDs for cross-sell targeting.
+                        </p>
+                        <p className="flex items-start gap-2">
+                            <Filter className="mt-0.5 h-4 w-4 text-emerald-600" />
+                            Data filtered by this page’s selected date range and OE/POS source.
+                        </p>
+                    </div>
+                    {topSegment && (
+                        <div className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm">
+                            <p className="font-semibold text-emerald-900">Largest audience right now</p>
+                            <p className="mt-1 text-emerald-700">
+                                {topSegment.segment_name}: {(topSegment.customer_count || 0).toLocaleString()} customers
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h3 className="text-base font-bold text-slate-900">1. Choose the audience source</h3>
+                        <p className="mt-1 text-sm text-slate-500">Use OE for online campaigns, POS for store follow-ups, or all sources for wider targeting.</p>
+                    </div>
+                    <select
+                        value={source}
+                        onChange={e => setSource(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 md:w-56"
+                    >
+                        <option value="all">All Sources</option>
+                        <option value="oe">OE (Online)</option>
+                        <option value="pos">POS (In-Store)</option>
+                        <option value="historical">Historical</option>
+                    </select>
+                </div>
             </div>
 
             {/* Threshold panel */}
-            <Card>
-                <CardHeader className="pb-2 border-b mb-4">
+            <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="border-b pb-3">
                     <div className="flex justify-between items-center">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <Settings className="w-4 h-4 text-gray-500" /> Threshold Settings
-                            <span className="text-xs font-normal text-gray-400">(drag sliders — results update automatically)</span>
-                        </CardTitle>
+                        <div>
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Settings className="w-4 h-4 text-slate-500" /> 2. Set campaign thresholds
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                                Drag sliders to define who belongs in each audience. The preview updates automatically.
+                            </CardDescription>
+                        </div>
                         {source === 'historical' && (
                             <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-blue-200 flex items-center gap-1">
                                 <Clock className="w-3 h-3" /> Relative Recency Active
@@ -169,7 +280,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
                         )}
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-5">
+                <CardContent className="space-y-5 pt-5">
                     {/* Champions */}
                     <div>
                         <p className="text-sm font-semibold text-yellow-700 mb-2 flex items-center gap-1.5"><Trophy className="w-4 h-4 text-yellow-500" /> Champions ({source === 'historical' ? 'F ≥ orders AND M ≥ PKR' : 'R ≤ days AND F ≥ orders AND M ≥ PKR'})</p>
@@ -230,18 +341,21 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
             </Card>
 
             {/* Segment cards */}
-            <div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-sm font-semibold text-gray-700">Live Segment Preview</h3>
+                    <div>
+                        <h3 className="text-base font-bold text-slate-900">3. Export campaign audiences</h3>
+                        <p className="text-sm text-slate-500">Each CSV is ready for targeted outreach and cross-sell planning.</p>
+                    </div>
                     {loading && <Loader2 className="w-3 h-3 animate-spin text-blue-500" />}
                     {!loading && (
-                        <span className="text-xs text-gray-400">
+                        <span className="ml-2 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500">
                             {total.toLocaleString()} customers total
                         </span>
                     )}
                     <button
                         onClick={fetchPreview}
-                        className="ml-auto text-xs flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                        className="ml-auto text-xs flex items-center gap-1 text-emerald-700 hover:text-emerald-900"
                     >
                         <RefreshCw className="w-3 h-3" /> Refresh
                     </button>
@@ -255,14 +369,14 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
                         return (
                             <div
                                 key={seg.segment_name}
-                                className={`rounded-xl border p-4 flex flex-col gap-3 ${meta.bg}`}
+                                className={`rounded-xl border p-4 flex flex-col gap-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${meta.bg}`}
                             >
                                 {/* Segment header */}
                                 <div className="flex items-center gap-2">
                                     <span className="text-xl">{meta.icon}</span>
                                     <div className="flex-1 min-w-0">
                                         <p className={`font-semibold text-sm ${meta.colour} truncate`}>{seg.segment_name}</p>
-                                        <p className="text-xs text-gray-400">{seg.percentage}% of customers</p>
+                                        <p className="text-xs text-gray-500">{seg.percentage}% of selected audience</p>
                                     </div>
                                 </div>
 
@@ -287,8 +401,8 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
                                 <button
                                     disabled={isExportingThis || seg.customer_count === 0}
                                     onClick={() => handleExport(seg.segment_name)}
-                                    className="mt-1 flex items-center justify-center gap-1.5 w-full py-1.5 px-3 rounded-lg text-xs font-semibold
-                    bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all
+                                    className="mt-1 flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg text-xs font-semibold
+                    bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm
                     disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                                 >
                                     {isExportingThis ? (
@@ -302,7 +416,7 @@ export const CustomRFMSection = ({ orderSource = 'all' }: Props) => {
                     })}
                 </div>
             </div>
-        </div>
+        </section>
     );
 };
 
