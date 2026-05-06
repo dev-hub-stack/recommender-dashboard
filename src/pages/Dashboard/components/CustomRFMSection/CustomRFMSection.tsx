@@ -4,7 +4,7 @@ import {
     Download, Loader2, Users, RefreshCw, Trophy, Star, Sprout,
     AlertTriangle, Moon, TrendingDown, User, Target, Settings,
     Clock, CheckCircle2, Database, Filter, MailCheck, Megaphone,
-    PackageSearch, Globe, Store, History
+    PackageSearch
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../../components/ui/card';
 
@@ -34,6 +34,10 @@ interface Thresholds {
 interface Props {
     orderSource?: string;
     timeFilter?: string;
+    category?: string;
+    categories?: string[];
+    statuses?: string[];
+    historicalChannels?: string[];
 }
 
 const TIME_FILTER_LABELS: Record<string, string> = {
@@ -55,33 +59,6 @@ const SOURCE_LABELS: Record<string, string> = {
     pos: 'POS store orders',
     historical: 'Historical imports',
 };
-
-const SOURCE_OPTIONS = [
-    {
-        value: 'all',
-        label: 'All Sources',
-        helper: 'Use every available order source',
-        icon: <Database className="h-4 w-4" />,
-    },
-    {
-        value: 'oe',
-        label: 'OE Online',
-        helper: 'Online Express customers only',
-        icon: <Globe className="h-4 w-4" />,
-    },
-    {
-        value: 'pos',
-        label: 'POS Stores',
-        helper: 'Point of Sale customers only',
-        icon: <Store className="h-4 w-4" />,
-    },
-    {
-        value: 'historical',
-        label: 'Historical',
-        helper: 'Imported legacy/customer history',
-        icon: <History className="h-4 w-4" />,
-    },
-];
 
 // ─── Segment meta ─────────────────────────────────────────────────────────────
 const SEGMENT_META: Record<string, { icon: React.ReactNode; colour: string; bg: string }> = {
@@ -117,7 +94,14 @@ const SliderRow = ({
 );
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Props) => {
+export const CustomRFMSection = ({
+    orderSource = 'all',
+    timeFilter = 'all',
+    category = '',
+    categories = [],
+    statuses = [],
+    historicalChannels = [],
+}: Props) => {
     const [thresholds, setThresholds] = useState<Thresholds>({
         champion_r: 30, champion_f: 5, champion_m: 50000,
         loyal_r: 60, loyal_f: 3, loyal_m: 20000,
@@ -143,6 +127,10 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                 order_source: source,
                 time_filter: timeFilter,
             });
+            if (category) p.set('category', category);
+            if (categories.length > 0) p.set('categories', categories.join(','));
+            if (statuses.length > 0) p.set('statuses', statuses.join(','));
+            if (historicalChannels.length > 0) p.set('historical_channels', historicalChannels.join(','));
             const res = await fetch(`${API_BASE}/analytics/customers/rfm-custom?${p}`);
             if (!res.ok) throw new Error();
             const data = await res.json();
@@ -153,7 +141,7 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
         } finally {
             setLoading(false);
         }
-    }, [thresholds, source, timeFilter]);
+    }, [thresholds, source, timeFilter, category, categories, statuses, historicalChannels]);
 
     // Debounce threshold changes (500ms)
     useEffect(() => {
@@ -171,6 +159,10 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
                 time_filter: timeFilter,
                 exclude_invalid_emails: 'true',
             });
+            if (category) p.set('category', category);
+            if (categories.length > 0) p.set('categories', categories.join(','));
+            if (statuses.length > 0) p.set('statuses', statuses.join(','));
+            if (historicalChannels.length > 0) p.set('historical_channels', historicalChannels.join(','));
             const res = await fetch(`${API_BASE}/export/rfm-campaign-csv?${p}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
             });
@@ -273,34 +265,11 @@ export const CustomRFMSection = ({ orderSource = 'all', timeFilter = 'all' }: Pr
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-                <div className="flex flex-col gap-4">
-                    <div>
-                        <h3 className="text-base font-bold text-slate-900">1. Choose the audience source</h3>
-                        <p className="mt-1 text-sm text-slate-600">Use OE for online campaigns, POS for store follow-ups, or all sources for wider targeting.</p>
-                    </div>
-                    <div className="grid gap-3 md:grid-cols-4">
-                        {SOURCE_OPTIONS.map(option => {
-                            const selected = source === option.value;
-                            return (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={() => setSource(option.value)}
-                                    className={`rounded-2xl border p-4 text-left transition ${
-                                        selected
-                                            ? 'border-emerald-500 bg-white shadow-md ring-2 ring-emerald-100'
-                                            : 'border-slate-200 bg-white hover:border-emerald-200 hover:shadow-sm'
-                                    }`}
-                                >
-                                    <div className={`mb-3 inline-flex rounded-xl p-2 ${selected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                                        {option.icon}
-                                    </div>
-                                    <p className="text-sm font-bold text-slate-950">{option.label}</p>
-                                    <p className="mt-1 text-xs leading-5 text-slate-500">{option.helper}</p>
-                                </button>
-                            );
-                        })}
-                    </div>
+                <div>
+                    <h3 className="text-base font-bold text-slate-900">1. Confirm audience filters</h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                        Use the filters at the top of the page for source, categories, OE statuses, and historical stores. Current source: <strong>{activeSourceLabel}</strong>.
+                    </p>
                 </div>
             </div>
 

@@ -32,6 +32,8 @@ export const Wireframe = (): JSX.Element => {
   const [orderSource, setOrderSource] = useState<string>('all');
   // Delivered only filter - only include delivered/completed orders
   const [deliveredOnly, setDeliveredOnly] = useState<boolean>(false);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedHistoricalChannels, setSelectedHistoricalChannels] = useState<string[]>([]);
   // Keep single category for backward compatibility
   const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] :
     selectedCategories.length > 1 ? selectedCategories.join(',') : '';
@@ -64,16 +66,55 @@ export const Wireframe = (): JSX.Element => {
   // Time filter: Hidden for ML Recommendations (uses all historical data for training)
   const shouldShowTimeFilter = activeView !== 'ML Recommendations';
 
-  // Category filter: Hidden for RFM Segmentation (customer-centric, not product-centric)
-  // and ML Recommendations (uses pre-computed models with all products)
-  const shouldShowCategoryFilter = !['RFM Segmentation', 'ML Recommendations'].includes(activeView);
+  // Category filter: available for RFM campaign slicing and dashboard/product views.
+  const shouldShowCategoryFilter = activeView !== 'ML Recommendations';
 
-  // Order Source filter (OE/POS): Show on Dashboard, Geographic Intelligence, and Revenue Optimization (Cross-Selling)
-  const shouldShowOrderSourceFilter = ['Dashboard', 'Geographic Intelligence', 'Cross-Selling'].includes(activeView);
+  // Order Source filter (OE/POS/Historical)
+  const shouldShowOrderSourceFilter = ['Dashboard', 'Geographic Intelligence', 'Cross-Selling', 'RFM Segmentation'].includes(activeView);
 
   // Delivered Only filter: Only show on Dashboard
   // Only Dashboard components pass this to their API calls
   const shouldShowDeliveredFilter = activeView === 'Dashboard';
+  const shouldShowRfmSpecificFilters = activeView === 'RFM Segmentation';
+
+  const orderStatusOptions = [
+    { value: 'Delivered Orders', label: 'OE Delivered Orders' },
+    { value: 'Cancelled Orders', label: 'OE Cancelled Orders' },
+    { value: 'Returned Orders', label: 'OE Returned Orders' },
+    { value: 'Pending Orders', label: 'OE Pending Orders' },
+    { value: 'Awaiting Assigning', label: 'OE Awaiting Assigning' },
+    { value: 'Courier In-Process', label: 'OE Courier In-Process' },
+    { value: 'completed', label: 'POS Completed' },
+  ];
+
+  const historicalChannelOptions = [
+    { value: 'Exhibition', label: 'Exhibition' },
+    { value: 'JobBox', label: 'JobBox' },
+    { value: 'Changan', label: 'Changan' },
+    { value: 'CFH', label: 'CHF' },
+    { value: 'DuraFoam', label: 'DuraFoam' },
+    { value: 'MasterOffisysView', label: 'MasterOffisysView' },
+    { value: 'Dealers', label: 'Dealers' },
+    { value: 'DDS', label: 'DDS' },
+    { value: 'OE', label: 'Historical OE' },
+    { value: 'POS', label: 'Historical POS' },
+    { value: 'MoltyHome', label: 'MoltyHome' },
+  ];
+
+  const handleOrderSourceChange = (value: string) => {
+    setOrderSource(value);
+    if (value !== 'historical') {
+      setSelectedHistoricalChannels([]);
+    }
+  };
+
+  const handleHistoricalChannelsChange = (values: string[]) => {
+    setSelectedHistoricalChannels(values);
+    if (values.length > 0) {
+      setOrderSource('historical');
+      setSelectedStatuses([]);
+    }
+  };
 
   return (
     <div className="bg-foundation-whitewhite-100 w-full min-w-[1440px] h-screen relative flex overflow-hidden">
@@ -122,7 +163,7 @@ export const Wireframe = (): JSX.Element => {
                   <label className="text-sm font-medium text-gray-700">Source:</label>
                   <select
                     value={orderSource}
-                    onChange={(e) => setOrderSource(e.target.value)}
+                    onChange={(e) => handleOrderSourceChange(e.target.value)}
                     className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="all">All Orders</option>
@@ -131,6 +172,40 @@ export const Wireframe = (): JSX.Element => {
                     <option value="historical">📦 Historical (Imported)</option>
                   </select>
                 </div>
+              )}
+
+              {shouldShowRfmSpecificFilters && (
+                <>
+                  <MultiSelectFilter
+                    options={orderStatusOptions}
+                    selectedValues={selectedStatuses}
+                    onChange={(values) => {
+                      setSelectedStatuses(values);
+                      if (values.length > 0 && orderSource === 'historical') {
+                        setOrderSource('all');
+                        setSelectedHistoricalChannels([]);
+                      }
+                    }}
+                    label="Statuses:"
+                    placeholder="All Statuses"
+                    allSelectedLabel="All Statuses"
+                    searchPlaceholder="Search statuses..."
+                    emptyText="No statuses found"
+                    className="min-w-[220px]"
+                  />
+
+                  <MultiSelectFilter
+                    options={historicalChannelOptions}
+                    selectedValues={selectedHistoricalChannels}
+                    onChange={handleHistoricalChannelsChange}
+                    label="Historical Stores:"
+                    placeholder="All Historical Stores"
+                    allSelectedLabel="All Historical Stores"
+                    searchPlaceholder="Search stores..."
+                    emptyText="No stores found"
+                    className="min-w-[240px]"
+                  />
+                </>
               )}
 
               {/* Delivered Only Toggle - Only for revenue-focused screens */}
@@ -214,7 +289,7 @@ export const Wireframe = (): JSX.Element => {
         </div>
 
         {/* Active Filters Badges */}
-        {(selectedCategories.length > 0 || orderSource !== 'all' || deliveredOnly) && (
+        {(selectedCategories.length > 0 || orderSource !== 'all' || deliveredOnly || selectedStatuses.length > 0 || selectedHistoricalChannels.length > 0) && (
           <div className="flex flex-wrap items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
             {/* Order Source Badge */}
             {orderSource !== 'all' && (
@@ -227,8 +302,36 @@ export const Wireframe = (): JSX.Element => {
                   </strong>
                 </span>
                 <button
-                  onClick={() => setOrderSource('all')}
+                  onClick={() => handleOrderSourceChange('all')}
                   className="text-blue-500 hover:text-blue-700 text-sm ml-1"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {selectedStatuses.length > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-emerald-100 rounded-full">
+                <span className="text-sm text-emerald-700">
+                  <strong>{selectedStatuses.length === 1 ? orderStatusOptions.find(s => s.value === selectedStatuses[0])?.label || selectedStatuses[0] : `${selectedStatuses.length} statuses`}</strong>
+                </span>
+                <button
+                  onClick={() => setSelectedStatuses([])}
+                  className="text-emerald-500 hover:text-emerald-700 text-sm ml-1"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {selectedHistoricalChannels.length > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-amber-100 rounded-full">
+                <span className="text-sm text-amber-700">
+                  <strong>{selectedHistoricalChannels.length === 1 ? historicalChannelOptions.find(s => s.value === selectedHistoricalChannels[0])?.label || selectedHistoricalChannels[0] : `${selectedHistoricalChannels.length} historical stores`}</strong>
+                </span>
+                <button
+                  onClick={() => setSelectedHistoricalChannels([])}
+                  className="text-amber-500 hover:text-amber-700 text-sm ml-1"
                 >
                   ×
                 </button>
@@ -271,6 +374,8 @@ export const Wireframe = (): JSX.Element => {
                 setOrderSource('all');
                 setDeliveredOnly(false);
                 setSelectedCategories([]);
+                setSelectedStatuses([]);
+                setSelectedHistoricalChannels([]);
               }}
               className="ml-auto text-sm text-gray-500 hover:text-gray-700 underline"
             >
@@ -313,8 +418,22 @@ export const Wireframe = (): JSX.Element => {
 
         {activeView === 'RFM Segmentation' && (
           <div className="space-y-6">
-            <RFMSegmentationSection timeFilter={timeFilter} />
-            <CustomRFMSection orderSource={orderSource} timeFilter={timeFilter} />
+            <RFMSegmentationSection
+              timeFilter={timeFilter}
+              orderSource={orderSource}
+              category={selectedCategory}
+              categories={selectedCategories}
+              statuses={selectedStatuses}
+              historicalChannels={selectedHistoricalChannels}
+            />
+            <CustomRFMSection
+              orderSource={orderSource}
+              timeFilter={timeFilter}
+              category={selectedCategory}
+              categories={selectedCategories}
+              statuses={selectedStatuses}
+              historicalChannels={selectedHistoricalChannels}
+            />
           </div>
         )}
 

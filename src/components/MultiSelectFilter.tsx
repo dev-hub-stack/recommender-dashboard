@@ -15,6 +15,9 @@ interface MultiSelectFilterProps {
   label?: string;
   maxDisplay?: number;
   className?: string;
+  allSelectedLabel?: string;
+  searchPlaceholder?: string;
+  emptyText?: string;
 }
 
 export const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
@@ -24,7 +27,10 @@ export const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
   placeholder = 'Select...',
   label,
   maxDisplay = 2,
-  className = ''
+  className = '',
+  allSelectedLabel = 'All selected',
+  searchPlaceholder = 'Search...',
+  emptyText = 'No options found'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,11 +70,16 @@ export const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
 
   const getDisplayText = () => {
     if (selectedValues.length === 0) return placeholder;
-    if (selectedValues.length === options.length) return 'All Categories';
+    if (selectedValues.length === options.length) return allSelectedLabel;
     if (selectedValues.length <= maxDisplay) {
-      return selectedValues.join(', ');
+      return selectedValues
+        .map(value => options.find(option => option.value === value)?.label || value)
+        .join(', ');
     }
-    return `${selectedValues.slice(0, maxDisplay).join(', ')} +${selectedValues.length - maxDisplay} more`;
+    const visibleLabels = selectedValues
+      .slice(0, maxDisplay)
+      .map(value => options.find(option => option.value === value)?.label || value);
+    return `${visibleLabels.join(', ')} +${selectedValues.length - maxDisplay} more`;
   };
 
   return (
@@ -119,7 +130,7 @@ export const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
           <div className="p-2 border-b">
             <input
               type="text"
-              placeholder="Search categories..."
+              placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
@@ -149,7 +160,7 @@ export const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
           <div className="max-h-60 overflow-y-auto">
             {filteredOptions.length === 0 ? (
               <div className="p-3 text-sm text-gray-500 text-center">
-                No categories found
+                {emptyText}
               </div>
             ) : (
               filteredOptions.map(option => (

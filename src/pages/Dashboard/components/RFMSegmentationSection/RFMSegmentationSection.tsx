@@ -40,6 +40,11 @@ const normalizePhone = (raw: string | null | undefined): string => {
 
 interface RFMSegmentationSectionProps {
   timeFilter?: string;
+  orderSource?: string;
+  category?: string;
+  categories?: string[];
+  statuses?: string[];
+  historicalChannels?: string[];
 }
 
 type SegmentIconKey =
@@ -58,7 +63,14 @@ const SEGMENT_ICONS: Record<SegmentIconKey, React.ReactNode> = {
   'Lost':               <TrendingDown className="w-6 h-6 text-slate-500" />,
 };
 
-export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmentationSectionProps) => {
+export const RFMSegmentationSection = ({
+  timeFilter: propTimeFilter,
+  orderSource = 'all',
+  category = '',
+  categories = [],
+  statuses = [],
+  historicalChannels = [],
+}: RFMSegmentationSectionProps) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(propTimeFilter as TimeFilter || 'all');
   const [segments, setSegments] = useState<RFMSegment[]>([]);
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
@@ -80,15 +92,19 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
         const ML_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || '';
         const params = new URLSearchParams({
           time_filter: timeFilter,
-          data_source: 'all',
+          data_source: orderSource,
         });
+        if (category) params.set('category', category);
+        if (categories.length > 0) params.set('categories', categories.join(','));
+        if (statuses.length > 0) params.set('statuses', statuses.join(','));
+        if (historicalChannels.length > 0) params.set('historical_channels', historicalChannels.join(','));
         const response = await fetch(`${ML_API_BASE_URL}/api/v1/ml/rfm-segments?${params}`);
 
         if (!response.ok) throw new Error('Failed to fetch ML RFM segments');
 
         const result = await response.json();
         setSegments(result.segments || []);
-        console.log('✅ Using ML RFM Segments — data_source: all');
+        console.log(`✅ Using ML RFM Segments — data_source: ${orderSource}`);
       } catch (error) {
         console.error('Error fetching RFM segments:', error);
       } finally {
@@ -97,7 +113,7 @@ export const RFMSegmentationSection = ({ timeFilter: propTimeFilter }: RFMSegmen
     };
 
     fetchData();
-  }, [timeFilter]);
+  }, [timeFilter, orderSource, category, categories, statuses, historicalChannels]);
 
   const handleSegmentClick = async (segmentName: string) => {
     if (selectedSegment === segmentName) {
