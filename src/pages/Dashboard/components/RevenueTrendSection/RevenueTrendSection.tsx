@@ -15,21 +15,6 @@ const insightsAnalysisItems = [
     icon: "/vuesax-linear-graph.svg",
     label: "RFM Segmentation",
   },
-  {
-    icon: "/vuesax-linear-user-edit.svg",
-    label: "Customer Profiling",
-  },
-];
-
-const growthToolsItems = [
-  {
-    icon: "/vuesax-linear-lamp-charge.svg",
-    label: "Product Insights",
-  },
-  {
-    icon: "/vuesax-linear-maximize.svg",
-    label: "Revenue Optimization",
-  },
 ];
 
 const phase1AnalyticsItems = [
@@ -80,50 +65,6 @@ export const RevenueTrendSection: React.FC<RevenueTrendSectionProps> = ({
                     isActive ? "text-white font-medium" : "text-grey-900"
                   }`}
                 >
-                  {item.label}
-                </span>
-                {isActive && (
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                )}
-              </Button>
-            );
-          })}
-        </div>
-      </nav>
-
-      <nav className="flex flex-col items-start gap-2 w-full">
-        <h2 className="[font-family:'Poppins',Helvetica] font-normal text-foundation-greygrey-500 text-xs tracking-[0] leading-[normal]">
-          Growth Tools
-        </h2>
-
-        <div className="flex flex-col items-start gap-3 w-full">
-          {growthToolsItems.map((item, index) => {
-            const isActive = 
-              (activeView === "Cross-Selling" && item.label === "Revenue Optimization") ||
-              (activeView === "Collaborative Filtering" && item.label === "Product Insights");
-            
-            return (
-              <Button
-                key={index}
-                onClick={() => {
-                  // Handle navigation for implemented features only
-                  if (item.label === "Revenue Optimization") {
-                    onNavigate("Cross-Selling");
-                  } else if (item.label === "Product Insights") {
-                    onNavigate("Collaborative Filtering");
-                  }
-                }}
-                variant={isActive ? "default" : "ghost"}
-                className={`flex items-center justify-start gap-2.5 px-2.5 py-2 w-full h-auto rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? "bg-foundation-blueblue-900 hover:bg-foundation-blueblue-900 shadow-md"
-                    : "bg-transparent hover:bg-foundation-greygrey-50"
-                }`}
-              >
-                <img className="w-5 h-5" alt={item.label} src={item.icon} />
-                <span className={`flex-1 text-left [font-family:'Poppins',Helvetica] font-normal text-sm tracking-[0] leading-[normal] ${
-                  isActive ? "text-white font-medium" : "text-grey-900"
-                }`}>
                   {item.label}
                 </span>
                 {isActive && (
