@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { DashboardHeaderSection } from "./components/DashboardHeaderSection";
 import { PerformanceMetricsSection } from "./components/PerformanceMetricsSection";
-import { RecentActivitySection } from "./components/RecentActivitySection";
 import { RevenueTrendSection } from "./components/RevenueTrendSection";
 import { TopProductsSection } from "./components/TopProductsSection";
 import { CustomerDetailedProfiling } from "./components/CustomerProfilingSection/CustomerDetailedProfiling";
@@ -395,7 +394,6 @@ export const Wireframe = (): JSX.Element => {
             <POSvsOESection timeFilter={timeFilter} category={selectedCategory} />
             <HistoricalStoreChannelsSection />
             <OrderStatusAnalyticsSection timeFilter={timeFilter} category={selectedCategory} orderSource={orderSource} />
-            <RecentActivitySection timeFilter={timeFilter} />
           </>
         )}
 
