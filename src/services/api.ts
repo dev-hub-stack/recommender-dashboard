@@ -238,7 +238,8 @@ export async function getPopularProducts(limit: number = 10, timeFilter: string 
   }
 
   const data = await response.json();
-  return data.recommendations.map((item: any) => ({
+  const items = data.recommendations || data.products || [];
+  return items.map((item: any) => ({
     product_id: item.product_id,
     product_name: item.product_name || `Product ${item.product_id}`,
     category: item.category || 'General',

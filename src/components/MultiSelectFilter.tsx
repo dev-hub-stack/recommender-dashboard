@@ -82,17 +82,19 @@ export const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
     return `${visibleLabels.join(', ')} +${selectedValues.length - maxDisplay} more`;
   };
 
+  const getOptionLabel = (value: string) => options.find(option => option.value === value)?.label || value;
+
   return (
     <div ref={dropdownRef} className={`relative ${className}`}>
       {label && (
-        <label className="text-sm font-medium text-gray-700 mr-2">{label}</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       )}
       
       {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 min-w-[200px]"
+        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 min-w-[180px]"
       >
         <span className={`truncate ${selectedValues.length === 0 ? 'text-gray-400' : 'text-gray-700'}`}>
           {getDisplayText()}
@@ -108,7 +110,7 @@ export const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
               key={value}
               className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded"
             >
-              {value}
+              {getOptionLabel(value)}
               <button
                 onClick={(e) => {
                   e.stopPropagation();

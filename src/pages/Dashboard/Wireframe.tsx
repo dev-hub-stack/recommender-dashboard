@@ -129,8 +129,8 @@ export const Wireframe = (): JSX.Element => {
         <DashboardHeaderSection />
 
         {/* Global Time Filter */}
-        <div className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 bg-white rounded-xl p-4 shadow-sm xl:flex-row xl:items-start xl:justify-between">
+          <div className="flex items-center gap-4 shrink-0">
             <h3 className="text-lg font-semibold text-gray-800">
               {activeView === 'Dashboard' ? 'Analytics Dashboard' :
                 activeView === 'Collaborative Filtering' ? 'Product Insights' :
@@ -141,7 +141,7 @@ export const Wireframe = (): JSX.Element => {
 
           {/* Hide Time Period filter for ML Recommendations since ML uses all historical data */}
           {shouldShowTimeFilter && (
-            <div className="flex items-center gap-4">
+            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 xl:flex-1">
               {/* Multi-Select Category Filter */}
               {shouldShowCategoryFilter && (
                 <MultiSelectFilter
@@ -154,17 +154,18 @@ export const Wireframe = (): JSX.Element => {
                   onChange={setSelectedCategories}
                   label="Categories:"
                   placeholder="All Categories"
+                  className="min-w-0"
                 />
               )}
 
               {/* OE/POS/Historical Order Source Filter */}
               {shouldShowOrderSourceFilter && (
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">Source:</label>
+                <div className="min-w-0">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Source:</label>
                   <select
                     value={orderSource}
                     onChange={(e) => handleOrderSourceChange(e.target.value)}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="all">All Orders</option>
                     <option value="oe">🌐 OE (Online Express)</option>
@@ -191,7 +192,7 @@ export const Wireframe = (): JSX.Element => {
                     allSelectedLabel="All Statuses"
                     searchPlaceholder="Search statuses..."
                     emptyText="No statuses found"
-                    className="min-w-[220px]"
+                    className="min-w-0"
                   />
 
                   <MultiSelectFilter
@@ -203,15 +204,15 @@ export const Wireframe = (): JSX.Element => {
                     allSelectedLabel="All Historical Stores"
                     searchPlaceholder="Search stores..."
                     emptyText="No stores found"
-                    className="min-w-[240px]"
+                    className="min-w-0"
                   />
                 </>
               )}
 
               {/* Delivered Only Toggle - Only for revenue-focused screens */}
               {shouldShowDeliveredFilter && (
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700 flex items-center gap-2 cursor-pointer">
+                <div className="flex items-end min-w-0">
+                  <label className="text-sm font-medium text-gray-700 flex items-center gap-2 cursor-pointer h-10">
                     <input
                       type="checkbox"
                       checked={deliveredOnly}
@@ -224,12 +225,12 @@ export const Wireframe = (): JSX.Element => {
               )}
 
               {/* Time Period Filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Time Period:</label>
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Time Period:</label>
                 <select
                   value={timeFilter}
                   onChange={(e) => handleTimeFilterChange(e.target.value)}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="today">Today</option>
                   <option value="7days">Last 7 Days</option>
@@ -246,13 +247,15 @@ export const Wireframe = (): JSX.Element => {
               </div>
 
               {/* CSV Export Button - Context-Aware */}
-              <DashboardExportButton
-                timeFilter={timeFilter}
-                categories={selectedCategories}
-                orderSource={orderSource}
-                deliveredOnly={deliveredOnly}
-                sections={[activeView.toLowerCase().replace(/\s+/g, '_')]}
-              />
+              <div className="flex items-end">
+                <DashboardExportButton
+                  timeFilter={timeFilter}
+                  categories={selectedCategories}
+                  orderSource={orderSource}
+                  deliveredOnly={deliveredOnly}
+                  sections={[activeView.toLowerCase().replace(/\s+/g, '_')]}
+                />
+              </div>
 
               {/* Custom Date Range Picker */}
               {showCustomDatePicker && (
