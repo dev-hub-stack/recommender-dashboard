@@ -248,22 +248,6 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
     }
   };
 
-  const getTestSendVariables = () => {
-    const sampleCustomer = messageIntelligence?.sample_customers?.[0];
-
-    return {
-      customer_name: sampleCustomer?.customer_name || "there",
-      city: sampleCustomer?.city || draft.cityFocus || "Pakistan",
-      last_product: sampleCustomer?.last_product || "your recent Master purchase",
-      top_category: sampleCustomer?.top_category || "comfort products",
-      recommended_product_1: sampleCustomer?.recommended_product_1 || sampleCustomer?.recommended_products?.[0] || "a recommended Master product",
-      recommended_product_2: sampleCustomer?.recommended_product_2 || sampleCustomer?.recommended_products?.[1] || "a comfort accessory",
-      recommended_product_3: sampleCustomer?.recommended_product_3 || sampleCustomer?.recommended_products?.[2] || "a sleep upgrade",
-      discount_code: draft.offer,
-      campaign_link: draft.campaignLink,
-    };
-  };
-
   const sendInternalTestMessages = async () => {
     if (!draft.segmentName) {
       setTestSendError("Select an RFM segment before sending a WhatsApp test.");
@@ -283,7 +267,6 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
     try {
       const campaignId = await ensureBackendCampaignDraft();
       const sampleCustomer = messageIntelligence?.sample_customers?.[0];
-      const variables = getTestSendVariables();
       const results: TestSendResult[] = [];
 
       for (const phone of phones) {
@@ -291,7 +274,7 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
           const response = await testSendWhatsAppCampaign(campaignId, {
             phone,
             customer_id: sampleCustomer?.customer_id,
-            variables,
+            variables: {},
           });
           results.push({ phone, status: "sent", response });
         } catch (error) {
@@ -443,7 +426,9 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
                   placeholder="923214809481, 923030644282"
                   className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                 />
-                <span className="mt-2 block text-xs text-slate-500">Comma or space separated. Backend test mode rejects numbers outside the provider allowlist.</span>
+                <span className="mt-2 block text-xs text-slate-500">
+                  Comma or space separated. Backend test mode rejects numbers outside the provider allowlist. Current Meta connectivity test uses the approved sample template without variables.
+                </span>
               </label>
               <button
                 type="button"
