@@ -12,6 +12,10 @@ const insightsAnalysisItems = [
     label: "Dashboard",
   },
   {
+    icon: "/vuesax-linear-messenger.svg",
+    label: "WhatsApp Campaigns",
+  },
+  {
     icon: "/vuesax-linear-graph.svg",
     label: "RFM Segmentation",
   },

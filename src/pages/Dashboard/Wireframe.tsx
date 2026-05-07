@@ -14,6 +14,7 @@ import { RFMSegmentationSection } from "./components/RFMSegmentationSection";
 import { AWSPersonalizeSection } from "./components/AWSPersonalizeSection";
 import { HistoricalStoreChannelsSection } from "./components/HistoricalStoreChannelsSection";
 import { CustomRFMSection } from "./components/CustomRFMSection";
+import { WhatsAppCampaigns } from "./components/WhatsAppCampaigns";
 import { getProductCategories, ProductCategory } from "../../services/api";
 import { MultiSelectFilter } from "../../components/MultiSelectFilter";
 import { DashboardExportButton } from "../../components/DashboardExportButton";
@@ -66,7 +67,8 @@ export const Wireframe = (): JSX.Element => {
   const shouldShowTimeFilter = activeView !== 'ML Recommendations';
 
   // Category filter: available for RFM campaign slicing and dashboard/product views.
-  const shouldShowCategoryFilter = activeView !== 'ML Recommendations';
+  const shouldShowCategoryFilter = !['ML Recommendations', 'WhatsApp Campaigns'].includes(activeView);
+  const shouldShowExportButton = activeView !== 'WhatsApp Campaigns';
 
   // Order Source filter (OE/POS/Historical)
   const shouldShowOrderSourceFilter = ['Dashboard', 'Geographic Intelligence', 'Cross-Selling', 'RFM Segmentation'].includes(activeView);
@@ -246,15 +248,17 @@ export const Wireframe = (): JSX.Element => {
               </div>
 
               {/* CSV Export Button - Context-Aware */}
-              <div className="flex items-end">
-                <DashboardExportButton
-                  timeFilter={timeFilter}
-                  categories={selectedCategories}
-                  orderSource={orderSource}
-                  deliveredOnly={deliveredOnly}
-                  sections={[activeView.toLowerCase().replace(/\s+/g, '_')]}
-                />
-              </div>
+              {shouldShowExportButton && (
+                <div className="flex items-end">
+                  <DashboardExportButton
+                    timeFilter={timeFilter}
+                    categories={selectedCategories}
+                    orderSource={orderSource}
+                    deliveredOnly={deliveredOnly}
+                    sections={[activeView.toLowerCase().replace(/\s+/g, '_')]}
+                  />
+                </div>
+              )}
 
               {/* Custom Date Range Picker */}
               {showCustomDatePicker && (
@@ -440,6 +444,10 @@ export const Wireframe = (): JSX.Element => {
 
         {activeView === 'ML Recommendations' && (
           <AWSPersonalizeSection />
+        )}
+
+        {activeView === 'WhatsApp Campaigns' && (
+          <WhatsAppCampaigns timeFilter={timeFilter} />
         )}
       </main>
 
