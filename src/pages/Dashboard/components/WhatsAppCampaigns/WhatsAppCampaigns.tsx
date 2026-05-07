@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../../../../components/ui/button";
 import {
   createWhatsAppCampaignDraft,
+  createMasterWhatsAppRecommendationTemplate,
   getWhatsAppApprovedTemplates,
   getRFMSegments,
   getWhatsAppMessageIntelligence,
@@ -156,6 +157,8 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
   const [testSendError, setTestSendError] = useState<string>("");
   const [approvedTemplates, setApprovedTemplates] = useState<WhatsAppApprovedTemplate[]>([]);
   const [templateNotice, setTemplateNotice] = useState<string>("");
+  const [isSubmittingTemplate, setIsSubmittingTemplate] = useState<boolean>(false);
+  const [templateSubmissionNotice, setTemplateSubmissionNotice] = useState<string>("");
 
   useEffect(() => {
     let isMounted = true;
@@ -304,6 +307,33 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
       setMessageGenerationError(error instanceof Error ? error.message : "Failed to generate message intelligence.");
     } finally {
       setIsGeneratingMessage(false);
+    }
+  };
+
+  const submitMasterTemplateForApproval = async () => {
+    setIsSubmittingTemplate(true);
+    setTemplateSubmissionNotice("");
+    setTemplateNotice("");
+
+    try {
+      const created = await createMasterWhatsAppRecommendationTemplate();
+      const response = await getWhatsAppApprovedTemplates();
+      const templates = response.templates || [];
+      setApprovedTemplates(templates);
+      const approvedMatch = templates.find((template) => template.name === created.template.name && template.language === created.template.language);
+      updateDraft({
+        approvedTemplateName: created.template.name,
+        approvedTemplateLanguage: created.template.language,
+      });
+      setTemplateSubmissionNotice(
+        approvedMatch
+          ? "Master recommendation template is approved and ready to test."
+          : `Master recommendation template submitted to Meta with status ${created.template.status || "PENDING"}.`
+      );
+    } catch (error) {
+      setTemplateSubmissionNotice(error instanceof Error ? error.message : "Failed to submit Master template to Meta.");
+    } finally {
+      setIsSubmittingTemplate(false);
     }
   };
 
@@ -481,7 +511,17 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
           <div className="rounded-2xl border border-emerald-100 bg-white p-5 lg:col-span-4">
             <div className="mb-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
               <label className="block">
-                <span className="text-sm font-semibold text-slate-900">Approved Meta template</span>
+                <span className="flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slate-900">
+                  Approved Meta template
+                  <button
+                    type="button"
+                    onClick={submitMasterTemplateForApproval}
+                    disabled={isSubmittingTemplate}
+                    className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isSubmittingTemplate ? "Submitting..." : "Submit Master template"}
+                  </button>
+                </span>
                 <select
                   value={`${draft.approvedTemplateName}::${draft.approvedTemplateLanguage}`}
                   onChange={(event) => {
@@ -491,16 +531,24 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
                   className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                 >
                   {approvedTemplates.length ? (
-                    approvedTemplates.map((template) => (
-                      <option key={`${template.name}-${template.language}`} value={`${template.name}::${template.language}`}>
-                        {template.name} · {template.language} · {template.category}
-                      </option>
-                    ))
+                    <>
+                      {!selectedApprovedTemplate && (
+                        <option value={`${draft.approvedTemplateName}::${draft.approvedTemplateLanguage}`}>
+                          {draft.approvedTemplateName} · {draft.approvedTemplateLanguage} · pending
+                        </option>
+                      )}
+                      {approvedTemplates.map((template) => (
+                        <option key={`${template.name}-${template.language}`} value={`${template.name}::${template.language}`}>
+                          {template.name} · {template.language} · {template.category}
+                        </option>
+                      ))}
+                    </>
                   ) : (
                     <option value={`${draft.approvedTemplateName}::${draft.approvedTemplateLanguage}`}>{draft.approvedTemplateName} · {draft.approvedTemplateLanguage}</option>
                   )}
                 </select>
                 {templateNotice && <span className="mt-2 block text-xs text-amber-700">{templateNotice}</span>}
+                {templateSubmissionNotice && <span className="mt-2 block text-xs font-medium text-blue-700">{templateSubmissionNotice}</span>}
               </label>
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">

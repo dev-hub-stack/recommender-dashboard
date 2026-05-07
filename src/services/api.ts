@@ -271,6 +271,14 @@ export interface WhatsAppApprovedTemplatesResponse {
   templates: WhatsAppApprovedTemplate[];
 }
 
+export interface WhatsAppTemplateCreateResponse {
+  success: boolean;
+  provider: string;
+  provider_mode: string;
+  message?: string;
+  template: WhatsAppApprovedTemplate;
+}
+
 // Brand Performance Interface
 export interface BrandPerformance {
   brand_name: string;
@@ -1313,6 +1321,35 @@ export async function getWhatsAppApprovedTemplates(): Promise<WhatsAppApprovedTe
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch approved WhatsApp templates');
+  }
+
+  return response.json();
+}
+
+export async function createMasterWhatsAppRecommendationTemplate(): Promise<WhatsAppTemplateCreateResponse> {
+  const response = await fetch(`${API_BASE_URL}/whatsapp/templates`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      name: 'master_recommendation_winback_v1',
+      language: 'en_US',
+      category: 'MARKETING',
+      body_text: 'Hi {{1}}, based on your recent {{2}} purchase, we picked {{3}} for you. Use code {{4}} for a special Master offer: {{5}}',
+      example_values: [
+        'Ayesha',
+        'Ortho Mattress',
+        'Mattress Protector',
+        'MASTER10',
+        'https://mastergroup.pk/campaign/whatsapp?utm_source=whatsapp',
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    handleAuthError(response);
+    const errorBody = await response.json().catch(() => null);
+    const detail = typeof errorBody?.detail === 'string' ? errorBody.detail : 'Failed to submit Master WhatsApp template';
+    throw new Error(detail);
   }
 
   return response.json();
