@@ -238,6 +238,22 @@ export interface WhatsAppMessageIntelligence {
   };
 }
 
+export interface WhatsAppCampaignTestSendResponse {
+  success: boolean;
+  mock_mode: boolean;
+  provider?: string;
+  provider_mode?: string;
+  message: string;
+  event?: {
+    event_type?: string;
+    status?: string;
+    recipient_phone?: string;
+    provider?: string;
+    provider_message_id?: string | null;
+    created_at?: string;
+  };
+}
+
 // Brand Performance Interface
 export interface BrandPerformance {
   brand_name: string;
@@ -1241,6 +1257,30 @@ export async function getWhatsAppMessageIntelligence(
   if (!response.ok) {
     handleAuthError(response);
     throw new Error('Failed to fetch WhatsApp message intelligence');
+  }
+
+  return response.json();
+}
+
+export async function testSendWhatsAppCampaign(
+  campaignId: number,
+  input: {
+    phone: string;
+    customer_id?: string;
+    variables?: Record<string, unknown>;
+  }
+): Promise<WhatsAppCampaignTestSendResponse> {
+  const response = await fetch(`${API_BASE_URL}/whatsapp/campaigns/${campaignId}/test-send`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    handleAuthError(response);
+    const errorBody = await response.json().catch(() => null);
+    const detail = typeof errorBody?.detail === 'string' ? errorBody.detail : 'Failed to send WhatsApp test message';
+    throw new Error(detail);
   }
 
   return response.json();

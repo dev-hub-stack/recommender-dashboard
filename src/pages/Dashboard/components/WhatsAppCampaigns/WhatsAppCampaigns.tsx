@@ -5,7 +5,9 @@ import {
   getRFMSegments,
   getWhatsAppMessageIntelligence,
   RFMSegment,
+  testSendWhatsAppCampaign,
   TimeFilter,
+  WhatsAppCampaignTestSendResponse,
   WhatsAppMessageIntelligence,
 } from "../../../../services/api";
 import { WhatsAppCampaignPerformancePanel } from "./WhatsAppCampaignPerformancePanel";
@@ -23,8 +25,16 @@ type CampaignDraft = {
   offer: string;
   campaignLink: string;
   body: string;
+  testPhones: string;
   backendCampaignId?: number;
   status: "draft" | "ready" | "sending" | "sent" | "failed";
+};
+
+type TestSendResult = {
+  phone: string;
+  status: "sent" | "failed";
+  response?: WhatsAppCampaignTestSendResponse;
+  error?: string;
 };
 
 interface WhatsAppCampaignsProps {
@@ -51,6 +61,7 @@ const defaultDraft: CampaignDraft = {
   offer: "Free consultation + limited-time bundle pricing",
   campaignLink: "https://mastergroup.pk/campaign/whatsapp?utm_source=whatsapp&utm_medium=campaign",
   body: "Hi {{customer_name}}, Master Group has a special bedding offer selected for you. Reply YES and our team will help you choose the right product.",
+  testPhones: "923214809481, 923030644282",
   status: "draft",
 };
 
@@ -86,6 +97,9 @@ const fallbackSegments: RFMSegment[] = [
 
 const formatNumber = (value: number): string => value.toLocaleString("en-US");
 
+const parseTestPhones = (value: string): string[] =>
+  Array.from(new Set(value.split(/[\s,;]+/).map((phone) => phone.replace(/\D/g, "")).filter(Boolean)));
+
 const estimateSendableUsers = (segment: RFMSegment | undefined, includeRecentConsent: boolean): number => {
   if (!segment) return 0;
   return Math.round(segment.customer_count * (includeRecentConsent ? 0.84 : 0.72));
@@ -109,6 +123,9 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
   const [messageIntelligence, setMessageIntelligence] = useState<WhatsAppMessageIntelligence | null>(null);
   const [isGeneratingMessage, setIsGeneratingMessage] = useState<boolean>(false);
   const [messageGenerationError, setMessageGenerationError] = useState<string>("");
+  const [isSendingTest, setIsSendingTest] = useState<boolean>(false);
+  const [testSendResults, setTestSendResults] = useState<TestSendResult[]>([]);
+  const [testSendError, setTestSendError] = useState<string>("");
 
   useEffect(() => {
     let isMounted = true;
@@ -184,6 +201,28 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
     }
   };
 
+  const ensureBackendCampaignDraft = async (): Promise<number> => {
+    if (draft.backendCampaignId) return draft.backendCampaignId;
+
+    const campaign = await createWhatsAppCampaignDraft({
+      name: draft.name,
+      message_template: draft.body,
+      filters: {
+        segment: draft.segmentName,
+        time_filter: timeFilter,
+        order_source: "all",
+        require_consent: draft.includeRecentConsent,
+      },
+      metadata: {
+        city_focus: draft.cityFocus,
+        draft_source: "whatsapp_workbench",
+      },
+    });
+
+    updateDraft({ backendCampaignId: campaign.id });
+    return campaign.id;
+  };
+
   const generateSmartMessageDraft = async () => {
     if (!draft.segmentName) {
       setMessageGenerationError("Select an RFM segment before generating customer-wise message intelligence.");
@@ -194,26 +233,7 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
     setMessageGenerationError("");
 
     try {
-      let campaignId = draft.backendCampaignId;
-      if (!campaignId) {
-        const campaign = await createWhatsAppCampaignDraft({
-          name: draft.name,
-          message_template: draft.body,
-          filters: {
-            segment: draft.segmentName,
-            time_filter: timeFilter,
-            order_source: "all",
-            require_consent: draft.includeRecentConsent,
-          },
-          metadata: {
-            city_focus: draft.cityFocus,
-            draft_source: "whatsapp_workbench",
-          },
-        });
-        campaignId = campaign.id;
-        updateDraft({ backendCampaignId: campaign.id });
-      }
-
+      const campaignId = await ensureBackendCampaignDraft();
       const intelligence = await getWhatsAppMessageIntelligence(campaignId, {
         limit: 5,
         discountCode: draft.offer,
@@ -225,6 +245,65 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
       setMessageGenerationError(error instanceof Error ? error.message : "Failed to generate message intelligence.");
     } finally {
       setIsGeneratingMessage(false);
+    }
+  };
+
+  const getTestSendVariables = () => {
+    const sampleCustomer = messageIntelligence?.sample_customers?.[0];
+
+    return {
+      customer_name: sampleCustomer?.customer_name || "there",
+      city: sampleCustomer?.city || draft.cityFocus || "Pakistan",
+      last_product: sampleCustomer?.last_product || "your recent Master purchase",
+      top_category: sampleCustomer?.top_category || "comfort products",
+      recommended_product_1: sampleCustomer?.recommended_product_1 || sampleCustomer?.recommended_products?.[0] || "a recommended Master product",
+      recommended_product_2: sampleCustomer?.recommended_product_2 || sampleCustomer?.recommended_products?.[1] || "a comfort accessory",
+      recommended_product_3: sampleCustomer?.recommended_product_3 || sampleCustomer?.recommended_products?.[2] || "a sleep upgrade",
+      discount_code: draft.offer,
+      campaign_link: draft.campaignLink,
+    };
+  };
+
+  const sendInternalTestMessages = async () => {
+    if (!draft.segmentName) {
+      setTestSendError("Select an RFM segment before sending a WhatsApp test.");
+      return;
+    }
+
+    const phones = parseTestPhones(draft.testPhones);
+    if (!phones.length) {
+      setTestSendError("Add at least one internal test phone number.");
+      return;
+    }
+
+    setIsSendingTest(true);
+    setTestSendError("");
+    setTestSendResults([]);
+
+    try {
+      const campaignId = await ensureBackendCampaignDraft();
+      const sampleCustomer = messageIntelligence?.sample_customers?.[0];
+      const variables = getTestSendVariables();
+      const results: TestSendResult[] = [];
+
+      for (const phone of phones) {
+        try {
+          const response = await testSendWhatsAppCampaign(campaignId, {
+            phone,
+            customer_id: sampleCustomer?.customer_id,
+            variables,
+          });
+          results.push({ phone, status: "sent", response });
+        } catch (error) {
+          results.push({ phone, status: "failed", error: error instanceof Error ? error.message : "Failed to send test message." });
+        }
+      }
+
+      setTestSendResults(results);
+    } catch (error) {
+      setTestSendError(error instanceof Error ? error.message : "Failed to prepare WhatsApp test campaign.");
+    } finally {
+      setIsSendingTest(false);
     }
   };
 
@@ -351,8 +430,52 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
           <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 lg:col-span-4">
             <p className="text-sm font-semibold text-blue-950">Review note</p>
             <p className="mt-2 text-sm text-blue-900">
-              Final WhatsApp send is intentionally disabled in this shell. Save Draft keeps the campaign ready for provider and approval integration.
+              Full-segment WhatsApp sending stays disabled until template approvals, consent checks, and suppression lists are final. Internal test send uses only the allowlisted numbers below.
             </p>
+          </div>
+          <div className="rounded-2xl border border-emerald-100 bg-white p-5 lg:col-span-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <label className="block flex-1">
+                <span className="text-sm font-semibold text-slate-900">Internal test numbers</span>
+                <input
+                  value={draft.testPhones}
+                  onChange={(event) => updateDraft({ testPhones: event.target.value })}
+                  placeholder="923214809481, 923030644282"
+                  className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                />
+                <span className="mt-2 block text-xs text-slate-500">Comma or space separated. Backend test mode rejects numbers outside the provider allowlist.</span>
+              </label>
+              <button
+                type="button"
+                onClick={sendInternalTestMessages}
+                disabled={isSendingTest || !draft.segmentName}
+                className="rounded-xl border border-emerald-200 bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSendingTest ? "Sending test..." : "Send test WhatsApp"}
+              </button>
+            </div>
+            {testSendError && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{testSendError}</p>}
+            {testSendResults.length ? (
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {testSendResults.map((result) => (
+                  <div key={result.phone} className={`rounded-xl border px-4 py-3 ${result.status === "sent" ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className={`text-sm font-semibold ${result.status === "sent" ? "text-emerald-900" : "text-red-900"}`}>{result.phone}</p>
+                        <p className={`mt-1 text-xs ${result.status === "sent" ? "text-emerald-700" : "text-red-700"}`}>
+                          {result.status === "sent"
+                            ? `${result.response?.provider || "provider"} ${result.response?.mock_mode ? "mock" : "live"} ${result.response?.provider_mode || "mode"}`
+                            : result.error}
+                        </p>
+                      </div>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${result.status === "sent" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}`}>
+                        {result.status === "sent" ? "Accepted" : "Failed"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       );
