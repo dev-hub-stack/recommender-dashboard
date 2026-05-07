@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../../../../components/ui/button";
 import {
   createWhatsAppCampaignDraft,
+  getWhatsAppApprovedTemplates,
   getRFMSegments,
   getWhatsAppMessageIntelligence,
   RFMSegment,
   testSendWhatsAppCampaign,
   TimeFilter,
+  WhatsAppApprovedTemplate,
   WhatsAppCampaignTestSendResponse,
   WhatsAppMessageIntelligence,
 } from "../../../../services/api";
@@ -26,6 +28,8 @@ type CampaignDraft = {
   campaignLink: string;
   body: string;
   testPhones: string;
+  approvedTemplateName: string;
+  approvedTemplateLanguage: string;
   backendCampaignId?: number;
   status: "draft" | "ready" | "sending" | "sent" | "failed";
 };
@@ -62,6 +66,8 @@ const defaultDraft: CampaignDraft = {
   campaignLink: "https://mastergroup.pk/campaign/whatsapp?utm_source=whatsapp&utm_medium=campaign",
   body: "Hi {{customer_name}}, Master Group has a special bedding offer selected for you. Reply YES and our team will help you choose the right product.",
   testPhones: "923214809481, 923030644282",
+  approvedTemplateName: "hello_world",
+  approvedTemplateLanguage: "en_US",
   status: "draft",
 };
 
@@ -100,6 +106,28 @@ const formatNumber = (value: number): string => value.toLocaleString("en-US");
 const parseTestPhones = (value: string): string[] =>
   Array.from(new Set(value.split(/[\s,;]+/).map((phone) => phone.replace(/\D/g, "")).filter(Boolean)));
 
+const buildApprovedTemplateVariables = (
+  template: WhatsAppApprovedTemplate | undefined,
+  customer: WhatsAppMessageIntelligence["sample_customers"][number] | undefined,
+  draft: CampaignDraft
+): Record<string, string> => {
+  const count = template?.body_parameter_count ?? 0;
+  if (!count) return {};
+
+  const values = [
+    customer?.customer_name || "there",
+    customer?.last_product || "your recent Master purchase",
+    customer?.recommended_product_1 || customer?.recommended_products?.[0] || draft.offer || "a Master comfort offer",
+    draft.campaignLink,
+    draft.offer,
+  ];
+
+  return Array.from({ length: count }).reduce<Record<string, string>>((variables, _item, index) => {
+    variables[String(index + 1)] = values[index] || values[values.length - 1] || "";
+    return variables;
+  }, {});
+};
+
 const estimateSendableUsers = (segment: RFMSegment | undefined, includeRecentConsent: boolean): number => {
   if (!segment) return 0;
   return Math.round(segment.customer_count * (includeRecentConsent ? 0.84 : 0.72));
@@ -126,6 +154,8 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
   const [isSendingTest, setIsSendingTest] = useState<boolean>(false);
   const [testSendResults, setTestSendResults] = useState<TestSendResult[]>([]);
   const [testSendError, setTestSendError] = useState<string>("");
+  const [approvedTemplates, setApprovedTemplates] = useState<WhatsAppApprovedTemplate[]>([]);
+  const [templateNotice, setTemplateNotice] = useState<string>("");
 
   useEffect(() => {
     let isMounted = true;
@@ -157,6 +187,32 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
   }, [timeFilter]);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchTemplates = async () => {
+      try {
+        const response = await getWhatsAppApprovedTemplates();
+        if (!isMounted) return;
+        const templates = response.templates || [];
+        setApprovedTemplates(templates);
+        if (templates.length && !templates.some((template) => template.name === draft.approvedTemplateName && template.language === draft.approvedTemplateLanguage)) {
+          const firstTemplate = templates[0];
+          updateDraft({ approvedTemplateName: firstTemplate.name, approvedTemplateLanguage: firstTemplate.language });
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        setTemplateNotice(error instanceof Error ? error.message : "Approved WhatsApp templates are unavailable.");
+      }
+    };
+
+    fetchTemplates();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     setSaveStatus("saving");
     const timeoutId = window.setTimeout(() => {
       try {
@@ -183,6 +239,9 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
   const reachableSummary = selectedSegment
     ? `${formatNumber(sendableUsers)} sendable of ${formatNumber(selectedSegment.customer_count)} reachable`
     : "Select a segment to calculate reach";
+  const selectedApprovedTemplate = approvedTemplates.find(
+    (template) => template.name === draft.approvedTemplateName && template.language === draft.approvedTemplateLanguage
+  );
 
   const updateDraft = (changes: Partial<CampaignDraft>) => {
     setDraft((currentDraft) => ({ ...currentDraft, ...changes }));
@@ -267,6 +326,7 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
     try {
       const campaignId = await ensureBackendCampaignDraft();
       const sampleCustomer = messageIntelligence?.sample_customers?.[0];
+      const variables = buildApprovedTemplateVariables(selectedApprovedTemplate, sampleCustomer, draft);
       const results: TestSendResult[] = [];
 
       for (const phone of phones) {
@@ -274,7 +334,9 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
           const response = await testSendWhatsAppCampaign(campaignId, {
             phone,
             customer_id: sampleCustomer?.customer_id,
-            variables: {},
+            template_name: draft.approvedTemplateName,
+            template_language: draft.approvedTemplateLanguage,
+            variables,
           });
           results.push({ phone, status: "sent", response });
         } catch (error) {
@@ -417,6 +479,38 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
             </p>
           </div>
           <div className="rounded-2xl border border-emerald-100 bg-white p-5 lg:col-span-4">
+            <div className="mb-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+              <label className="block">
+                <span className="text-sm font-semibold text-slate-900">Approved Meta template</span>
+                <select
+                  value={`${draft.approvedTemplateName}::${draft.approvedTemplateLanguage}`}
+                  onChange={(event) => {
+                    const [approvedTemplateName, approvedTemplateLanguage] = event.target.value.split("::");
+                    updateDraft({ approvedTemplateName, approvedTemplateLanguage });
+                  }}
+                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                >
+                  {approvedTemplates.length ? (
+                    approvedTemplates.map((template) => (
+                      <option key={`${template.name}-${template.language}`} value={`${template.name}::${template.language}`}>
+                        {template.name} · {template.language} · {template.category}
+                      </option>
+                    ))
+                  ) : (
+                    <option value={`${draft.approvedTemplateName}::${draft.approvedTemplateLanguage}`}>{draft.approvedTemplateName} · {draft.approvedTemplateLanguage}</option>
+                  )}
+                </select>
+                {templateNotice && <span className="mt-2 block text-xs text-amber-700">{templateNotice}</span>}
+              </label>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {selectedApprovedTemplate?.body_parameter_count ? `${selectedApprovedTemplate.body_parameter_count} body variables` : "No body variables"}
+                </p>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-700">
+                  {selectedApprovedTemplate?.body_text || "This approved template will be sent by Meta. The smart draft remains the planning/preview layer until a matching Master template is approved."}
+                </p>
+              </div>
+            </div>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <label className="block flex-1">
                 <span className="text-sm font-semibold text-slate-900">Internal test numbers</span>
@@ -427,7 +521,7 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
                   className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                 />
                 <span className="mt-2 block text-xs text-slate-500">
-                  Comma or space separated. Backend test mode rejects numbers outside the provider allowlist. Current Meta connectivity test uses the approved sample template without variables.
+                  Comma or space separated. Backend test mode rejects numbers outside the provider allowlist. Test send uses the selected approved Meta template.
                 </span>
               </label>
               <button

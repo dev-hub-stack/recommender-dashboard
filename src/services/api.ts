@@ -254,6 +254,23 @@ export interface WhatsAppCampaignTestSendResponse {
   };
 }
 
+export interface WhatsAppApprovedTemplate {
+  name: string;
+  status: string;
+  language: string;
+  category: string;
+  body_text: string;
+  body_parameter_count: number;
+  components?: Array<Record<string, unknown>>;
+}
+
+export interface WhatsAppApprovedTemplatesResponse {
+  success: boolean;
+  provider: string;
+  provider_mode: string;
+  templates: WhatsAppApprovedTemplate[];
+}
+
 // Brand Performance Interface
 export interface BrandPerformance {
   brand_name: string;
@@ -1268,6 +1285,8 @@ export async function testSendWhatsAppCampaign(
     phone: string;
     customer_id?: string;
     variables?: Record<string, unknown>;
+    template_name?: string;
+    template_language?: string;
   }
 ): Promise<WhatsAppCampaignTestSendResponse> {
   const response = await fetch(`${API_BASE_URL}/whatsapp/campaigns/${campaignId}/test-send`, {
@@ -1281,6 +1300,19 @@ export async function testSendWhatsAppCampaign(
     const errorBody = await response.json().catch(() => null);
     const detail = typeof errorBody?.detail === 'string' ? errorBody.detail : 'Failed to send WhatsApp test message';
     throw new Error(detail);
+  }
+
+  return response.json();
+}
+
+export async function getWhatsAppApprovedTemplates(): Promise<WhatsAppApprovedTemplatesResponse> {
+  const response = await fetch(`${API_BASE_URL}/whatsapp/templates?status=APPROVED`, {
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch approved WhatsApp templates');
   }
 
   return response.json();
