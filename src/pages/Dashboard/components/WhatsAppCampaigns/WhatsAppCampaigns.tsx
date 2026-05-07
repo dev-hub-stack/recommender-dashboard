@@ -636,7 +636,7 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
   };
 
   return (
-    <section className="flex min-h-[720px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 shadow-sm">
+    <section className="flex min-h-[720px] flex-col rounded-3xl border border-slate-200 bg-slate-50 shadow-sm">
       <div className="border-b border-slate-200 bg-white p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 flex-1">
@@ -699,7 +699,7 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
         )}
       </div>
 
-      <div className="sticky bottom-0 flex flex-col gap-3 border-t border-slate-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-b-3xl border-t border-slate-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-500">
           Step {currentStepIndex + 1} of {steps.length}: <span className="font-medium text-slate-900">{steps[currentStepIndex].label}</span>
         </p>
