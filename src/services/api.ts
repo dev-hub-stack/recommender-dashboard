@@ -190,6 +190,54 @@ export interface CustomerSegmentDetail {
   };
 }
 
+export interface WhatsAppCampaignDraftResponse {
+  id: number;
+  name: string;
+  status: string;
+  message_template?: string | null;
+  filters: Record<string, unknown>;
+  metadata: Record<string, unknown>;
+}
+
+export interface WhatsAppMessageIntelligenceCustomer {
+  customer_id?: string;
+  customer_name: string;
+  phone?: string;
+  city: string;
+  segment?: string;
+  last_product: string;
+  last_purchase_date?: string;
+  recent_products: string[];
+  top_category: string;
+  recommended_products: string[];
+  recommended_product_1?: string;
+  recommended_product_2?: string;
+  recommended_product_3?: string;
+  total_orders: number;
+  total_spend: number;
+  recency_days: number;
+  discount_code: string;
+  campaign_link: string;
+}
+
+export interface WhatsAppMessageIntelligence {
+  campaign_id: number;
+  segment: string;
+  time_filter: string;
+  template: string;
+  available_variables: string[];
+  sample_customers: WhatsAppMessageIntelligenceCustomer[];
+  segment_recommendations: Array<{
+    product_name: string;
+    customer_count: number;
+    order_count: number;
+  }>;
+  message_strategy: {
+    uses: string[];
+    manual_review: string;
+  };
+}
+
 // Brand Performance Interface
 export interface BrandPerformance {
   brand_name: string;
@@ -1148,6 +1196,54 @@ export async function getMLRecommendations(
 
   const data = await response.json();
   return data.recommendations || [];
+}
+
+export async function createWhatsAppCampaignDraft(input: {
+  name: string;
+  message_template?: string;
+  filters: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+}): Promise<WhatsAppCampaignDraftResponse> {
+  const response = await fetch(`${API_BASE_URL}/whatsapp/campaigns`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to create WhatsApp campaign draft');
+  }
+
+  return response.json();
+}
+
+export async function getWhatsAppMessageIntelligence(
+  campaignId: number,
+  options: {
+    limit?: number;
+    discountCode?: string;
+    campaignLink?: string;
+  } = {}
+): Promise<WhatsAppMessageIntelligence> {
+  const params = new URLSearchParams();
+  params.set('limit', String(options.limit ?? 5));
+  if (options.discountCode) params.set('discount_code', options.discountCode);
+  if (options.campaignLink) params.set('campaign_link', options.campaignLink);
+
+  const response = await fetch(
+    `${API_BASE_URL}/whatsapp/campaigns/${campaignId}/message-intelligence?${params.toString()}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    handleAuthError(response);
+    throw new Error('Failed to fetch WhatsApp message intelligence');
+  }
+
+  return response.json();
 }
 
 // Get ML Top Products

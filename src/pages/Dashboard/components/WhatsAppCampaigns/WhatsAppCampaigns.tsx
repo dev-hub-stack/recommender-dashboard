@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../../../../components/ui/button";
-import { getRFMSegments, RFMSegment, TimeFilter } from "../../../../services/api";
+import {
+  createWhatsAppCampaignDraft,
+  getRFMSegments,
+  getWhatsAppMessageIntelligence,
+  RFMSegment,
+  TimeFilter,
+  WhatsAppMessageIntelligence,
+} from "../../../../services/api";
 import { WhatsAppCampaignPerformancePanel } from "./WhatsAppCampaignPerformancePanel";
 
 type CampaignStep = "segment" | "audience" | "message" | "review" | "performance";
@@ -16,6 +23,7 @@ type CampaignDraft = {
   offer: string;
   campaignLink: string;
   body: string;
+  backendCampaignId?: number;
   status: "draft" | "ready" | "sending" | "sent" | "failed";
 };
 
@@ -98,6 +106,9 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
   const [isLoadingSegments, setIsLoadingSegments] = useState<boolean>(true);
   const [segmentNotice, setSegmentNotice] = useState<string>("");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
+  const [messageIntelligence, setMessageIntelligence] = useState<WhatsAppMessageIntelligence | null>(null);
+  const [isGeneratingMessage, setIsGeneratingMessage] = useState<boolean>(false);
+  const [messageGenerationError, setMessageGenerationError] = useState<string>("");
 
   useEffect(() => {
     let isMounted = true;
@@ -170,6 +181,50 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
       setSaveStatus("saved");
     } catch {
       setSaveStatus("error");
+    }
+  };
+
+  const generateSmartMessageDraft = async () => {
+    if (!draft.segmentName) {
+      setMessageGenerationError("Select an RFM segment before generating customer-wise message intelligence.");
+      return;
+    }
+
+    setIsGeneratingMessage(true);
+    setMessageGenerationError("");
+
+    try {
+      let campaignId = draft.backendCampaignId;
+      if (!campaignId) {
+        const campaign = await createWhatsAppCampaignDraft({
+          name: draft.name,
+          message_template: draft.body,
+          filters: {
+            segment: draft.segmentName,
+            time_filter: timeFilter,
+            order_source: "all",
+            require_consent: draft.includeRecentConsent,
+          },
+          metadata: {
+            city_focus: draft.cityFocus,
+            draft_source: "whatsapp_workbench",
+          },
+        });
+        campaignId = campaign.id;
+        updateDraft({ backendCampaignId: campaign.id });
+      }
+
+      const intelligence = await getWhatsAppMessageIntelligence(campaignId, {
+        limit: 5,
+        discountCode: draft.offer,
+        campaignLink: draft.campaignLink,
+      });
+      setMessageIntelligence(intelligence);
+      updateDraft({ body: intelligence.template });
+    } catch (error) {
+      setMessageGenerationError(error instanceof Error ? error.message : "Failed to generate message intelligence.");
+    } finally {
+      setIsGeneratingMessage(false);
     }
   };
 
@@ -270,6 +325,11 @@ export const WhatsAppCampaigns = ({ timeFilter }: WhatsAppCampaignsProps): JSX.E
           campaignLink={draft.campaignLink}
           onCampaignLinkChange={(campaignLink) => updateDraft({ campaignLink })}
           onApplyTemplate={(body) => updateDraft({ body })}
+          onGenerateSmartDraft={generateSmartMessageDraft}
+          isGeneratingSmartDraft={isGeneratingMessage}
+          generationError={messageGenerationError}
+          sampleCustomers={messageIntelligence?.sample_customers}
+          strategyUses={messageIntelligence?.message_strategy?.uses}
         />
       );
     }
@@ -414,6 +474,8 @@ export const WHATSAPP_MESSAGE_VARIABLES = [
   "{{city}}",
   "{{last_product}}",
   "{{top_category}}",
+  "{{recommended_product_1}}",
+  "{{recommended_product_2}}",
   "{{discount_code}}",
   "{{campaign_link}}",
 ] as const;
@@ -425,6 +487,12 @@ export interface WhatsAppMessageSampleCustomer {
   city?: string;
   last_product?: string;
   top_category?: string;
+  recommended_product_1?: string;
+  recommended_product_2?: string;
+  recommended_product_3?: string;
+  recent_products?: string[];
+  recency_days?: number;
+  total_orders?: number;
   discount_code?: string;
   campaign_link?: string;
 }
@@ -444,7 +512,12 @@ export interface WhatsAppMessageBuilderStepProps {
   campaignLink?: string;
   onCampaignLinkChange?: (link: string) => void;
   sampleCustomer?: WhatsAppMessageSampleCustomer;
+  sampleCustomers?: WhatsAppMessageSampleCustomer[];
+  strategyUses?: string[];
   onApplyTemplate?: (template: string) => void;
+  onGenerateSmartDraft?: () => void;
+  isGeneratingSmartDraft?: boolean;
+  generationError?: string;
   disabled?: boolean;
   className?: string;
 }
@@ -461,6 +534,12 @@ const messagePreviewCustomer: Required<WhatsAppMessageSampleCustomer> = {
   city: "Lahore",
   last_product: "Ortho mattress",
   top_category: "pillows and protectors",
+  recommended_product_1: "Mattress protector",
+  recommended_product_2: "Cooling pillow",
+  recommended_product_3: "Comfort cushion",
+  recent_products: ["Ortho mattress", "Memory pillow"],
+  recency_days: 42,
+  total_orders: 3,
   discount_code: "MASTER10",
   campaign_link: "https://mastergroup.pk/campaign/whatsapp?utm_source=whatsapp",
 };
@@ -651,13 +730,19 @@ export const WhatsAppMessageBuilderStep = ({
   campaignLink,
   onCampaignLinkChange,
   sampleCustomer: sampleOverrides,
+  sampleCustomers,
+  strategyUses,
   onApplyTemplate,
+  onGenerateSmartDraft,
+  isGeneratingSmartDraft = false,
+  generationError = "",
   disabled = false,
   className = "",
 }: WhatsAppMessageBuilderStepProps) => {
   const insertRef = useRef<(token: string) => void>();
   const template = useMemo(() => getDefaultWhatsAppMessageTemplate(segment), [segment]);
   const issues = useMemo(() => validateWhatsAppMessage({ message, offerValue, campaignLink }), [campaignLink, message, offerValue]);
+  const previewCustomer = sampleCustomers?.[0] || sampleOverrides;
 
   return (
     <section className={`space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5 ${className}`}>
@@ -665,9 +750,20 @@ export const WhatsAppMessageBuilderStep = ({
         <div className="space-y-4">
           <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-sky-50 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div><p className="text-xs font-bold uppercase tracking-wide text-emerald-700">WhatsApp message builder</p><h3 className="mt-2 text-xl font-bold text-slate-950">Write the campaign message</h3><p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">Use approved variables, add the tracked CTA, and preview customer-facing copy before review.</p></div>
-              <button type="button" onClick={() => onApplyTemplate?.(template)} disabled={disabled || !onApplyTemplate} className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-800 shadow-sm transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">Use {segment ? `${segment} ` : ""}template</button>
+              <div><p className="text-xs font-bold uppercase tracking-wide text-emerald-700">WhatsApp message builder</p><h3 className="mt-2 text-xl font-bold text-slate-950">Generate customer-aware copy</h3><p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">Use the selected RFM segment, recent purchases, and recommended products to draft one smart placeholder template.</p></div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={onGenerateSmartDraft} disabled={disabled || !onGenerateSmartDraft || isGeneratingSmartDraft} className="rounded-xl border border-blue-200 bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isGeneratingSmartDraft ? "Generating..." : "Generate smart draft"}</button>
+                <button type="button" onClick={() => onApplyTemplate?.(template)} disabled={disabled || !onApplyTemplate} className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-800 shadow-sm transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">Use {segment ? `${segment} ` : ""}template</button>
+              </div>
             </div>
+            {generationError && <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{generationError}</p>}
+            {strategyUses?.length ? (
+              <div className="mt-3 grid gap-2 md:grid-cols-3">
+                {strategyUses.map((strategy) => (
+                  <div key={strategy} className="rounded-xl border border-blue-100 bg-white/80 px-3 py-2 text-xs font-medium text-blue-900">{strategy}</div>
+                ))}
+              </div>
+            ) : null}
           </div>
           <WhatsAppTextEditor value={message} onChange={onMessageChange} onRegisterInsert={(insert) => { insertRef.current = insert; }} disabled={disabled} />
           <VariableInsertionButtons onInsertVariable={(variable) => insertRef.current?.(variable)} disabled={disabled} />
@@ -677,13 +773,35 @@ export const WhatsAppMessageBuilderStep = ({
           </div>
         </div>
         <div className="space-y-4">
-          <WhatsAppLivePreview message={message} offerValue={offerValue} campaignLink={campaignLink} sampleCustomer={sampleOverrides} segment={segment} />
+          <WhatsAppLivePreview message={message} offerValue={offerValue} campaignLink={campaignLink} sampleCustomer={previewCustomer} segment={segment} />
+          {sampleCustomers?.length ? <CustomerIntelligenceSamples customers={sampleCustomers} /> : null}
           <ValidationWarnings issues={issues} />
         </div>
       </div>
     </section>
   );
 };
+
+const CustomerIntelligenceSamples = ({ customers }: { customers: WhatsAppMessageSampleCustomer[] }) => (
+  <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+    <p className="text-sm font-semibold text-slate-800">Sample customer intelligence</p>
+    <div className="mt-3 space-y-2">
+      {customers.slice(0, 5).map((customer, index) => (
+        <div key={`${customer.customer_name || "customer"}-${index}`} className="rounded-xl bg-slate-50 px-3 py-2">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{customer.customer_name || "Customer"}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Recent: {customer.last_product || "recent purchase"} · Rec: {customer.recommended_product_1 || "next best product"}
+              </p>
+            </div>
+            <span className="rounded-full bg-white px-2 py-1 text-xs font-medium text-slate-600">{customer.city || "City"}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
 const isValidTrackedCampaignUrl = (value: string) => {
   try {
@@ -714,6 +832,9 @@ const renderSampleWhatsAppMessage = ({
     city: customer.city,
     last_product: customer.last_product,
     top_category: customer.top_category,
+    recommended_product_1: customer.recommended_product_1,
+    recommended_product_2: customer.recommended_product_2,
+    recommended_product_3: customer.recommended_product_3,
     discount_code: offerValue?.trim() || customer.discount_code,
     campaign_link: campaignLink?.trim() || customer.campaign_link,
   };
