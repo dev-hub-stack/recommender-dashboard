@@ -1334,7 +1334,7 @@ export async function createMasterWhatsAppRecommendationTemplate(): Promise<What
       name: 'master_recommendation_winback_v1',
       language: 'en_US',
       category: 'MARKETING',
-      body_text: 'Hi {{1}}, based on your recent {{2}} purchase, we picked {{3}} for you. Use code {{4}} for a special Master offer: {{5}}',
+      body_text: 'Hi {{1}}, based on your recent {{2}} purchase, we picked {{3}} for you. Use code {{4}} for a special Master offer. View details here: {{5}} Reply YES for help.',
       example_values: [
         'Ayesha',
         'Ortho Mattress',
