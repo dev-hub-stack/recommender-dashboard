@@ -451,16 +451,6 @@ export const Wireframe = (): JSX.Element => {
         )}
       </main>
 
-      <Button
-        className="fixed right-[42px] bottom-[37px] w-16 h-16 rounded-[40px] p-3 shadow-[0px_4px_20px_#0000001f] bg-[linear-gradient(to_bottom_right,rgba(234,244,255,1)_0%,rgba(159,204,253,1)_50%)_bottom_right_/_50%_50%_no-repeat,linear-gradient(to_bottom_left,rgba(234,244,255,1)_0%,rgba(159,204,253,1)_50%)_bottom_left_/_50%_50%_no-repeat,linear-gradient(to_top_left,rgba(234,244,255,1)_0%,rgba(159,204,253,1)_50%)_top_left_/_50%_50%_no-repeat,linear-gradient(to_top_right,rgba(234,244,255,1)_0%,rgba(159,204,253,1)_50%)_top_right_/_50%_50%_no-repeat] hover:opacity-90"
-        size="icon"
-      >
-        <img
-          className="w-6 h-6"
-          alt="Vuesax linear"
-          src="/vuesax-linear-messenger.svg"
-        />
-      </Button>
     </div>
   );
 };
