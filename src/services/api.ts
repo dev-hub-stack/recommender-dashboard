@@ -912,7 +912,7 @@ export async function getRFMSegments(
   timeFilter: TimeFilter = 'all'
 ): Promise<RFMSegment[]> {
   const response = await fetch(
-    `${API_BASE_URL}/analytics/customers/rfm-segments?time_filter=${timeFilter}`,
+    `${API_BASE_URL}/ml/rfm-segments?time_filter=${timeFilter}&data_source=all`,
     {
       headers: getAuthHeaders(),
     }
@@ -924,17 +924,17 @@ export async function getRFMSegments(
   }
 
   const data = await response.json();
-  const segments = data.segments || [];
+  const segments = data.segments || (Array.isArray(data) ? data : []);
 
   // Transform and validate data
   return segments.map((s: any) => ({
-    segment_name: s.segment_name || 'Unknown',
-    customer_count: safeNumber(s.customer_count, 0),
+    segment_name: s.segment_name || s.segment || 'Unknown',
+    customer_count: safeNumber(s.customer_count ?? s.customerCount, 0),
     total_revenue: safeNumber(s.total_revenue, 0),
-    avg_order_value: safeNumber(s.avg_customer_value, 0),
+    avg_order_value: safeNumber(s.avg_customer_value ?? s.avg_order_value ?? s.avgRevenue, 0),
     avg_orders_per_customer: safeNumber(s.avg_orders_per_customer, 0),
-    avg_days_since_last_order: safeNumber(s.avg_recency_days, 0),
-    percentage: 0, // Calculate on frontend
+    avg_days_since_last_order: safeNumber(s.avg_days_since_last_order ?? s.avg_recency_days, 0),
+    percentage: safeNumber(s.percentage, 0),
   }));
 }
 
