@@ -57,7 +57,7 @@ const steps: Array<{ id: CampaignStep; label: string; helper: string }> = [
 ];
 
 const defaultDraft: CampaignDraft = {
-  name: "May bedding reactivation campaign",
+  name: "WhatsApp campaign draft",
   step: "segment",
   segmentName: "",
   includeRecentConsent: false,
@@ -131,13 +131,16 @@ const buildApprovedTemplateVariables = (
 
 const estimateSendableUsers = (segment: RFMSegment | undefined, includeRecentConsent: boolean): number => {
   if (!segment) return 0;
-  return Math.round(segment.customer_count * (includeRecentConsent ? 0.84 : 0.72));
+  return Math.round(segment.customer_count * (includeRecentConsent ? 0.62 : 0.84));
 };
 
 const loadDraft = (): CampaignDraft => {
   try {
     const storedDraft = localStorage.getItem(STORAGE_KEY);
-    return storedDraft ? { ...defaultDraft, ...JSON.parse(storedDraft) } : defaultDraft;
+    const parsedDraft = storedDraft ? { ...defaultDraft, ...JSON.parse(storedDraft) } : defaultDraft;
+    return parsedDraft.name === "May bedding reactivation campaign"
+      ? { ...parsedDraft, name: defaultDraft.name }
+      : parsedDraft;
   } catch {
     return defaultDraft;
   }
